@@ -60,7 +60,7 @@ const solverOptions = {
 
 const goalToLinkMap = new Map();
 const linkToGoalMap = new Map();
-const extraGoals = [];
+const goals = [];
 const goalIcons = [];
 let selectedGoalIndex = - 1;
 
@@ -158,7 +158,7 @@ function init() {
 
 		if ( selectedGoalIndex !== - 1 ) {
 
-			const goal = extraGoals[ selectedGoalIndex ];
+			const goal = goals[ selectedGoalIndex ];
 			const ikLink = goalToLinkMap.get( goal );
 			if ( ikLink ) {
 
@@ -213,8 +213,8 @@ function init() {
 				linkToGoalMap.delete( ikLink );
 				goalToLinkMap.delete( goal );
 
-				const i = extraGoals.indexOf( goal );
-				extraGoals.splice( i, 1 );
+				const i = goals.indexOf( goal );
+				goals.splice( i, 1 );
 
 				const i2 = solver.roots.indexOf( goal );
 				solver.roots.splice( i2, 1 );
@@ -274,8 +274,8 @@ function init() {
 
 			goalToLinkMap.set( rootGoalJoint, ikLink );
 			linkToGoalMap.set( ikLink, rootGoalJoint );
-			extraGoals.push( rootGoalJoint );
-			selectedGoalIndex = extraGoals.length - 1;
+			goals.push( rootGoalJoint );
+			selectedGoalIndex = goals.length - 1;
 
 		} else if ( e.button === 0 ) {
 
@@ -285,14 +285,14 @@ function init() {
 
 				if ( selectedGoalIndex !== -1 ) {
 
-					const ikgoal = extraGoals[ selectedGoalIndex ];
+					const ikgoal = goals[ selectedGoalIndex ];
 					targetObject.position.set( ...ikgoal.position );
 					targetObject.quaternion.set( ...ikgoal.quaternion );
 
 				} else if ( ikLink && linkToGoalMap.has( ikLink ) ) {
 
 					const goal = linkToGoalMap.get( ikLink );
-					selectedGoalIndex = extraGoals.indexOf( goal );
+					selectedGoalIndex = goals.indexOf( goal );
 					targetObject.position.set( ...goal.position );
 					targetObject.quaternion.set( ...goal.quaternion );
 
@@ -308,12 +308,12 @@ function init() {
 
 		if ( selectedGoalIndex !== - 1 && e.code === 'Delete' ) {
 
-			const goalToRemove = extraGoals[ selectedGoalIndex ];
+			const goalToRemove = goals[ selectedGoalIndex ];
 			const i = solver.roots.indexOf( goalToRemove );
 			solver.roots.splice( i, 1 );
 			solver.updateStructure();
 
-			extraGoals.splice( selectedGoalIndex, 1 );
+			goals.splice( selectedGoalIndex, 1 );
 			selectedGoalIndex = - 1;
 
 			const link = goalToLinkMap.get( goalToRemove );
@@ -336,9 +336,9 @@ function raycast( e ) {
 	raycaster.setFromCamera( mouse, camera );
 
 	let results;
-	const fewerGoals = [ ...goalIcons ];
-	fewerGoals.length = extraGoals.length;
-	results = raycaster.intersectObjects( fewerGoals, true );
+	const intersectGoals = [ ...goalIcons ];
+	intersectGoals.length = goals.length;
+	results = raycaster.intersectObjects( intersectGoals, true );
 	if ( results.length !== 0 ) {
 
 		return { ikLink: null, result: results[ 0 ] };
@@ -382,7 +382,7 @@ function render() {
 
 	requestAnimationFrame( render );
 
-	const allGoals = extraGoals;
+	const allGoals = goals;
 	const selectedGoal = allGoals[ selectedGoalIndex ];
 	if ( ikRoot ) {
 
@@ -637,7 +637,7 @@ function loadModel( promise ) {
 	urdfRoot = null;
 	ikHelper = null;
 	drawThroughIkHelper = null;
-	extraGoals.length = 0;
+	goals.length = 0;
 	goalToLinkMap.clear();
 	linkToGoalMap.clear();
 	selectedGoalIndex = - 1;
@@ -727,7 +727,7 @@ function loadModel( promise ) {
 
 			ikRoot = ik;
 			urdfRoot = urdf;
-			extraGoals.push( ...goals );
+			goals.push( ...goals );
 
 			rebuildGUI();
 
