@@ -1,0 +1,23 @@
+{
+
+	"presets": [
+
+		[
+
+			"@babel/preset-env",
+			{
+
+		  		"targets": {
+
+					"node": "current",
+					"chrome": "85"
+
+				}
+
+			}
+
+		]
+
+	]
+
+}

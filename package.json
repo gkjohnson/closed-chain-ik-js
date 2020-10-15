@@ -1,0 +1,32 @@
+{
+  "name": "closed-chain-ik",
+  "type": "module",
+  "scripts": {
+    "start": "parcel serve ./example/index.html",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gkjohnson/closed-chain-ik-js.git"
+  },
+  "author": "Garrett Johnson <garrett.kjohnson@gmail.com>",
+  "bugs": {
+    "url": "https://github.com/gkjohnson/closed-chain-ik-js/issues"
+  },
+  "homepage": "https://github.com/gkjohnson/closed-chain-ik-js#readme",
+  "dependencies": {
+    "gl-matrix": "^3.3.0",
+    "linear-solve": "^1.2.1",
+    "svd-js": "^1.1.1",
+    "three": "^0.120.1",
+    "urdf-loader": "^0.8.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "eslint-config-mdcs": "^5.0.0",
+    "jest": "^26.4.2",
+    "jest-cli": "^26.4.2",
+    "parcel-bundler": "^1.12.4"
+  }
+}

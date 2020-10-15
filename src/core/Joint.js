@@ -1,0 +1,654 @@
+import { mat4, quat } from 'gl-matrix';
+import { Frame } from './Frame.js';
+import { getClosestEulerRepresentation, toSmallestEulerValueDistance } from './utils/euler.js';
+import { getEuler, getMatrixDifference } from './utils/glmatrix.js';
+import { RAD2DEG, DEG2RAD } from './utils/constants.js';
+
+// degrees of freedom axes
+export const DOF = {
+	X: 0,
+	Y: 1,
+	Z: 2,
+	EX: 3,
+	EY: 4,
+	EZ: 5,
+};
+
+export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
+
+const tempInverse = new Float64Array( 16 );
+const tempQuat = new Float64Array( 4 );
+const tempEuler = new Float64Array( 3 );
+const tempValueEuler = new Float64Array( 3 );
+const quatEuler = new Float64Array( 3 );
+const tempDoFValues = new Float64Array( 6 );
+const tempMatrix = new Float64Array( 16 );
+const tempMatrix2 = new Float64Array( 16 );
+
+// generate a matrix from a set of degrees of freedom
+function dofToMatrix( out, dof ) {
+
+	quat.fromEuler( tempQuat, dof[ DOF.EX ] * RAD2DEG, dof[ DOF.EY ] * RAD2DEG, dof[ DOF.EZ ] * RAD2DEG );
+	mat4.fromRotationTranslation( out, tempQuat, dof );
+
+}
+
+export class Joint extends Frame {
+
+	constructor() {
+
+		super();
+		this.isJoint = true;
+
+		this.child = null;
+		this.isClosure = false;
+
+		this.trackJointWrap = false;
+		this.rotationDoFCount = 0;
+		this.translationDoFCount = 0;
+
+		// TODO: should we make DoF Flags a bit mask flag?
+		this.dof = [];
+		this.dofFlags = new Uint8Array( 6 );
+		this.dofValues = new Float64Array( 6 );
+		this.dofTarget = new Float64Array( 6 );
+		this.dofRestPose = new Float64Array( 6 );
+
+		this.minDoFLimit = new Float64Array( 6 ).fill( - Infinity );
+		this.maxDoFLimit = new Float64Array( 6 ).fill( Infinity );
+
+		this.targetSet = false;
+		this.restPoseSet = false;
+		this.targetWeight = 1;
+		this.restPoseWeight = 1;
+
+		this.matrixDoFNeedsUpdate = false;
+		this.matrixDoF = new Float64Array( 16 );
+		mat4.identity( this.matrixDoF );
+
+		this.cachedIdentityDoFMatrixWorld = new Float64Array( 16 );
+		mat4.identity( this.cachedIdentityDoFMatrixWorld );
+
+		// TODO: Consider affording control over rotation order
+		// TODO: Create pre built joint types
+
+	}
+
+	// private helpers
+	_getQuaternion( target, outQuat ) {
+
+		quat.fromEuler( outQuat, target[ DOF.EX ], target[ DOF.EY ], target[ DOF.EZ ] );
+
+	}
+
+	_getEuler( target, outEuler ) {
+
+		outEuler[ 0 ] = target[ DOF.EX ];
+		outEuler[ 1 ] = target[ DOF.EY ];
+		outEuler[ 2 ] = target[ DOF.EZ ];
+
+	}
+
+	_getPosition( target, outPos ) {
+
+		outPos[ 0 ] = target[ DOF.X ];
+		outPos[ 1 ] = target[ DOF.Y ];
+		outPos[ 2 ] = target[ DOF.Z ];
+
+	}
+
+	_setValue( target, dof, value ) {
+
+		const minVal = this.minDoFLimit[ dof ];
+		const maxVal = this.maxDoFLimit[ dof ];
+
+		if ( value < minVal ) {
+
+			value = minVal;
+
+		}
+
+		if ( value > maxVal ) {
+
+			value = maxVal;
+
+		}
+
+		target[ dof ] = value;
+		return value === maxVal || value === minVal;
+
+	}
+
+	_setValues( target, values ) {
+
+		const dof = this.dof;
+		for ( let i = 0, l = values.length; i < l; i ++ ) {
+
+			this._setValue( target, dof[ i ], values[ i ] );
+
+		}
+
+	}
+
+	_setViaFullPosition( target, values ) {
+
+		const dofFlags = this.dofFlags;
+		for ( let i = 0; i < 3; i ++ ) {
+
+			target[ i ] = dofFlags[ i ] * values[ i ];
+
+		}
+
+	}
+
+	_setViaFullEuler( target, values ) {
+
+		// TODO: depending on the representation this could not represent the given
+		// rotation all that well. We need to find the euler representation such that when
+		// zeroing the fixed dimensions it is as close as possible.
+		if ( this.rotationDoFCount !== 3 ) {
+
+			throw new Error();
+
+		}
+
+		const dofFlags = this.dofFlags;
+		for ( let i = 3; i < 6; i ++ ) {
+
+			target[ i ] = dofFlags[ i ] * values[ i - 3 ];
+
+		}
+		this.tryMinimizeEulerAngles();
+
+	}
+
+	_setViaQuaternion( target, values ) {
+
+		getEuler( quatEuler, values );
+		quatEuler[ 0 ] *= DEG2RAD;
+		quatEuler[ 1 ] *= DEG2RAD;
+		quatEuler[ 2 ] *= DEG2RAD;
+
+		if ( this.trackJointWrap ) {
+
+			// if we're tracking joint wrap then set this to be as close as possible to
+			// the current dof settings.
+			// TODO: How should restPose work here? Should it always be the shortest distance?
+			const dofValues = this.dofValues;
+			tempEuler[ 0 ] = dofValues[ DOF.EX ];
+			tempEuler[ 1 ] = dofValues[ DOF.EY ];
+			tempEuler[ 2 ] = dofValues[ DOF.EZ ];
+			getClosestEulerRepresentation( quatEuler, tempEuler, quatEuler );
+
+		}
+		this._setViaFullEuler( target, quatEuler );
+
+	}
+
+	// Set the degrees of freedom
+	setDoF( ...args ) {
+
+		args.forEach( ( dof, i ) => {
+
+			if ( dof < 0 || dof >= 6 ){
+
+				throw new Error( 'Joint: Invalid degree of freedom enum ' + dof + '.' );
+
+			}
+
+			if ( args.includes( dof, i + 1 ) ) {
+
+				throw new Error( 'Joint: Duplicate degree of freedom ' + DOF_NAMES[ dof ] + 'specified.' );
+
+			}
+
+			if ( i !== 0 && args[ i - 1 ] > dof ) {
+
+				throw new Error( 'Joint: Joints degrees of freedom must be specified in position then rotation, XYZ order' );
+			}
+
+		} );
+
+		this.dof = args;
+		this.dofValues.fill( 0 );
+		this.dofTarget.fill( 0 );
+		this.dofRestPose.fill( 0 );
+
+		this.minDoFLimit.fill( - Infinity );
+		this.maxDoFLimit.fill( Infinity );
+		this.setMatrixDoFNeedsUpdate();
+
+		for ( let i = 0; i < 6; i ++ ) {
+
+			this.dofFlags[ i ] = Number( args.includes( i ) );
+
+		}
+
+		this.rotationDoFCount =
+			this.dofFlags[ DOF.EX ] +
+			this.dofFlags[ DOF.EY ] +
+			this.dofFlags[ DOF.EZ ];
+		this.translationDoFCount =
+			this.dofFlags[ DOF.X ] +
+			this.dofFlags[ DOF.Y ] +
+			this.dofFlags[ DOF.Z ];
+
+	}
+
+	// Get and set the values of the different degrees of freedom
+	setDoFValues( ...values ) {
+
+		this.setMatrixDoFNeedsUpdate();
+		this._setValues( this.dofValues, values );
+
+	}
+
+	setDoFValue( dof, value ) {
+
+		this.setMatrixDoFNeedsUpdate();
+		return this._setValue( this.dofValues, dof, value );
+
+	}
+
+	setDoFQuaternion( ...values ) {
+
+		this._setViaQuaternion( this.dofValues, values )
+		this.setMatrixDoFNeedsUpdate();
+
+	}
+
+	getDoFValue( dof ) {
+
+		return this.dofValues[ dof ];
+
+	}
+
+	getDoFQuaternion( outQuat ) {
+
+		this._getQuaternion( this.dofValues, outQuat );
+
+	}
+
+	getDoFEuler( outEuler ) {
+
+		this._getEuler( this.dofValues, outEuler );
+
+	}
+
+	getDoFPosition( outPos ) {
+
+		this._getPosition( this.dofValues, outPos );
+
+	}
+
+	// Get and set the restPose values of the different degrees of freedom
+	setRestPoseValues( ...values ) {
+
+		this._setValues( this.dofRestPose, values );
+
+	}
+
+	setRestPoseValue( dof, value ) {
+
+		return this._setValue( this.dofRestPose, dof, value );
+
+	}
+
+	getRestPoseValue( dof ) {
+
+		return this.dofRestPose[ dof ];
+
+	}
+
+	getRestPoseQuaternion( outQuat ) {
+
+		this._getQuaternion( this.dofRestPose, outQuat );
+
+	}
+
+	getRestPoseEuler( outEuler ) {
+
+		this._getEuler( this.dofRestPose, outEuler );
+
+	}
+
+	getRestPosePosition( outPos ) {
+
+		this._getPosition( this.dofRestPose, outPos );
+
+	}
+
+	// Get and set the restPose values of the different degrees of freedom
+	setTargetValues( ...values ) {
+
+		this._setValues( this.dofTarget,  values );
+
+	}
+
+	setTargetValue( dof, value ) {
+
+		this._setValue( this.dofTarget, dof, value );
+
+	}
+
+	getTargetValue( dof ) {
+
+		return this.dofTarget[ dof ];
+
+	}
+
+	getTargetQuaternion( outQuat ) {
+
+		this._getQuaternion( this.dofTarget, outQuat );
+
+	}
+
+	getTargetEuler( outEuler ) {
+
+		this._getEuler( this.dofTarget, outEuler );
+
+	}
+
+	getTargetPosition( outPos ) {
+
+		this._getPosition( this.dofTarget, outPos );
+
+	}
+
+	// Joint Limits
+	setMinLimits( ...values ) {
+
+		this._setValues( this.minDoFLimit, values );
+
+	}
+
+	setMinLimit( dof, value ) {
+
+		this._setValue( this.minDoFLimit, dof, value );
+
+	}
+
+	getMinLimit( dof ) {
+
+		return this.minDoFLimit[ dof ];
+
+	}
+
+	setMaxLimits( ...values ) {
+
+		this._setValues( this.maxDoFLimit, values );
+
+	}
+
+	setMaxLimit( dof, value ) {
+
+		this._setValue( this.maxDoFLimit, dof, value );
+
+	}
+
+	getMaxLimit( dof ) {
+
+		return this.maxDoFLimit[ dof ];
+
+	}
+
+	// Returns the error between this joint and the next link if this is a closure.
+	// TODO: remove this and put it in solver
+	getClosureError( outPos, outQuat ) {
+
+		if ( ! this.isClosure ) {
+
+			throw new Error();
+
+		}
+
+		this.updateMatrixWorld();
+		this.child.updateMatrixWorld();
+
+		// error from this position to child
+		getMatrixDifference( this.matrixWorld, this.child.matrixWorld, outPos, outQuat );
+
+	}
+
+	// TODO: remove this and put it in solver
+	getDeltaClosureError( dof, delta, outPos, outQuat ) {
+
+		this.getDeltaWorldMatrix( dof, delta, tempMatrix2 );
+
+		this.child.updateMatrixWorld();
+		getMatrixDifference( tempMatrix2, this.child.matrixWorld, outPos, outQuat );
+
+	}
+
+	// Update matrix overrides
+	// TODO: it might be best if we skip this and try to characterize joint error with quats in
+	// the error vector
+	tryMinimizeEulerAngles() {
+
+		const {
+			trackJointWrap,
+			rotationDoFCount,
+			dofRestPose,
+			dofTarget,
+			dofValues,
+		} = this;
+
+		if ( ! trackJointWrap ) {
+
+			if ( rotationDoFCount < 3 ) {
+
+				for ( let i = DOF.EX; i <= DOF.EZ; i ++ ) {
+
+					dofTarget[ i ] = toSmallestEulerValueDistance( dofValues[ i ], dofTarget[ i ] );
+					dofRestPose[ i ] = toSmallestEulerValueDistance( dofValues[ i ], dofRestPose[ i ] );
+
+				}
+
+			} else {
+
+				tempValueEuler[ 0 ] = dofValues[ DOF.EX ];
+				tempValueEuler[ 1 ] = dofValues[ DOF.EY ];
+				tempValueEuler[ 2 ] = dofValues[ DOF.EZ ];
+
+				// update target
+				tempEuler[ 0 ] = dofTarget[ DOF.EX ];
+				tempEuler[ 1 ] = dofTarget[ DOF.EY ];
+				tempEuler[ 2 ] = dofTarget[ DOF.EZ ];
+
+				getClosestEulerRepresentation( tempEuler, tempValueEuler, tempEuler );
+
+				dofTarget[ DOF.EX ] = tempEuler[ 0 ];
+				dofTarget[ DOF.EY ] = tempEuler[ 1 ];
+				dofTarget[ DOF.EZ ] = tempEuler[ 2 ];
+
+				// update restPose
+				tempEuler[ 0 ] = dofRestPose[ DOF.EX ];
+				tempEuler[ 1 ] = dofRestPose[ DOF.EY ];
+				tempEuler[ 2 ] = dofRestPose[ DOF.EZ ];
+
+				getClosestEulerRepresentation( tempEuler, tempValueEuler, tempEuler );
+
+				dofRestPose[ DOF.EX ] = tempEuler[ 0 ];
+				dofRestPose[ DOF.EY ] = tempEuler[ 1 ];
+				dofRestPose[ DOF.EZ ] = tempEuler[ 2 ];
+
+			}
+
+		}
+
+	}
+
+	getDeltaWorldMatrix( dof, delta, outMatrix ) {
+
+		const {
+			dofValues,
+			minDoFLimit,
+			maxDoFLimit,
+			cachedIdentityDoFMatrixWorld,
+		} = this;
+
+		this.updateMatrixWorld();
+
+		// copy out set of dof values
+		tempDoFValues.set( dofValues );
+
+		// get the state
+		const min = minDoFLimit[ dof ];
+		const max = maxDoFLimit[ dof ];
+		const currVal = tempDoFValues[ dof ];
+
+		// check what our slack is
+		const minSlack = currVal - min;
+		const maxSlack = max - currVal;
+
+		// If we're constrained by either limit then move in the other direction then
+		// use the direction with the most slack.
+		let newVal = currVal + delta;
+		const isMaxConstrained = delta > 0 && newVal > max;
+		const isMinConstrained = delta < 0 && newVal < min;
+		const doInvert = ( isMaxConstrained && minSlack > maxSlack ) || ( isMinConstrained && maxSlack > minSlack );
+		if ( doInvert ) {
+
+			newVal = currVal - delta;
+
+		}
+
+		// update our dof array and compute the matrix
+		tempDoFValues[ dof ] = newVal;
+
+		dofToMatrix( tempMatrix, tempDoFValues );
+
+		mat4.multiply( outMatrix, cachedIdentityDoFMatrixWorld, tempMatrix );
+
+		return doInvert;
+
+	}
+
+	// matrix updates
+	setMatrixDoFNeedsUpdate() {
+
+		if ( this.matrixDoFNeedsUpdate === false ) {
+
+			this.matrixDoFNeedsUpdate = true;
+			this.setMatrixWorldNeedsUpdate();
+
+		}
+
+	}
+
+	updateDoFMatrix() {
+
+		if ( this.matrixDoFNeedsUpdate ) {
+
+			dofToMatrix( this.matrixDoF, this.dofValues );
+			this.matrixDoFNeedsUpdate = false;
+
+
+		}
+
+	}
+
+	computeMatrixWorld() {
+
+		const {
+			parent,
+			matrixWorld,
+			matrix,
+			matrixDoF,
+			cachedIdentityDoFMatrixWorld
+		} = this;
+
+		this.updateDoFMatrix();
+
+		mat4.multiply( matrixWorld, matrix, matrixDoF );
+		if ( parent ) {
+
+			mat4.multiply( matrixWorld, parent.matrixWorld, matrixWorld );
+			mat4.multiply( cachedIdentityDoFMatrixWorld, parent.matrixWorld, matrix );
+
+		} else {
+
+			mat4.copy( cachedIdentityDoFMatrixWorld, matrix );
+
+		}
+
+
+
+	}
+
+	// Add child overrides
+	addChild( child ) {
+
+		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
+
+			throw new Error();
+
+		} else if ( child.parent ) {
+
+			this.children[ 0 ] = child;
+			this.child = child;
+			this.isClosure = true;
+
+			// TODO: should we add a way on a link to track what a closure links are referencing it? What would
+			// we do with that?
+			// Does it make more sense to have a function that explicitly creates a closure?
+
+		} else {
+
+			super.addChild( child );
+			this.child = child;
+			this.isClosure = false;
+
+		}
+
+	}
+
+	removeChild( child ) {
+
+		if ( this.isClosure ) {
+
+			if ( this.child !== child ) {
+
+				throw new Error();
+
+			} else {
+
+				this.children.length = 0;
+				this.child = null;
+				this.isClosure = false;
+
+			}
+
+		} else {
+
+			super.removeChild( child );
+
+		}
+
+	}
+
+	attachChild( child ) {
+
+		super.attachChild( child );
+
+		// remove the dof rotation afterward
+		mat4.invert( tempInverse, this.matrixDoF );
+		mat4.multiply( child.matrix, tempInverse, child.matrix );
+		mat4.getTranslation( child.position, child.matrix );
+		mat4.getRotation( child.quaternion, child.matrix );
+
+	}
+
+	detachChild( child ) {
+
+		super.detachChild( child );
+
+		// remove the dof rotation afterward
+		mat4.invert( tempInverse, this.matrixDoF );
+		mat4.multiply( child.matrix, tempInverse, child.matrix );
+		mat4.getTranslation( child.position, child.matrix );
+		mat4.getRotation( child.quaternion, child.matrix );
+
+	}
+
+}

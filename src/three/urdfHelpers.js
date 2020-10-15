@@ -1,0 +1,200 @@
+import { Joint, DOF } from '../core/Joint.js';
+import { Link } from '../core/Link.js';
+
+export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
+
+	let rootNode = null;
+	let node;
+	if ( urdfNode.isURDFRobot ) {
+
+		rootNode = new Joint();
+		rootNode.name = '__world_joint__';
+		rootNode.setDoF( DOF.X, DOF.Y, DOF.Z, DOF.EX, DOF.EY, DOF.EZ );
+
+		node = new Link();
+		node.name = urdfNode.name;
+
+		rootNode.addChild( node );
+
+	} else if ( urdfNode.isURDFLink ) {
+
+		node = new Link();
+		node.name = urdfNode.name;
+
+	} else if ( urdfNode.isURDFJoint ) {
+
+		rootNode = new Joint();
+
+		if ( urdfNode.jointType === 'revolute' ) {
+
+			// TODO: URDF lets you specify an arbitrary axis which means we need to generate
+			// a joint that orients the rotation axis to the given direction.
+
+			const link = new Link();
+			rootNode.addChild( link );
+
+			const joint = new Joint();
+			joint.name = urdfNode.name;
+			link.addChild( joint );
+
+			const fixedLink = new Link();
+			joint.addChild( fixedLink );
+
+			const fixedJoint = new Joint();
+			fixedLink.addChild( fixedJoint );
+
+			if ( urdfNode.axis.x !== 0 ) {
+
+				joint.setDoF( DOF.EX );
+				if ( urdfNode.axis.x < 0 ) {
+
+					joint.setEuler( 0, Math.PI, 0 );
+					fixedJoint.setEuler( 0, - Math.PI, 0 );
+
+				}
+
+			} else if ( urdfNode.axis.y !== 0 ) {
+
+				joint.setDoF( DOF.EY );
+				if ( urdfNode.axis.y < 0 ) {
+
+					joint.setEuler( Math.PI, 0, 0 );
+					fixedJoint.setEuler( - Math.PI, 0, 0 );
+
+				}
+
+			} else if ( urdfNode.axis.z !== 0 ) {
+
+				joint.setDoF( DOF.EZ );
+				if ( urdfNode.axis.z < 0 ) {
+
+					joint.setEuler( 0, Math.PI, 0 );
+					fixedJoint.setEuler( 0, - Math.PI, 0 );
+
+				}
+
+			}
+
+			joint.setMinLimits( urdfNode.limit.lower );
+			joint.setMaxLimits( urdfNode.limit.upper );
+
+			node = fixedJoint;
+
+		} else {
+
+			node = rootNode;
+
+		}
+
+	} else {
+
+		return null;
+
+	}
+
+	// don't position the urdf root because we're treating the positions at
+	// degrees of freedom
+	if ( ! isRoot ) {
+
+		( rootNode || node )
+			.setPosition(
+				urdfNode.position.x,
+				urdfNode.position.y,
+				urdfNode.position.z,
+			);
+
+		( rootNode || node )
+			.setQuaternion(
+				urdfNode.quaternion.x,
+				urdfNode.quaternion.y,
+				urdfNode.quaternion.z,
+				urdfNode.quaternion.w,
+			);
+
+	}
+
+	const children = urdfNode.children;
+	for ( let i = 0, l = children.length; i < l; i ++ ) {
+
+		const res = urdfRobotToIKRoot( children[ i ], false );
+
+		if ( res ) {
+
+			node.addChild( res );
+
+		}
+
+	}
+
+	return rootNode || node;
+
+}
+
+export function setIKFromUrdf( ikRoot, urdfRoot ) {
+
+	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x );
+	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
+	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
+
+	ikRoot.setDoFQuaternion(
+		urdfRoot.quaternion.x,
+		urdfRoot.quaternion.y,
+		urdfRoot.quaternion.z,
+		urdfRoot.quaternion.w,
+	);
+
+	ikRoot.traverse( c => {
+
+		if ( c.isJoint ) {
+
+			const name = c.name;
+			if ( name in urdfRoot.joints ) {
+
+				c.setDoFValues( urdfRoot.joints[ name ].angle );
+
+			}
+
+		}
+
+	} );
+
+}
+
+export function setUrdfFromIK( urdfRoot, ikRoot ) {
+
+	ikRoot.updateMatrixWorld();
+	urdfRoot.matrix.set( ...ikRoot.matrixWorld ).transpose();
+	urdfRoot.matrix.decompose(
+		urdfRoot.position,
+		urdfRoot.quaternion,
+		urdfRoot.scale,
+	);
+
+	// urdfRoot.position.set(
+	// 	ikRoot.getDoFValue( DOF.X ),
+	// 	ikRoot.getDoFValue( DOF.Y ),
+	// 	ikRoot.getDoFValue( DOF.Z ),
+	// );
+	// urdfRoot.rotation.set(
+	// 	ikRoot.getDoFValue( DOF.EX ),
+	// 	ikRoot.getDoFValue( DOF.EY ),
+	// 	ikRoot.getDoFValue( DOF.EZ ),
+	// );
+
+	ikRoot.traverse( c => {
+
+		if ( c.isJoint ) {
+
+			const ikJoint = c;
+			const urdfJoint = urdfRoot.joints[ c.name ];
+			if ( urdfJoint ) {
+
+				urdfJoint.setOffset( ikJoint.getDoFValue( DOF.EZ ) );
+
+			}
+
+		}
+
+	} );
+
+}
