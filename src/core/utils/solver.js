@@ -18,6 +18,8 @@ export function accumulateClosureError(
 		rotationErrorClamp,
 	} = solver;
 
+	// TODO: If this is a Goal and we have less than three euler DoF we should use euler angles (and adjust the rows). Otherwise we
+	// should use a quat.
 	joint.getClosureError( tempPos, tempQuat );
 
 	let isConverged = false;
@@ -96,6 +98,8 @@ export function accumulateTargetError(
 	// get the position delta
 	const posDelta = vec3.distance( dofValues, dofTarget );
 
+	// TODO: if three euler angles are being used we should set this to a quaternion to measure
+	// error rather than euler angles.
 	// Before running this solver we try to ensure the target and restPose are minimized
 	let rotDelta =
 		dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] +
