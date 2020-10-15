@@ -186,6 +186,12 @@ export class Joint extends Frame {
 	}
 
 	// Set the degrees of freedom
+	clearDoF() {
+
+		this.setDoF();
+
+	}
+
 	setDoF( ...args ) {
 
 		args.forEach( ( dof, i ) => {
