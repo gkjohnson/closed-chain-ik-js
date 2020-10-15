@@ -8,6 +8,9 @@ export class Goal extends Frame {
 		super( ...args );
 		this.isGoal = true;
 		this.freeDoF = [];
+		this.child = null;
+		this.isClosure = false;
+
 
 	}
 
@@ -45,6 +48,36 @@ export class Goal extends Frame {
 			DOF.EX, DOF.EY, DOF.EZ,
 		].filter( d => ! args.includes( d ) );
 		this.setFreeDoF( ...freeDoF );
+
+	}
+
+	makeClosure( child ) {
+
+		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
+
+			throw new Error();
+
+		} else {
+
+			this.children[ 0 ] = child;
+			this.child = child;
+			this.isClosure = true;
+
+		}
+
+	}
+
+	removeChild( child ) {
+
+		super.removeChild( child );
+		this.child = null;
+		this.isClosure = false;
+
+	}
+
+	addChild() {
+
+		throw new Error();
 
 	}
 
