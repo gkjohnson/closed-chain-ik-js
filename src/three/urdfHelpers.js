@@ -202,7 +202,7 @@ export function setUrdfFromIK( urdfRoot, ikRoot ) {
 			const urdfJoint = urdfRoot.joints[ c.name ];
 			if ( urdfJoint ) {
 
-				urdfJoint.setOffset( ikJoint.getDoFValue( DOF.EZ ) );
+				urdfJoint.setJointValue( ikJoint.getDoFValue( DOF.EZ ) );
 
 			}
 

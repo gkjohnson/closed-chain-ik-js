@@ -23,9 +23,9 @@ export function loadATHLETE() {
 			urdf.rotation.set( Math.PI / 2 , 0, 0 );
 			for ( let i = 1; i <= 6 ; i ++ ) {
 
-				urdf.joints[ `HP${ i }` ].setAngle( 30 * DEG2RAD );
-				urdf.joints[ `KP${ i }` ].setAngle( 90 * DEG2RAD );
-				urdf.joints[ `AP${ i }` ].setAngle( -30 * DEG2RAD );
+				urdf.joints[ `HP${ i }` ].setJointValue( 30 * DEG2RAD );
+				urdf.joints[ `KP${ i }` ].setJointValue( 90 * DEG2RAD );
+				urdf.joints[ `AP${ i }` ].setJointValue( -30 * DEG2RAD );
 
 			}
 
@@ -81,19 +81,19 @@ export function loadRobonaut() {
 
 			const ik = urdfRobotToIKRoot( urdf );
 
-			urdf.joints[ 'r2/left_leg/joint3' ].setAngle( 60 * DEG2RAD );
-			urdf.joints[ 'r2/left_leg/joint5' ].setAngle( 60 * DEG2RAD );
-			urdf.joints[ 'r2/left_arm/joint1' ].setAngle( - 80 * DEG2RAD );
-			urdf.joints[ 'r2/left_arm/joint2' ].setAngle( - 100 * DEG2RAD );
-			urdf.joints[ 'r2/left_arm/joint3' ].setAngle( - 90 * DEG2RAD );
-			urdf.joints[ 'r2/left_arm/joint4' ].setAngle( 90 * DEG2RAD );
+			urdf.joints[ 'r2/left_leg/joint3' ].setJointValue( 60 * DEG2RAD );
+			urdf.joints[ 'r2/left_leg/joint5' ].setJointValue( 60 * DEG2RAD );
+			urdf.joints[ 'r2/left_arm/joint1' ].setJointValue( - 80 * DEG2RAD );
+			urdf.joints[ 'r2/left_arm/joint2' ].setJointValue( - 100 * DEG2RAD );
+			urdf.joints[ 'r2/left_arm/joint3' ].setJointValue( - 90 * DEG2RAD );
+			urdf.joints[ 'r2/left_arm/joint4' ].setJointValue( 90 * DEG2RAD );
 
-			urdf.joints[ 'r2/right_leg/joint3' ].setAngle( 60 * DEG2RAD );
-			urdf.joints[ 'r2/right_leg/joint5' ].setAngle( 60 * DEG2RAD );
-			urdf.joints[ 'r2/right_arm/joint1' ].setAngle( - 80 * DEG2RAD );
-			urdf.joints[ 'r2/right_arm/joint2' ].setAngle( 100 * DEG2RAD );
-			urdf.joints[ 'r2/right_arm/joint3' ].setAngle( - 90 * DEG2RAD );
-			urdf.joints[ 'r2/right_arm/joint4' ].setAngle( - 90 * DEG2RAD );
+			urdf.joints[ 'r2/right_leg/joint3' ].setJointValue( 60 * DEG2RAD );
+			urdf.joints[ 'r2/right_leg/joint5' ].setJointValue( 60 * DEG2RAD );
+			urdf.joints[ 'r2/right_arm/joint1' ].setJointValue( - 80 * DEG2RAD );
+			urdf.joints[ 'r2/right_arm/joint2' ].setJointValue( 100 * DEG2RAD );
+			urdf.joints[ 'r2/right_arm/joint3' ].setJointValue( - 90 * DEG2RAD );
+			urdf.joints[ 'r2/right_arm/joint4' ].setJointValue( - 90 * DEG2RAD );
 
 			setIKFromUrdf( ik, urdf );
 
@@ -202,42 +202,42 @@ export function loadAthnaut() {
 			athlete.rotation.set( Math.PI / 2 , 0, 0 );
 			for ( let i = 1; i <= 6 ; i ++ ) {
 
-				athlete.joints[ `HP${ i }` ].setAngle( 30 * DEG2RAD );
-				athlete.joints[ `KP${ i }` ].setAngle( 90 * DEG2RAD );
-				athlete.joints[ `AP${ i }` ].setAngle( -30 * DEG2RAD );
+				athlete.joints[ `HP${ i }` ].setJointValue( 30 * DEG2RAD );
+				athlete.joints[ `KP${ i }` ].setJointValue( 90 * DEG2RAD );
+				athlete.joints[ `AP${ i }` ].setJointValue( -30 * DEG2RAD );
 
 			}
 
-			athlete.joints[ `HP1` ].setAngle( - 30 * DEG2RAD );
-			athlete.joints[ `KP1` ].setAngle( - 60 * DEG2RAD );
-			athlete.joints[ `AP1` ].setAngle( 0 );
+			athlete.joints[ `HP1` ].setJointValue( - 30 * DEG2RAD );
+			athlete.joints[ `KP1` ].setJointValue( - 60 * DEG2RAD );
+			athlete.joints[ `AP1` ].setJointValue( 0 );
 
-			athlete.joints[ `HP6` ].setAngle( - 30 * DEG2RAD );
-			athlete.joints[ `KP6` ].setAngle( - 60 * DEG2RAD );
-			athlete.joints[ `AP6` ].setAngle( 0 );
+			athlete.joints[ `HP6` ].setJointValue( - 30 * DEG2RAD );
+			athlete.joints[ `KP6` ].setJointValue( - 60 * DEG2RAD );
+			athlete.joints[ `AP6` ].setJointValue( 0 );
 
-			athlete.joints[ `HY2` ].setAngle( 60 * DEG2RAD );
-			athlete.joints[ `HY5` ].setAngle( - 60 * DEG2RAD );
+			athlete.joints[ `HY2` ].setJointValue( 60 * DEG2RAD );
+			athlete.joints[ `HY5` ].setJointValue( - 60 * DEG2RAD );
 
-			athlete.joints[ 'r2/left_arm/joint1' ].setAngle( - 80 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint2' ].setAngle( - 100 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint3' ].setAngle( - 90 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint4' ].setAngle( 90 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint1' ].setJointValue( - 80 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint2' ].setJointValue( - 100 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint3' ].setJointValue( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint4' ].setJointValue( 90 * DEG2RAD );
 
-			athlete.joints[ 'r2/right_arm/joint1' ].setAngle( - 80 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint2' ].setAngle( 100 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint3' ].setAngle( - 90 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint4' ].setAngle( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint1' ].setJointValue( - 80 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint2' ].setJointValue( 100 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint3' ].setJointValue( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint4' ].setJointValue( - 90 * DEG2RAD );
 
-			athlete.joints[ 'r2/left_arm/joint1_2' ].setAngle( - 80 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint2_2' ].setAngle( - 100 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint3_2' ].setAngle( - 90 * DEG2RAD );
-			athlete.joints[ 'r2/left_arm/joint4_2' ].setAngle( 90 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint1_2' ].setJointValue( - 80 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint2_2' ].setJointValue( - 100 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint3_2' ].setJointValue( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/left_arm/joint4_2' ].setJointValue( 90 * DEG2RAD );
 
-			athlete.joints[ 'r2/right_arm/joint1_2' ].setAngle( - 80 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint2_2' ].setAngle( 100 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint3_2' ].setAngle( - 90 * DEG2RAD );
-			athlete.joints[ 'r2/right_arm/joint4_2' ].setAngle( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint1_2' ].setJointValue( - 80 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint2_2' ].setJointValue( 100 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint3_2' ].setJointValue( - 90 * DEG2RAD );
+			athlete.joints[ 'r2/right_arm/joint4_2' ].setJointValue( - 90 * DEG2RAD );
 
 			setIKFromUrdf( ik, athlete );
 
