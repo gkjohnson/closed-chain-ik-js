@@ -29,47 +29,76 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
 		rootNode = new Joint();
 
-		if ( urdfNode.jointType === 'revolute' || urdfNode.jointType === 'continuous' ) {
+		const jointType = urdfNode.jointType;
+		switch ( jointType ) {
 
-			const link = new Link();
-			rootNode.addChild( link );
+			case 'continuous':
+			case 'revolute':
+			case 'prismatic': {
 
-			const joint = new Joint();
-			joint.name = urdfNode.name;
-			link.addChild( joint );
+				const link = new Link();
+				rootNode.addChild( link );
 
-			const fixedLink = new Link();
-			joint.addChild( fixedLink );
+				const joint = new Joint();
+				joint.name = urdfNode.name;
+				link.addChild( joint );
 
-			const fixedJoint = new Joint();
-			fixedLink.addChild( fixedJoint );
+				const fixedLink = new Link();
+				joint.addChild( fixedLink );
 
-			tempVec[ 0 ] = 0;
-			tempVec[ 1 ] = 0;
-			tempVec[ 2 ] = 1;
+				const fixedJoint = new Joint();
+				fixedLink.addChild( fixedJoint );
 
-			tempVec2[ 0 ] = urdfNode.axis.x;
-			tempVec2[ 1 ] = urdfNode.axis.y;
-			tempVec2[ 2 ] = urdfNode.axis.z;
+				tempVec[ 0 ] = 0;
+				tempVec[ 1 ] = 0;
+				tempVec[ 2 ] = 1;
 
-			// orient the joint such that +Z is pointing down the URDF rotation axis
-			quat.rotationTo( joint.quaternion, tempVec, tempVec2 );
-			quat.invert( fixedJoint.quaternion, joint.quaternion );
-			joint.setMatrixNeedsUpdate();
-			fixedJoint.setMatrixNeedsUpdate();
+				tempVec2[ 0 ] = urdfNode.axis.x;
+				tempVec2[ 1 ] = urdfNode.axis.y;
+				tempVec2[ 2 ] = urdfNode.axis.z;
 
-			joint.setDoF( DOF.EZ );
-			joint.setMinLimits( urdfNode.limit.lower );
-			joint.setMaxLimits( urdfNode.limit.upper );
+				// orient the joint such that +Z is pointing down the URDF rotation axis
+				quat.rotationTo( joint.quaternion, tempVec, tempVec2 );
+				quat.invert( fixedJoint.quaternion, joint.quaternion );
+				joint.setMatrixNeedsUpdate();
+				fixedJoint.setMatrixNeedsUpdate();
 
-			node = fixedJoint;
+				if ( jointType === 'revolute' || jointType === 'continuous' ) {
 
-		} else {
+					joint.setDoF( DOF.EZ );
 
-			node = rootNode;
+				} else {
+
+					joint.setDoF( DOF.Z );
+
+				}
+
+				if ( jointType !== 'continuous' ) {
+
+					joint.setMinLimits( urdfNode.limit.lower );
+					joint.setMaxLimits( urdfNode.limit.upper );
+
+				}
+
+				node = fixedJoint;
+				break;
+
+			}
+
+			case 'fixed': {
+
+				node = rootNode;
+				break;
+
+			}
+
+			case 'planar':
+			case 'floating':
+			default:
+
+				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
 
 		}
-
 	} else {
 
 		return null;
