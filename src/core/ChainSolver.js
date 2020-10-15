@@ -495,6 +495,7 @@ export class ChainSolver {
 		let colIndex = 0;
 		for ( let c = 0, tc = freeJoints.length; c < tc; c ++ ) {
 
+			// TODO: If this is a goal we should skip adding it to the jacabian columns
 			const freeJoint = freeJoints[ c ];
 			const relevantClosures = affectedClosures.get( freeJoint );
 			const relevantConnectedClosures = affectedConnectedClosures.get( freeJoint );
@@ -700,6 +701,9 @@ export class ChainSolver {
 
 			// TODO: We may be able to speed this up by using the square distance and length
 			// to compare error.
+
+			// TODO: If this is a goal we shouldnt add to the free dof because they won't be added
+			// to the jacobian
 
 			// If this is a closure joint then we need to make sure we're solving
 			// for the other child end to meet this joint so this error is important.
