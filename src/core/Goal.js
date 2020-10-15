@@ -25,22 +25,6 @@ export class Goal extends Frame {
 
 	}
 
-	makeClosure( child ) {
-
-		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
-
-			throw new Error();
-
-		} else {
-
-			this.children[ 0 ] = child;
-			this.child = child;
-			this.isClosure = true;
-
-		}
-
-	}
-
 	addChild() {
 
 		throw new Error();
