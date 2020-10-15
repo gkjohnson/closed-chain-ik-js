@@ -1,5 +1,9 @@
+import { quat } from 'gl-matrix';
 import { Joint, DOF } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
+
+const tempVec = new Float64Array( 3 );
+const tempVec2 = new Float64Array( 3 );
 
 export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
@@ -25,10 +29,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
 		rootNode = new Joint();
 
-		if ( urdfNode.jointType === 'revolute' ) {
-
-			// TODO: URDF lets you specify an arbitrary axis which means we need to generate
-			// a joint that orients the rotation axis to the given direction.
+		if ( urdfNode.jointType === 'revolute' || urdfNode.jointType === 'continuous' ) {
 
 			const link = new Link();
 			rootNode.addChild( link );
@@ -43,38 +44,21 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 			const fixedJoint = new Joint();
 			fixedLink.addChild( fixedJoint );
 
-			if ( urdfNode.axis.x !== 0 ) {
+			tempVec[ 0 ] = 0;
+			tempVec[ 1 ] = 0;
+			tempVec[ 2 ] = 1;
 
-				joint.setDoF( DOF.EX );
-				if ( urdfNode.axis.x < 0 ) {
+			tempVec2[ 0 ] = urdfNode.axis.x;
+			tempVec2[ 1 ] = urdfNode.axis.y;
+			tempVec2[ 2 ] = urdfNode.axis.z;
 
-					joint.setEuler( 0, Math.PI, 0 );
-					fixedJoint.setEuler( 0, - Math.PI, 0 );
+			// orient the joint such that +Z is pointing down the URDF rotation axis
+			quat.rotationTo( joint.quaternion, tempVec, tempVec2 );
+			quat.invert( fixedJoint.quaternion, joint.quaternion );
+			joint.setMatrixNeedsUpdate();
+			fixedJoint.setMatrixNeedsUpdate();
 
-				}
-
-			} else if ( urdfNode.axis.y !== 0 ) {
-
-				joint.setDoF( DOF.EY );
-				if ( urdfNode.axis.y < 0 ) {
-
-					joint.setEuler( Math.PI, 0, 0 );
-					fixedJoint.setEuler( - Math.PI, 0, 0 );
-
-				}
-
-			} else if ( urdfNode.axis.z !== 0 ) {
-
-				joint.setDoF( DOF.EZ );
-				if ( urdfNode.axis.z < 0 ) {
-
-					joint.setEuler( 0, Math.PI, 0 );
-					fixedJoint.setEuler( 0, - Math.PI, 0 );
-
-				}
-
-			}
-
+			joint.setDoF( DOF.EZ );
 			joint.setMinLimits( urdfNode.limit.lower );
 			joint.setMaxLimits( urdfNode.limit.upper );
 
