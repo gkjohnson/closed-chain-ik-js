@@ -541,6 +541,8 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
+							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set. Quat is only
+							// needed if 3 eulers are used.
 							// TODO: these could be cached per target joint
 							// get the current error within the closure joint
 							targetJoint.getClosureError( tempPos, tempQuat );
@@ -613,6 +615,8 @@ export class ChainSolver {
 							// TODO: Having noted that is this really necessary? Is there any way that this doesn't just
 							// jump to the solution and lock? How can we afford some slack? With a low weight? Does that
 							// get applied here?
+							// TODO: If this joint happens to have three euler joints we need to use a quat here. Otherwise we
+							// use the euler angles.
 							for ( let i = 0; i < rowCount; i ++ ) {
 
 								outJacobian[ rowIndex + colIndex ][ colIndex ] = - 1;
