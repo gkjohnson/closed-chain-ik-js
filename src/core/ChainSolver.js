@@ -528,7 +528,7 @@ export class ChainSolver {
 				let delta = dof < 3 ? translationStep : rotationStep;
 				if ( freeJoint.getDeltaWorldMatrix( dof, delta, tempDeltaWorldMatrix ) ) {
 
-					delta *= -1;
+					delta *= - 1;
 
 				}
 
@@ -577,21 +577,51 @@ export class ChainSolver {
 							vec4.subtract( tempQuat, tempQuat2, tempQuat );
 							vec4.scale( tempQuat, tempQuat, 1 / delta );
 
-							// set translation
-							outJacobian[ rowIndex + 0 ][ colIndex ] = tempPos[ 0 ];
-							outJacobian[ rowIndex + 1 ][ colIndex ] = tempPos[ 1 ];
-							outJacobian[ rowIndex + 2 ][ colIndex ] = tempPos[ 2 ];
+							if ( targetJoint.isGoal ) {
 
-							// set rotation
-							outJacobian[ rowIndex + 3 ][ colIndex ] = tempQuat[ 0 ];
-							outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
-							outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
-							outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+								const { translationDoFCount, rotationDoFCount, dof } = targetJoint;
+								for ( let i = 0; i < translationDoFCount; i ++ ) {
+
+									const d = dof[ i ];
+									outJacobian[ rowIndex + i ][ colIndex ] = tempPos[ d ];
+
+								}
+
+								if ( rotationDoFCount === 3 ) {
+
+									outJacobian[ rowIndex + translationDoFCount + 0 ][ colIndex ] = tempQuat[ 0 ];
+									outJacobian[ rowIndex + translationDoFCount + 1 ][ colIndex ] = tempQuat[ 1 ];
+									outJacobian[ rowIndex + translationDoFCount + 2 ][ colIndex ] = tempQuat[ 2 ];
+									outJacobian[ rowIndex + translationDoFCount + 3 ][ colIndex ] = tempQuat[ 3 ];
+
+								}
+
+							} else {
+
+								// set translation
+								outJacobian[ rowIndex + 0 ][ colIndex ] = tempPos[ 0 ];
+								outJacobian[ rowIndex + 1 ][ colIndex ] = tempPos[ 1 ];
+								outJacobian[ rowIndex + 2 ][ colIndex ] = tempPos[ 2 ];
+
+								// set rotation
+								outJacobian[ rowIndex + 3 ][ colIndex ] = tempQuat[ 0 ];
+								outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
+								outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
+								outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+
+							}
 
 						} else {
 
 							// if the target isn't relevant then there's no delta
-							for ( let i = 0; i < 7; i ++ ) {
+							let totalRows = 7;
+							if ( targetJoint.isGoal ) {
+
+								targetRows = targetJoint.translationDoFCount + targetJoint.rotationDoFCount
+
+							}
+
+							for ( let i = 0; i < totalRows; i ++ ) {
 
 								outJacobian[ rowIndex + i ][ colIndex ] = 0;
 

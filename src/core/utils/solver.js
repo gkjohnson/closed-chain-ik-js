@@ -18,9 +18,36 @@ export function accumulateClosureError(
 		rotationErrorClamp,
 	} = solver;
 
+	const {
+		translationDoFCount,
+		rotationDoFCount,
+		dofFlags,
+		dof,
+	} = joint;
+
 	// TODO: If this is a Goal and we have less than three euler DoF we should use euler angles (and adjust the rows). Otherwise we
 	// should use a quat.
 	joint.getClosureError( tempPos, tempQuat );
+
+	let rowCount = 7;
+	if ( joint.isGoal ) {
+
+		tempPos[ 0 ] *= dofFlags[ 0 ];
+		tempPos[ 1 ] *= dofFlags[ 1 ];
+		tempPos[ 2 ] *= dofFlags[ 2 ];
+		rowCount = translationDoFCount;
+
+		if ( rotationDoFCount === 0 ) {
+
+			tempQuat[ 0 ] = 0;
+			tempQuat[ 1 ] = 0;
+			tempQuat[ 2 ] = 0;
+			tempQuat[ 3 ] = 0;
+			rowCount += 4;
+
+		}
+
+	}
 
 	let isConverged = false;
 	let totalError = 0;
@@ -35,10 +62,7 @@ export function accumulateClosureError(
 
 	}
 
-	totalError += posMag + rotMag;
-
 	if ( errorVector ) {
-
 
 		if ( posMag > translationErrorClamp ) {
 
@@ -52,20 +76,42 @@ export function accumulateClosureError(
 
 		}
 
-		errorVector[ startIndex + 0 ][ 0 ] = tempPos[ 0 ];
-		errorVector[ startIndex + 1 ][ 0 ] = tempPos[ 1 ];
-		errorVector[ startIndex + 2 ][ 0 ] = tempPos[ 2 ];
+		if ( joint.isGoal ) {
 
-		errorVector[ startIndex + 3 ][ 0 ] = tempQuat[ 0 ];
-		errorVector[ startIndex + 4 ][ 0 ] = tempQuat[ 1 ];
-		errorVector[ startIndex + 5 ][ 0 ] = tempQuat[ 2 ];
-		errorVector[ startIndex + 6 ][ 0 ] = tempQuat[ 3 ];
+			for ( let i = 0; i < translationDoFCount; i ++ ) {
+
+				const d = dof[ i ];
+				errorVector[ startIndex + i ][ 0 ] = tempPos[ d ];
+
+			}
+
+			if ( joint.rotationDoFCount === 3 ) {
+
+				errorVector[ startIndex + translationDoFCount + 0 ][ 0 ] = tempQuat[ 0 ];
+				errorVector[ startIndex + translationDoFCount + 1 ][ 0 ] = tempQuat[ 1 ];
+				errorVector[ startIndex + translationDoFCount + 2 ][ 0 ] = tempQuat[ 2 ];
+				errorVector[ startIndex + translationDoFCount + 3 ][ 0 ] = tempQuat[ 3 ];
+
+			}
+
+		} else {
+
+			errorVector[ startIndex + 0 ][ 0 ] = tempPos[ 0 ];
+			errorVector[ startIndex + 1 ][ 0 ] = tempPos[ 1 ];
+			errorVector[ startIndex + 2 ][ 0 ] = tempPos[ 2 ];
+
+			errorVector[ startIndex + 3 ][ 0 ] = tempQuat[ 0 ];
+			errorVector[ startIndex + 4 ][ 0 ] = tempQuat[ 1 ];
+			errorVector[ startIndex + 5 ][ 0 ] = tempQuat[ 2 ];
+			errorVector[ startIndex + 6 ][ 0 ] = tempQuat[ 3 ];
+
+		}
 
 	}
 
 	result.totalError = totalError;
 	result.isConverged = isConverged;
-	result.rowCount = 7;
+	result.rowCount = rowCount;
 	return result;
 
 }
