@@ -99,7 +99,8 @@ export function accumulateTargetError(
 	const posDelta = vec3.distance( dofValues, dofTarget );
 
 	// TODO: if three euler angles are being used we should set this to a quaternion to measure
-	// error rather than euler angles.
+	// error rather than euler angles. We should instead just always use quaternions for targets
+	// for now.
 	// Before running this solver we try to ensure the target and restPose are minimized
 	let rotDelta =
 		dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] +
