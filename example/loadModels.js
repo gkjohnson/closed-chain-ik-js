@@ -46,7 +46,7 @@ export function loadATHLETE() {
 					const link = urdf.links[ c.name ];
 					const ee = new Joint();
 					ee.name = link.name;
-					ee.addChild( c );
+					ee.makeClosure( c );
 
 					c.getWorldPosition( ee.position );
 					c.getWorldQuaternion( ee.quaternion );
@@ -113,7 +113,7 @@ export function loadRobonaut() {
 					const link = urdf.links[ c.name ];
 					const ee = new Joint();
 					ee.name = link.name;
-					ee.addChild( c );
+					ee.makeClosure( c );
 
 					c.getWorldPosition( ee.position );
 					c.getWorldQuaternion( ee.quaternion );
@@ -254,7 +254,7 @@ export function loadAthnaut() {
 					const link = athlete.links[ c.name ];
 					const ee = new Joint();
 					ee.name = link.name;
-					ee.addChild( c );
+					ee.makeClosure( c );
 
 					c.getWorldPosition( ee.position );
 					c.getWorldQuaternion( ee.quaternion );

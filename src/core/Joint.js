@@ -610,21 +610,27 @@ export class Joint extends Frame {
 	}
 
 	// Add child overrides
-	addChild( child ) {
+	makeClosure( child ) {
 
 		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
 
 			throw new Error();
 
-		} else if ( child.parent ) {
+		} else {
 
 			this.children[ 0 ] = child;
 			this.child = child;
 			this.isClosure = true;
 
-			// TODO: should we add a way on a link to track what a closure links are referencing it? What would
-			// we do with that?
-			// Does it make more sense to have a function that explicitly creates a closure?
+		}
+
+	}
+
+	addChild( child ) {
+
+		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
+
+			throw new Error();
 
 		} else {
 

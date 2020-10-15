@@ -250,7 +250,7 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 
 		rootGoalJoint.attachChild( goalLink );
 		goalLink.attachChild( goalJoint );
-		goalJoint.addChild( ikLink );
+		goalJoint.makeClosure( ikLink );
 
 		// save the relative position
 		ikLink.attachChild( rootGoalJoint );
