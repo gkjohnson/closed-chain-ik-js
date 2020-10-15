@@ -99,6 +99,19 @@ export class Joint extends Frame {
 
 	_setValue( target, dof, value ) {
 
+		if ( target === this.minDoFLimit || target == this.maxDoFLimit ) {
+
+			// TODO: add error message
+			throw new Error();
+
+		}
+
+		if ( dof < 0 || dof > 6 || typeof dof !== 'number' ) {
+
+			throw new Error();
+
+		}
+
 		const minVal = this.minDoFLimit[ dof ];
 		const maxVal = this.maxDoFLimit[ dof ];
 
@@ -364,13 +377,20 @@ export class Joint extends Frame {
 	// Joint Limits
 	setMinLimits( ...values ) {
 
-		this._setValues( this.minDoFLimit, values );
+		const { dof } = this;
+		for ( const i in values ) {
+
+			const d = dof[ i ];
+			this.setMinLimit( d, values[ i ] )
+
+		}
 
 	}
 
 	setMinLimit( dof, value ) {
 
-		this._setValue( this.minDoFLimit, dof, value );
+		this.minDoFLimit[ dof ] = value;
+		this.setDoFValue( dof, this.dofValues[ dof ] );
 
 	}
 
@@ -382,13 +402,20 @@ export class Joint extends Frame {
 
 	setMaxLimits( ...values ) {
 
-		this._setValues( this.maxDoFLimit, values );
+		const { dof } = this;
+		for ( const i in values ) {
+
+			const d = dof[ i ];
+			this.setMaxLimit( d, values[ i ] )
+
+		}
 
 	}
 
 	setMaxLimit( dof, value ) {
 
-		this._setValue( this.maxDoFLimit, dof, value );
+		this.maxDoFLimit[ dof ] = value;
+		this.setDoFValue( dof, this.dofValues[ dof ] );
 
 	}
 
