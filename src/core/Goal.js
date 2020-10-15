@@ -1,16 +1,18 @@
 import { DOF_NAMES, DOF } from './Joint.js';
 import { Frame } from './Frame.js';
 
+// TODO: we should just extend Joint here...
 export class Goal extends Frame {
 
 	constructor( ...args ) {
 
 		super( ...args );
 		this.isGoal = true;
+		this.isJoint = true;
+
 		this.freeDoF = [];
 		this.child = null;
 		this.isClosure = false;
-
 
 	}
 
