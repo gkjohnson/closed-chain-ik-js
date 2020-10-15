@@ -1,5 +1,6 @@
 import { Joint } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
+import { Goal } from '../core/Goal.js';
 
 // Takes a list of interconnected frames and serializes them into a non cyclic json representation
 export function serialize( frames ) {
@@ -27,6 +28,17 @@ export function serialize( frames ) {
 			isClosure,
 		} = frame;
 
+		let type = 'Link';
+		if ( frame.isGoal ) {
+
+			type = 'Goal';
+
+		} else if ( frame.isJoint ) {
+
+			type = 'Joint';
+
+		}
+
 		const res = {
 			dof: dof ? dof.slice() : null,
 			dofValues: dofValues ? dofValues.slice() : null,
@@ -42,7 +54,7 @@ export function serialize( frames ) {
 			position: position.slice(),
 			quaternion: quaternion.slice(),
 			children: null,
-			type: frame.isJoint ? 'Joint' : 'Link',
+			type,
 		};
 
 		info.push( res );
@@ -99,8 +111,9 @@ export function deserialize( data ) {
 
 			let frame;
 			switch ( type ) {
+				case 'Goal':
 				case 'Joint':
-					frame = new Joint();
+					frame = type === 'Goal' ? new Goal() : new Joint();
 
 					frame.setDoF( ...dof );
 					frame.dofValues.set( dofValues );
