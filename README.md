@@ -35,6 +35,7 @@ joint.setDoFValues( Math.PI / 4 );
 const link3 = new Link();
 link3.setPosition( 0, 1, 0 );
 
+// Create the goal
 const goal = new Goal();
 link.getWorldPosition( goal.position );
 link.getWorldQuaternion( goal.quaternion );
