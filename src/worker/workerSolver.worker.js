@@ -26,7 +26,7 @@ global.onmessage = function( { data: e } ) {
 
 			buffer = data.buffer;
 			byteBuffer = new Uint8Array( buffer );
-			floatBuffer = new Float64Array( buffer );
+			floatBuffer = new Float32Array( buffer );
 			break;
 
 		// Update the settings of the solver

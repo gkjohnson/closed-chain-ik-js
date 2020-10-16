@@ -4,42 +4,42 @@ export const LINK_STRIDE = 56;
 
 export function generateSharedBuffer( frames ) {
 
-	// dofValues 	6 * 8
-	// dofTarget 	6 * 8
-	// dofRestPose 	6 * 8
-	// minDoFLimit 	6 * 8
-	// maxDoFLimit 	6 * 8
-	// position 	3 * 8
-	// quaternion 	4 * 8
+	// dofValues 	6 * 4
+	// dofTarget 	6 * 4
+	// dofRestPose 	6 * 4
+	// minDoFLimit 	6 * 4
+	// maxDoFLimit 	6 * 4
+	// position 	3 * 4
+	// quaternion 	4 * 4
 	// targetSet 	1
 	// restPoseSet 	1
 	// --
-	// total  		298 bytes per joint
-	// 8 byte aligned: 304
+	// total  		150 bytes per joint
+	// 4 byte aligned: 152
 
 	const arrayBuffer = new SharedArrayBuffer( JOINT_STRIDE * frames.length );
-	const float64 = new Float64Array( arrayBuffer );
+	const float64 = new Float32Array( arrayBuffer );
 	const byte8 = new Uint8Array( arrayBuffer );
 	applyToBuffer( frames, float64, byte8 );
 	return arrayBuffer;
 
 }
 
-export function applyToBuffer( frames, float64, byte8, copyDoFValues = true, copyJointSettings = true ) {
+export function applyToBuffer( frames, floatBuffer, byteBuffer, copyDoFValues = true, copyJointSettings = true ) {
 
 	for ( let i = 0, l = frames.length; i < l; i ++ ) {
 
-		copyFrameToBuffer( frames[ i ], float64, byte8, i * JOINT_STRIDE, copyDoFValues, copyJointSettings );
+		copyFrameToBuffer( frames[ i ], floatBuffer, byteBuffer, i * JOINT_STRIDE, copyDoFValues, copyJointSettings );
 
 	}
 
 }
 
-export function applyFromBuffer( frames, float64, byte8, copyDoFValues = true, copyJointSettings = true  ) {
+export function applyFromBuffer( frames, floatBuffer, byteBuffer, copyDoFValues = true, copyJointSettings = true  ) {
 
 	for ( let i = 0, l = frames.length; i < l; i ++ ) {
 
-		copyBufferToFrame( frames[ i ], float64, byte8, JOINT_STRIDE * i, copyDoFValues, copyJointSettings );
+		copyBufferToFrame( frames[ i ], floatBuffer, byteBuffer, JOINT_STRIDE * i, copyDoFValues, copyJointSettings );
 
 	}
 
@@ -49,14 +49,14 @@ export function applyFromBuffer( frames, float64, byte8, copyDoFValues = true, c
 // bytes while links take LINK_STRIDE bytes.
 export function copyFrameToBuffer(
 	frame,
-	float64,
-	byte8,
+	floatBuffer,
+	byteBuffer,
 	byteOffset,
 	copyDoFValues = true,
 	copyJointSettings = true,
 ) {
 
-	const floatOffset = byteOffset / 8;
+	const floatOffset = byteOffset / 4;
 	if ( copyJointSettings ) {
 
 		const {
@@ -65,13 +65,13 @@ export function copyFrameToBuffer(
 		} = frame;
 		for ( let i = 0; i < 3; i ++ ) {
 
-			float64[ floatOffset + 0 + i ] = position[ i ];
+			floatBuffer[ floatOffset + 0 + i ] = position[ i ];
 
 		}
 
 		for ( let i = 0; i < 4; i ++ ) {
 
-			float64[ floatOffset + 3 + i ] = quaternion[ i ];
+			floatBuffer[ floatOffset + 3 + i ] = quaternion[ i ];
 
 		}
 
@@ -88,15 +88,15 @@ export function copyFrameToBuffer(
 
 			for ( let i = 0; i < 6; i ++ ) {
 
-				float64[ floatOffset + 7 + 0 * 6 + i ] = dofTarget[ i ];
-				float64[ floatOffset + 7 + 1 * 6 + i ] = dofRestPose[ i ];
-				float64[ floatOffset + 7 + 2 * 6 + i ] = minDoFLimit[ i ];
-				float64[ floatOffset + 7 + 3 * 6 + i ] = maxDoFLimit[ i ];
+				floatBuffer[ floatOffset + 7 + 0 * 6 + i ] = dofTarget[ i ];
+				floatBuffer[ floatOffset + 7 + 1 * 6 + i ] = dofRestPose[ i ];
+				floatBuffer[ floatOffset + 7 + 2 * 6 + i ] = minDoFLimit[ i ];
+				floatBuffer[ floatOffset + 7 + 3 * 6 + i ] = maxDoFLimit[ i ];
 
 			}
 
-			byte8[ byteOffset + 296 ] = Number( targetSet );
-			byte8[ byteOffset + 297 ] = Number( restPoseSet );
+			byteBuffer[ byteOffset + 148 ] = Number( targetSet );
+			byteBuffer[ byteOffset + 149 ] = Number( restPoseSet );
 
 		}
 
@@ -109,7 +109,7 @@ export function copyFrameToBuffer(
 
 		for ( let i = 0; i < 6; i ++ ) {
 
-			float64[ floatOffset + 7 + 4 * 6 + i ] = dofValues[ i ];
+			floatBuffer[ floatOffset + 7 + 4 * 6 + i ] = dofValues[ i ];
 
 		}
 
@@ -120,27 +120,27 @@ export function copyFrameToBuffer(
 // Copy data from the given buffer to the given frame starting at the given byte offset.
 export function copyBufferToFrame(
 	joint,
-	float64,
-	byte8,
+	floatBuffer,
+	byteBuffer,
 	byteOffset,
 	copyDoFValues = true,
 	copyJointSettings = true,
 ) {
 
-	const floatOffset = byteOffset / 8;
+	const floatOffset = byteOffset / 4;
 
 	if ( copyJointSettings ) {
 
 		joint.setPosition(
-			float64[ floatOffset + 0 ],
-			float64[ floatOffset + 1 ],
-			float64[ floatOffset + 2 ],
+			floatBuffer[ floatOffset + 0 ],
+			floatBuffer[ floatOffset + 1 ],
+			floatBuffer[ floatOffset + 2 ],
 		);
 		joint.setQuaternion(
-			float64[ floatOffset + 3 + 0 ],
-			float64[ floatOffset + 3 + 1 ],
-			float64[ floatOffset + 3 + 2 ],
-			float64[ floatOffset + 3 + 3 ],
+			floatBuffer[ floatOffset + 3 + 0 ],
+			floatBuffer[ floatOffset + 3 + 1 ],
+			floatBuffer[ floatOffset + 3 + 2 ],
+			floatBuffer[ floatOffset + 3 + 3 ],
 		);
 
 		if ( joint.isJoint ) {
@@ -154,15 +154,15 @@ export function copyBufferToFrame(
 
 			for ( let i = 0; i < 6; i ++ ) {
 
-				dofTarget[ i ] = float64[ floatOffset + 7 + 0 * 6 + i ];
-				dofRestPose[ i ] = float64[ floatOffset + 7 + 1 * 6 + i ];
-				minDoFLimit[ i ] = float64[ floatOffset + 7 + 2 * 6 + i ];
-				maxDoFLimit[ i ] = float64[ floatOffset + 7 + 3 * 6 + i ];
+				dofTarget[ i ] = floatBuffer[ floatOffset + 7 + 0 * 6 + i ];
+				dofRestPose[ i ] = floatBuffer[ floatOffset + 7 + 1 * 6 + i ];
+				minDoFLimit[ i ] = floatBuffer[ floatOffset + 7 + 2 * 6 + i ];
+				maxDoFLimit[ i ] = floatBuffer[ floatOffset + 7 + 3 * 6 + i ];
 
 			}
 
-			joint.targetSet = Boolean( byte8[ byteOffset + 296 ] );
-			joint.restPoseSet = Boolean( byte8[ byteOffset + 297 ] );
+			joint.targetSet = Boolean( byteBuffer[ byteOffset + 148 ] );
+			joint.restPoseSet = Boolean( byteBuffer[ byteOffset + 149 ] );
 
 		}
 
@@ -174,7 +174,7 @@ export function copyBufferToFrame(
 		let changed = false;
 		for ( let i = 0; i < 6; i ++ ) {
 
-			const v = float64[ floatOffset + 7 + 4 * 6 + i ];
+			const v = floatBuffer[ floatOffset + 7 + 4 * 6 + i ];
 			if ( v !== dofValues[ i ] ) {
 
 				dofValues[ i ] = v;

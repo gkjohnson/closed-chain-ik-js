@@ -17,13 +17,12 @@ export const DOF = {
 export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
 
 const tempInverse = new Float64Array( 16 );
-const tempQuat = new Float64Array( 4 );
-const tempEuler = new Float64Array( 3 );
-const tempValueEuler = new Float64Array( 3 );
-const quatEuler = new Float64Array( 3 );
-const tempDoFValues = new Float64Array( 6 );
 const tempMatrix = new Float64Array( 16 );
-const tempMatrix2 = new Float64Array( 16 );
+const tempQuat = new Float32Array( 4 );
+const tempEuler = new Float32Array( 3 );
+const tempValueEuler = new Float32Array( 3 );
+const quatEuler = new Float32Array( 3 );
+const tempDoFValues = new Float32Array( 6 );
 
 // generate a matrix from a set of degrees of freedom
 function dofToMatrix( out, dof ) {
@@ -50,12 +49,12 @@ export class Joint extends Frame {
 		// TODO: should we make DoF Flags a bit mask flag?
 		this.dof = [];
 		this.dofFlags = new Uint8Array( 6 );
-		this.dofValues = new Float64Array( 6 );
-		this.dofTarget = new Float64Array( 6 );
-		this.dofRestPose = new Float64Array( 6 );
+		this.dofValues = new Float32Array( 6 );
+		this.dofTarget = new Float32Array( 6 );
+		this.dofRestPose = new Float32Array( 6 );
 
-		this.minDoFLimit = new Float64Array( 6 ).fill( - Infinity );
-		this.maxDoFLimit = new Float64Array( 6 ).fill( Infinity );
+		this.minDoFLimit = new Float32Array( 6 ).fill( - Infinity );
+		this.maxDoFLimit = new Float32Array( 6 ).fill( Infinity );
 
 		this.targetSet = false;
 		this.restPoseSet = false;

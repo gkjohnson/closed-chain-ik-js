@@ -1,14 +1,14 @@
 import { randomizeFrame } from './utils.js';
 import { Joint } from '../../src/core/Joint.js';
 import { Link } from '../../src/core/Link.js';
-import { copyBufferToFrame, copyFrameToBuffer, applyFromBuffer, applyToBuffer } from '../../src/worker/utils.js';
+import { copyBufferToFrame, copyFrameToBuffer, applyFromBuffer, applyToBuffer, JOINT_STRIDE } from '../../src/worker/utils.js';
 
 describe( 'copyBufferToFrame / copyFrameToBuffer', () => {
 
 	it( 'should copy joint state into the buffer and back out.', () => {
 
-		const buffer = new ArrayBuffer( 304 );
-		const floatBuffer = new Float64Array( buffer );
+		const buffer = new ArrayBuffer( JOINT_STRIDE );
+		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 		const joint = new Joint();
 		randomizeFrame( joint );
@@ -24,7 +24,7 @@ describe( 'copyBufferToFrame / copyFrameToBuffer', () => {
 
 	it( 'should copy link state into the buffer and back out.', () => {
 
-		const buffer = new ArrayBuffer( 304 );
+		const buffer = new ArrayBuffer( JOINT_STRIDE );
 		const floatBuffer = new Float64Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 		const link = new Link();
@@ -41,22 +41,22 @@ describe( 'copyBufferToFrame / copyFrameToBuffer', () => {
 
 	it( 'should work with non zero offsets.', () => {
 
-		const buffer = new ArrayBuffer( 608 );
-		const floatBuffer = new Float64Array( buffer );
+		const buffer = new ArrayBuffer( 2 * JOINT_STRIDE );
+		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 		floatBuffer.fill( 0 );
 
 		const joint = new Joint();
 		randomizeFrame( joint );
-		copyFrameToBuffer( joint, floatBuffer, byteBuffer, 304 );
+		copyFrameToBuffer( joint, floatBuffer, byteBuffer, JOINT_STRIDE );
 
 		const otherJoint = new Joint();
 		randomizeFrame( otherJoint );
-		copyBufferToFrame( otherJoint, floatBuffer, byteBuffer, 304 );
+		copyBufferToFrame( otherJoint, floatBuffer, byteBuffer, JOINT_STRIDE );
 
 		expect( joint ).toEqual( otherJoint );
 		expect( floatBuffer[ 0 ] ).toEqual( 0 );
-		expect( floatBuffer[ 304 / 8 ] ).toEqual( joint.position[ 0 ] );
+		expect( floatBuffer[ JOINT_STRIDE / 4 ] ).toEqual( joint.position[ 0 ] );
 
 	} );
 
@@ -66,8 +66,8 @@ describe( 'applyToBuffer / applyFromBuffer', () => {
 
 	it( 'should copy across a whole list.', () => {
 
-		const buffer = new ArrayBuffer( 100 * 304 );
-		const floatBuffer = new Float64Array( buffer );
+		const buffer = new ArrayBuffer( 100 * JOINT_STRIDE );
+		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 
 		const list = new Array( 100 )

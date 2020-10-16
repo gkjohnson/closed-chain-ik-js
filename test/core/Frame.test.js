@@ -1,5 +1,6 @@
 import { quat } from 'gl-matrix';
 import { Frame } from '../../src/core/Frame.js';
+import { quaternionDistance } from '../../src/core/utils/quaternion.js';
 import { PI, HALF_PI, RAD2DEG } from '../../src/core/utils/constants.js';
 
 describe( 'Frame', () => {
@@ -10,7 +11,7 @@ describe( 'Frame', () => {
 
 			const frame = new Frame();
 			frame.setPosition( 1, 2, 3 );
-			expect( frame.position ).toEqual( new Float64Array( [ 1, 2, 3 ] ) );
+			expect( frame.position ).toEqual( new Float32Array( [ 1, 2, 3 ] ) );
 			expect( frame.matrixNeedsUpdate ).toBeTruthy();
 
 		} );
@@ -39,7 +40,7 @@ describe( 'Frame', () => {
 
 			const frame = new Frame();
 			frame.setQuaternion( 1, 0, 0, 0 );
-			expect( frame.quaternion ).toEqual( new Float64Array( [ 1, 0, 0, 0 ] ) );
+			expect( frame.quaternion ).toEqual( new Float32Array( [ 1, 0, 0, 0 ] ) );
 			expect( frame.matrixNeedsUpdate ).toBeTruthy();
 
 		} );
@@ -55,7 +56,7 @@ describe( 'Frame', () => {
 
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
-			expect( f.position ).toEqual( new Float64Array( [ 1, 2, 3 ] ) );
+			expect( f.position ).toEqual( new Float32Array( [ 1, 2, 3 ] ) );
 
 		} );
 
@@ -87,12 +88,12 @@ describe( 'Frame', () => {
 			const f = new Frame();
 			f.setWorldEuler( HALF_PI, HALF_PI, 0 );
 
-			const quaternion = new Float64Array( 4 );
+			const quaternion = new Float32Array( 4 );
 			quat.fromEuler( quaternion, HALF_PI * RAD2DEG, HALF_PI * RAD2DEG, 0 );
 
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
-			expect( f.quaternion ).toEqual( quaternion );
+			expect( quaternionDistance( f.quaternion, quaternion ) ).toEqual( 0 );
 
 		} );
 
@@ -108,7 +109,7 @@ describe( 'Frame', () => {
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
 
-			const invertParentQuat = new Float64Array( 4 );
+			const invertParentQuat = new Float32Array( 4 );
 			quat.invert( invertParentQuat, p.quaternion );
 
 			expect( f.quaternion ).toEqual( invertParentQuat );
@@ -126,7 +127,7 @@ describe( 'Frame', () => {
 
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
-			expect( f.quaternion ).toEqual( new Float64Array( [ 0, 0, 1, 0 ] ) );
+			expect( f.quaternion ).toEqual( new Float32Array( [ 0, 0, 1, 0 ] ) );
 
 		} );
 
@@ -142,7 +143,7 @@ describe( 'Frame', () => {
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
 
-			const invertParentQuat = new Float64Array( 4 );
+			const invertParentQuat = new Float32Array( 4 );
 			invertParentQuat[ 0 ] = 0;
 			invertParentQuat[ 1 ] = - p.quaternion[ 1 ];
 			invertParentQuat[ 2 ] = 0;
@@ -272,10 +273,10 @@ describe( 'Frame', () => {
 			c.setPosition( 2, 4, 6 );
 
 			f.attachChild( c );
-			expect( c.position ).toEqual( new Float64Array( [ 1, 2, 3 ] ) );
+			expect( c.position ).toEqual( new Float32Array( [ 1, 2, 3 ] ) );
 
 			f.detachChild( c );
-			expect( c.position ).toEqual( new Float64Array( [ 2, 4, 6 ] ) );
+			expect( c.position ).toEqual( new Float32Array( [ 2, 4, 6 ] ) );
 
 		} );
 
@@ -288,10 +289,10 @@ describe( 'Frame', () => {
 			c.setQuaternion( 0, 1, 0, 0 );
 
 			f.attachChild( c );
-			expect( c.quaternion ).toEqual( new Float64Array( [ 0, 0, 1, 0 ] ) );
+			expect( c.quaternion ).toEqual( new Float32Array( [ 0, 0, 1, 0 ] ) );
 
 			f.detachChild( c );
-			expect( c.quaternion ).toEqual( new Float64Array( [ 0, 1, 0, 0 ] ) );
+			expect( c.quaternion ).toEqual( new Float32Array( [ 0, 1, 0, 0 ] ) );
 
 		} );
 

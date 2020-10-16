@@ -3,9 +3,9 @@ import { quaternionSquaredDistance } from './utils/quaternion.js';
 import { RAD2DEG } from './utils/constants.js';
 
 const tempInverse = new Float64Array( 16 );
-const tempQuat = new Float64Array( 4 );
 const tempMatrix = new Float64Array( 16 );
-const tempPos = new Float64Array( 3 );
+const tempQuat = new Float32Array( 4 );
+const tempPos = new Float32Array( 3 );
 const traversedChildren = new Set();
 export class Frame {
 
@@ -13,8 +13,8 @@ export class Frame {
 
 		this.name = '';
 
-		this.quaternion = new Float64Array( [ 0, 0, 0, 1 ] );
-		this.position = new Float64Array( 3 );
+		this.quaternion = new Float32Array( [ 0, 0, 0, 1 ] );
+		this.position = new Float32Array( 3 );
 
 		this.matrix = new Float64Array( 16 );
 		mat4.identity( this.matrix );
