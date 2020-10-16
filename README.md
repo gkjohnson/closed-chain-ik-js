@@ -264,9 +264,115 @@ A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only
 
 _extends [Frame](#Frame)_
 
-A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set.
+A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children.
 
-TODO
+### .dof
+
+```js
+readonly dof : Array<Number>
+```
+
+### .dofFlags
+
+```js
+readonly dofFlags : Uint8Array[6]
+```
+
+### .dofValues
+
+```js
+readonly dofValues : Float32Array[6]
+```
+
+### .dofTarget
+
+```js
+readonly dofTarget : Float32Array[6]
+```
+
+### .dofRestPose
+
+```js
+readonly dofRestPose : Float32Array[6]
+```
+
+### .minDoFLimit
+
+```js
+readonly minDoFLimit : Float32Array[6]
+```
+
+### .maxDoFLimit
+
+```js
+readonly maxDoFLimit : Float32Array[6]
+```
+
+### .matrixDoF
+
+```js
+readonly matrixDoF : Float64Array[16]
+```
+
+### .targetSet
+
+```js
+targetSet : Boolean = false
+```
+
+### .restPoseSet
+
+```js
+restPoseSet : Boolean = false
+```
+
+### .setDoF
+
+```js
+setDoF( ...dof : Array<DOF> ) : void
+```
+
+### .clearDoF
+
+```js
+clearDoF() : void
+```
+
+### .set\*Values
+
+```js
+setDoFValues( ...values : Array<Number> ) : void;
+setRestPoseValues( ...values : Array<Number> ) : void;
+setTargetValues( ...values : Array<Number> ) : void;
+setMinLimits( ...values : Array<Number> ) : void;
+setMaxLimits( ...values : Array<Number> ) : void;
+```
+
+### .set\*Value
+
+```js
+setDoFValue( dof : DOF, value : Number ) : Boolean
+setRestPoseValue( dof : DOF, value : Number ) : Boolean
+setTargetValue( dof : DOF, value : Number ) : Boolean
+setMinLimit( dof : DOF, value : Number ) : Boolean
+setMaxLimit( dof : DOF, value : Number ) : Boolean
+```
+
+### .get\*Value
+
+```js
+getDoFValue( dof : DOF ) : Number
+getRestPoseValue( dof : DOF ) : Number
+getTargetValue( dof : DOF ) : Number
+getMinLimit( dof : DOF ) : Number
+getMaxLimit( dof : DOF ) : Number
+```
+
+### .makeClosure
+
+```js
+makeClosure( child : Link ) : void
+```
 
 ## Goal
 
