@@ -37,12 +37,15 @@ export function accumulateClosureError(
 		tempPos[ 2 ] *= dofFlags[ 2 ];
 		rowCount = translationDoFCount;
 
-		if ( rotationDoFCount === 3 ) {
+		if ( rotationDoFCount === 0 ) {
 
 			tempQuat[ 0 ] = 0;
 			tempQuat[ 1 ] = 0;
 			tempQuat[ 2 ] = 0;
 			tempQuat[ 3 ] = 0;
+
+		} else {
+
 			rowCount += 4;
 
 		}

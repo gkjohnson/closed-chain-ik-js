@@ -29,6 +29,7 @@ import {
 } from '../src/index.js';
 
 const params = {
+	controls: 'translate',
 	solvePosition: true,
 	solveRotation: false,
 };
@@ -38,12 +39,12 @@ const params = {
 const solverOptions = {
 	maxIterations: 3,
 	divergeThreshold: 0.005,
-	stallThreshold: 1e-7,
+	stallThreshold: 1e-4,
 	translationErrorClamp: 0.25,
 	rotationErrorClamp: 0.25,
-	translationConvergeThreshold: 1e-4,
-	rotationConvergeThreshold: 1e-5,
-	restPoseFactor: 0.01,
+	translationConvergeThreshold: 1e-3,
+	rotationConvergeThreshold: 1e-3,
+	restPoseFactor: 0.0001,
 };
 
 let gui, stats;
@@ -178,6 +179,11 @@ function init() {
 
 	gui = new GUI();
 	gui.width = 350;
+	gui.add( params, 'controls', [ 'rotate', 'translate' ] ).listen().onChange( v => {
+
+		transformControls.setMode( v );
+
+	} );
 	gui.add( params, 'solvePosition' ).onChange( updateGoalDoF );
 	gui.add( params, 'solveRotation' ).onChange( updateGoalDoF );
 
@@ -211,9 +217,11 @@ function init() {
 		switch( e.key ) {
 			case 'w':
 				transformControls.setMode( 'translate' );
+				params.controls = 'translate';
 				break;
 			case 'e':
 				transformControls.setMode( 'rotate' );
+				params.controls = 'rotate';
 				break;
 			case 'f':
 				controls.target.set( 0, 0, 0 );
