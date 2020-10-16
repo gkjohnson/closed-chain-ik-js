@@ -401,7 +401,7 @@ function render() {
 				solver.updateFrameState( ...allGoals );
 				solver.updateSolverSettings( solverOptions );
 
-				statuses = [ solver.status ];
+				statuses = solver.status;
 				if ( ! solver.running ) {
 
 					solver.solve();

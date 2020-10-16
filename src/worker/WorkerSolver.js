@@ -7,7 +7,7 @@ export class WorkerSolver {
 	constructor( roots ) {
 
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
-		this.status = - 1;
+		this.status = [];
 		this.running = false;
 
 		this.frames = null;

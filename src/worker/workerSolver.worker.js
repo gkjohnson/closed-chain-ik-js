@@ -64,7 +64,7 @@ function updateSolve() {
 	applyFromBuffer( frames, floatBuffer, byteBuffer, false, true );
 
 	// Solve 1 iteration taking the most severe chain result
-	const result = Math.max( ...solver.solve() );
+	const result = solver.solve();
 
 	// Copy the new DoF back to the shared buffer
 	applyToBuffer( frames, floatBuffer, byteBuffer, true, false );
