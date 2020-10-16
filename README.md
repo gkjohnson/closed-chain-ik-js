@@ -78,6 +78,24 @@ solver.solve();
 
 TODO
 
+## Constants
+
+### DOF
+
+TODO
+
+### DOF_NAMES
+
+TODO
+
+### SOLVE_STATUS
+
+TODO
+
+### SOLVE_STATUS_NAMES
+
+TODO
+
 ## Frame
 
 TODO
