@@ -593,8 +593,10 @@ export class ChainSolver {
 									outJacobian[ rowIndex + translationDoFCount + 1 ][ colIndex ] = tempQuat[ 1 ];
 									outJacobian[ rowIndex + translationDoFCount + 2 ][ colIndex ] = tempQuat[ 2 ];
 									outJacobian[ rowIndex + translationDoFCount + 3 ][ colIndex ] = tempQuat[ 3 ];
+									rowIndex += 4;
 
 								}
+								rowIndex += translationDoFCount;
 
 							} else {
 
@@ -608,6 +610,7 @@ export class ChainSolver {
 								outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
 								outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
 								outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+								rowIndex += 7;
 
 							}
 
@@ -632,9 +635,9 @@ export class ChainSolver {
 
 							}
 
-						}
+							rowIndex += totalRows;
 
-						rowIndex += 7;
+						}
 
 					}
 

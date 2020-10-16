@@ -31,7 +31,7 @@ export class Goal extends Joint {
 
 	setGoalDoF( ...args ) {
 
-		this.setFreeDoF( ...args );
+		this.setDoF( ...args );
 
 	}
 

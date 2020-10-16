@@ -251,7 +251,7 @@ function init() {
 
 			const goalLink = new Link;
 
-			const goalJoint = new Goal();
+			const goalJoint = new Joint();
 			ikLink.getWorldPosition( goalJoint.position );
 			ikLink.getWorldQuaternion( goalJoint.quaternion );
 			goalJoint.setMatrixNeedsUpdate();
