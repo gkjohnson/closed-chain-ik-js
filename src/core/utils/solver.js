@@ -62,6 +62,8 @@ export function accumulateClosureError(
 
 	}
 
+	totalError += posMag + rotMag;
+
 	if ( errorVector ) {
 
 		if ( posMag > translationErrorClamp ) {
