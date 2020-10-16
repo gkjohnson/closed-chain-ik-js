@@ -82,19 +82,34 @@ TODO
 
 ### DOF
 
-TODO
+Enumerated fields representing different degrees of freedom for Joints.
+
+```js
+// Translation DoF
+DOF.X, DOF.Y, DOF.Z,
+
+// Rotation DoF
+DOF.EX, DOF.EY, DOF.EZ,
+```
 
 ### DOF_NAMES
 
-TODO
+An array of strings representing the names of the above degrees of freedom.
 
 ### SOLVE_STATUS
 
-TODO
+Enumerated fields representing the state of a solve result.
+
+```js
+SOLVE_STATUS.CONVERGED,
+SOLVE_STATUS.DIVERGED,
+SOLVE_STATUS.STALLED,
+SOLVE_STATUS.TIMEOUT,
+```
 
 ### SOLVE_STATUS_NAMES
 
-TODO
+An array of strings representing the names of the above solve statuses.
 
 ## Frame
 
