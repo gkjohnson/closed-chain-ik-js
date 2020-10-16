@@ -120,6 +120,8 @@ An array of strings representing the names of the above solve statuses.
 
 ## Frame
 
+A base class for `Link`, `Joint`, and `Goal` representing a frame defined by a position and rotation in space.
+
 ### .position
 
 ```js
@@ -252,15 +254,17 @@ setMatrixNeedsUpdate() : void
 setMatrixNeedsUpdate() : void
 ```
 
+## Link
+
+_extends [Frame](#Frame)_
+
+A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only [Joints](#Joint) may be added as children.
+
 ## Joint
 
 _extends [Frame](#Frame)_
 
-TODO
-
-## Link
-
-_extends [Frame](#Frame)_
+A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set.
 
 TODO
 
@@ -268,12 +272,66 @@ TODO
 
 _extends [Joint](#Joint)_
 
-TODO
+A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal can only be used to make a closure.
 
 ## Solver
 
-TODO
+Class for solving the closure and target joint constraints of a sytem.
+
+### .roots
+
+```js
+roots : Array<Frame>
+```
+
+### .constructor
+
+```js
+constructor( roots : Array<Frame> )
+```
+
+### .solve
+
+```js
+solve() : Array<SOLVE_STATUS>
+```
+
+### .updateStructure
+
+```js
+updateStructure() : void
+```
 
 ## WorkerSolver
 
-TODO
+Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker.
+
+### .updateSolverSettings
+
+```js
+updateSolverSettings( settings : Object ) : void
+```
+
+### .updateFrameState
+
+```js
+updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
+```
+
+### .solve
+
+```js
+solve() : void
+```
+
+### .stop
+
+```js
+stop() : void
+```
+
+### .dispose
+
+```js
+dispose() : void
+```
