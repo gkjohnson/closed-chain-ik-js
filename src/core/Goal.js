@@ -7,6 +7,8 @@ export class Goal extends Joint {
 
 		super( ...args );
 		this.isGoal = true;
+		this.setFreeDoF();
+
 	}
 
 	setDoF( ...args ) {
@@ -27,19 +29,19 @@ export class Goal extends Joint {
 
 	}
 
-	setFreeDoF( ...args ) {
+	setGoalDoF( ...args ) {
 
 		this.setFreeDoF( ...args );
 
 	}
 
-	setGoalDoF( ...args ) {
+	setFreeDoF( ...args ) {
 
 		const freeDoF = [
 			DOF.X, DOF.Y, DOF.Z,
 			DOF.EX, DOF.EY, DOF.EZ,
 		].filter( d => ! args.includes( d ) );
-		this.setFreeDoF( ...freeDoF );
+		this.setDoF( ...freeDoF );
 
 	}
 

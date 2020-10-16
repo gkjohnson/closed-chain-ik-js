@@ -615,9 +615,14 @@ export class ChainSolver {
 
 							// if the target isn't relevant then there's no delta
 							let totalRows = 7;
-							if ( targetJoint.isGoal ) {
+							if ( targetJoint.isGoal  ) {
 
-								targetRows = targetJoint.translationDoFCount + targetJoint.rotationDoFCount
+								totalRows = targetJoint.translationDoFCount;
+								if ( targetJoint.rotationDoFCount === 3 ) {
+
+									totalRows += 4;
+
+								}
 
 							}
 
@@ -768,8 +773,12 @@ export class ChainSolver {
 
 			}
 
-			freeDoF += dofList.length - lockedDoF;
-			freeJoints.push( joint );
+			if ( ! joint.isGoal ) {
+
+				freeDoF += dofList.length - lockedDoF;
+				freeJoints.push( joint );
+
+			}
 
 			if ( addToTargetList ) {
 
