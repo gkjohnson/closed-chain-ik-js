@@ -12,7 +12,50 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 # Use
 
-TODO
+## Simple 2 DoF System
+
+```js
+import { Joint, Link, Goal, DOF } from 'closed-chain-ik';
+
+// Create links and joints
+const link1 = new Link();
+
+const joint1 = new Joint();
+joint.setDoF( DOF.EZ );
+joint.setPosition( 0, 1, 0 );
+joint.setDoFValues( Math.PI / 4 );
+
+const link2 = new Link();
+
+const joint2 = new Joint();
+joint.setDoF( DOF.EX );
+joint.setPosition( 0, 1, 0 );
+joint.setDoFValues( Math.PI / 4 );
+
+const link3 = new Link();
+link3.setPosition( 0, 1, 0 );
+
+const goal = new Goal();
+link.getWorldPosition( goal.position );
+link.getWorldQuaternion( goal.quaternion );
+
+// Create structure
+link1.addChild( joint1 );
+joint1.addChild( link2 );
+link2.addChild( joint2 );
+joint2.addChild( link3 );
+
+goal.makeClosure( link3 );
+
+// create solver
+const solver = new Solver( [ link1, goal ] );
+
+// ...
+
+// move the goal around and solve
+solver.solve();
+```
+
 
 # API
 
