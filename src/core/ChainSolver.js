@@ -486,6 +486,8 @@ export class ChainSolver {
 			rotationStep,
 			lockedJointDoF,
 			lockedJointDoFCount,
+			translationFactor,
+			rotationFactor,
 		} = this;
 
 		// TODO: abstract this
@@ -571,10 +573,10 @@ export class ChainSolver {
 							// Get the amount that the rotation and translation error changed due to the
 							// small DoF adjustment to serve as the derivative.
 							vec3.subtract( tempPos, tempPos2, tempPos );
-							vec3.scale( tempPos, tempPos, 1 / delta );
+							vec3.scale( tempPos, tempPos, translationFactor / delta );
 
 							vec4.subtract( tempQuat, tempQuat2, tempQuat );
-							vec4.scale( tempQuat, tempQuat, 1 / delta );
+							vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
 
 							if ( targetJoint.isGoal ) {
 
