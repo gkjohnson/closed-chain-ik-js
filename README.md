@@ -120,7 +120,41 @@ An array of strings representing the names of the above solve statuses.
 
 ## Frame
 
-TODO
+### .position
+
+```js
+position : Float32Array[ 3 ]
+```
+
+### .quaternion
+
+```js
+quaternion : Float32Array[ 4 ]
+```
+
+### .matrix
+
+```js
+readonly matrix : Float64Array[ 16 ]
+```
+
+### .matrixWorld
+
+```js
+readonly matrixWorld : Float64Array[ 16 ]
+```
+
+### .parent
+
+```js
+readonly parent : Frame
+```
+
+### .children
+
+```js
+readonly children : Array<Frame>
+```
 
 ## Joint
 
