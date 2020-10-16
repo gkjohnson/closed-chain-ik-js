@@ -60,232 +60,115 @@ const solverOptions = {
 
 const goalToLinkMap = new Map();
 const linkToGoalMap = new Map();
-const extraGoals = [];
+const goals = [];
 const goalIcons = [];
 let selectedGoalIndex = - 1;
 
 let loadId = 0;
-let gui;
-const stats = new Stats();
-document.body.appendChild( stats.dom );
-
-const outputContainer = document.getElementById( 'output' );
-
-// init renderer
-const renderer = new WebGLRenderer( { antialias: true } );
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.outputEncoding = sRGBEncoding;
-document.body.appendChild( renderer.domElement );
-
-const camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
-camera.position.set( 8, 8, 8 );
-
-const scene = new Scene();
-scene.background = new Color( 0x131619 );
-
-const directionalLight = new DirectionalLight();
-directionalLight.position.set( 1, 3, 2 );
-scene.add( directionalLight );
-
-const ambientLight = new AmbientLight( 0x263238, 1 );
-scene.add( ambientLight );
-
-const controls = new OrbitControls( camera, renderer.domElement );
-const transformControls = new TransformControls( camera, renderer.domElement );
-transformControls.setSpace( 'local' );
-scene.add( transformControls );
-
-transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
-transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
-
-const targetObject = new Group();
-targetObject.position.set( 0, 1, 1 )
-scene.add( targetObject );
-transformControls.attach( targetObject );
-
+let averageTime = 0;
+let averageCount = 0;
+let gui, stats;
+let outputContainer, renderer, scene, camera;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
-loadModel( loadATHLETE() );
+let controls, transformControls, targetObject;
+let mouse = new Vector2();
+
+init();
 rebuildGUI();
+loadModel( loadATHLETE() );
 render();
 
-window.addEventListener( 'resize', () => {
+function init() {
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const aspect = w / h;
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
 
-    renderer.setSize( w, h );
+	outputContainer = document.getElementById( 'output' );
 
-    camera.aspect = aspect;
-	camera.updateProjectionMatrix();
+	// init renderer
+	renderer = new WebGLRenderer( { antialias: true } );
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.outputEncoding = sRGBEncoding;
+	document.body.appendChild( renderer.domElement );
 
-	ikHelper.setResolution( window.innerWidth, window.innerHeight );
-	drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
+	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
+	camera.position.set( 8, 8, 8 );
 
-} );
+	scene = new Scene();
+	scene.background = new Color( 0x131619 );
 
-window.addEventListener( 'keydown', e => {
+	const directionalLight = new DirectionalLight();
+	directionalLight.position.set( 1, 3, 2 );
+	scene.add( directionalLight );
 
-	switch( e.key ) {
-		case 'w':
-			transformControls.setMode( 'translate' );
-			break;
-		case 'e':
-			transformControls.setMode( 'rotate' );
-			break;
-		case 'q':
-			transformControls.setSpace( transformControls.space === 'local' ? 'world' : 'local' );
-			break;
-		case 'f':
-			controls.target.set( 0, 0, 0 );
-			controls.update();
-			break;
-	}
+	const ambientLight = new AmbientLight( 0x263238, 1 );
+	scene.add( ambientLight );
 
-} );
+	controls = new OrbitControls( camera, renderer.domElement );
+	transformControls = new TransformControls( camera, renderer.domElement );
+	transformControls.setSpace( 'local' );
+	scene.add( transformControls );
 
-let startX = 0;
-let startY = 0;
-transformControls.addEventListener( 'mouseUp', () => {
+	transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
+	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
 
-	if ( selectedGoalIndex !== - 1 ) {
+	targetObject = new Group();
+	targetObject.position.set( 0, 1, 1 )
+	scene.add( targetObject );
+	transformControls.attach( targetObject );
 
-		const goal = extraGoals[ selectedGoalIndex ];
-		const ikLink = goalToLinkMap.get( goal );
-		if ( ikLink ) {
+	window.addEventListener( 'resize', () => {
 
-			ikLink.updateMatrixWorld();
+		const w = window.innerWidth;
+		const h = window.innerHeight;
+		const aspect = w / h;
 
-			ikLink.attachChild( goal );
-			goal.setPosition( ...goal.originalPosition );
-			goal.setQuaternion( ...goal.originalQuaternion );
-			ikLink.detachChild( goal );
+		renderer.setSize( w, h );
 
-			targetObject.position.set( ...goal.position );
-			targetObject.quaternion.set( ...goal.quaternion );
+		camera.aspect = aspect;
+		camera.updateProjectionMatrix();
 
+		ikHelper.setResolution( window.innerWidth, window.innerHeight );
+		drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
+
+	} );
+
+	window.addEventListener( 'keydown', e => {
+
+		switch( e.key ) {
+			case 'w':
+				transformControls.setMode( 'translate' );
+				break;
+			case 'e':
+				transformControls.setMode( 'rotate' );
+				break;
+			case 'q':
+				transformControls.setSpace( transformControls.space === 'local' ? 'world' : 'local' );
+				break;
+			case 'f':
+				controls.target.set( 0, 0, 0 );
+				controls.update();
+				break;
 		}
 
-	}
+	} );
 
-} );
+	transformControls.addEventListener( 'mouseUp', () => {
 
-renderer.domElement.addEventListener( 'pointerdown', e => {
+		if ( selectedGoalIndex !== - 1 ) {
 
-	startX = e.clientX;
-	startY = e.clientY;
+			const goal = goals[ selectedGoalIndex ];
+			const ikLink = goalToLinkMap.get( goal );
+			if ( ikLink ) {
 
-} );
+				ikLink.updateMatrixWorld();
 
-renderer.domElement.addEventListener( 'pointerup', e => {
+				ikLink.attachChild( goal );
+				goal.setPosition( ...goal.originalPosition );
+				goal.setQuaternion( ...goal.originalQuaternion );
+				ikLink.detachChild( goal );
 
-	if ( Math.abs( e.clientX - startX ) > 3 ||  Math.abs( e.clientY - startY ) > 3 ) return;
-
-	if ( ! urdfRoot ) return;
-
-	const { ikLink, result } = raycast( e );
-
-	if ( ikLink === null ) {
-
-		selectedGoalIndex = - 1;
-
-	}
-
-	if ( e.button === 2 ) {
-
-		if ( ! ikLink ) {
-
-			return;
-
-		}
-
-		if ( linkToGoalMap.has( ikLink ) ) {
-
-			const goal = linkToGoalMap.get( ikLink );
-			linkToGoalMap.delete( ikLink );
-			goalToLinkMap.delete( goal );
-
-			const i = extraGoals.indexOf( goal );
-			extraGoals.splice( i, 1 );
-
-			const i2 = solver.roots.indexOf( goal );
-			solver.roots.splice( i2, 1 );
-			solver.updateStructure();
-
-		}
-
-		// normal in world space
-		const norm4 = new Vector4();
-		norm4.copy( result.face.normal );
-		norm4.w = 0;
-		norm4.applyMatrix4( result.object.matrixWorld );
-
-		// create look matrix
-		const lookMat = mat4.create();
-		const eyeVec = [ 0, 0, 0 ];
-		const posVec = norm4.toArray();
-		let upVec = [ 0, 1, 0 ];
-		if ( Math.abs( posVec[ 1 ] ) > 0.9 ) {
-
-			upVec = [ 0, 0, 1 ];
-
-		}
-		mat4.targetTo( lookMat, eyeVec, posVec, upVec );
-
-		const rootGoalJoint = new Joint();
-		rootGoalJoint.setPosition(
-			result.point.x,
-			result.point.y,
-			result.point.z,
-		);
-		mat4.getRotation( rootGoalJoint.quaternion, lookMat );
-
-		const goalLink = new Link;
-
-		const goalJoint = new Joint();
-		ikLink.getWorldPosition( goalJoint.position );
-		ikLink.getWorldQuaternion( goalJoint.quaternion );
-		goalJoint.setMatrixNeedsUpdate();
-
-		rootGoalJoint.attachChild( goalLink );
-		goalLink.attachChild( goalJoint );
-		goalJoint.makeClosure( ikLink );
-
-		// save the relative position
-		ikLink.attachChild( rootGoalJoint );
-		rootGoalJoint.originalPosition = rootGoalJoint.position.slice();
-		rootGoalJoint.originalQuaternion = rootGoalJoint.quaternion.slice();
-		ikLink.detachChild( rootGoalJoint );
-
-		// update the solver
-		solver.roots.push( rootGoalJoint );
-		solver.updateStructure();
-
-		targetObject.position.set( ...rootGoalJoint.position );
-		targetObject.quaternion.set( ...rootGoalJoint.quaternion );
-
-		goalToLinkMap.set( rootGoalJoint, ikLink );
-		linkToGoalMap.set( ikLink, rootGoalJoint );
-		extraGoals.push( rootGoalJoint );
-		selectedGoalIndex = extraGoals.length - 1;
-
-	} else if ( e.button === 0 ) {
-
-		if ( ! transformControls.dragging ) {
-
-			selectedGoalIndex = goalIcons.indexOf( result ? result.object.parent : null );
-
-			if ( selectedGoalIndex !== -1 ) {
-
-				const ikgoal = extraGoals[ selectedGoalIndex ];
-				targetObject.position.set( ...ikgoal.position );
-				targetObject.quaternion.set( ...ikgoal.quaternion );
-
-			} else if ( ikLink && linkToGoalMap.has( ikLink ) ) {
-
-				const goal = linkToGoalMap.get( ikLink );
-				selectedGoalIndex = extraGoals.indexOf( goal );
 				targetObject.position.set( ...goal.position );
 				targetObject.quaternion.set( ...goal.quaternion );
 
@@ -293,29 +176,155 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 
 		}
 
-	}
+	} );
 
-} );
+	renderer.domElement.addEventListener( 'pointerdown', e => {
 
-window.addEventListener( 'keydown', e => {
+		mouse.x = e.clientX;
+		mouse.y = e.clientY;
 
-	if ( selectedGoalIndex !== - 1 && e.code === 'Delete' ) {
+	} );
 
-		const goalToRemove = extraGoals[ selectedGoalIndex ];
-		const i = solver.roots.indexOf( goalToRemove );
-		solver.roots.splice( i, 1 );
-		solver.updateStructure();
+	renderer.domElement.addEventListener( 'pointerup', e => {
 
-		extraGoals.splice( selectedGoalIndex, 1 );
-		selectedGoalIndex = - 1;
+		if ( Math.abs( e.clientX - mouse.x ) > 3 ||  Math.abs( e.clientY - mouse.y ) > 3 ) return;
 
-		const link = goalToLinkMap.get( goalToRemove );
-		goalToLinkMap.delete( goalToRemove );
-		linkToGoalMap.delete( link );
+		if ( ! urdfRoot ) return;
 
-	}
+		const { ikLink, result } = raycast( e );
 
-} );
+		if ( ikLink === null ) {
+
+			selectedGoalIndex = - 1;
+
+		}
+
+		if ( e.button === 2 ) {
+
+			if ( ! ikLink ) {
+
+				return;
+
+			}
+
+			if ( linkToGoalMap.has( ikLink ) ) {
+
+				const goal = linkToGoalMap.get( ikLink );
+				linkToGoalMap.delete( ikLink );
+				goalToLinkMap.delete( goal );
+
+				const i = goals.indexOf( goal );
+				goals.splice( i, 1 );
+
+				const i2 = solver.roots.indexOf( goal );
+				solver.roots.splice( i2, 1 );
+				solver.updateStructure();
+
+			}
+
+			// normal in world space
+			const norm4 = new Vector4();
+			norm4.copy( result.face.normal );
+			norm4.w = 0;
+			norm4.applyMatrix4( result.object.matrixWorld );
+
+			// create look matrix
+			const lookMat = mat4.create();
+			const eyeVec = [ 0, 0, 0 ];
+			const posVec = norm4.toArray();
+			let upVec = [ 0, 1, 0 ];
+			if ( Math.abs( posVec[ 1 ] ) > 0.9 ) {
+
+				upVec = [ 0, 0, 1 ];
+
+			}
+			mat4.targetTo( lookMat, eyeVec, posVec, upVec );
+
+			const rootGoalJoint = new Joint();
+			rootGoalJoint.setPosition(
+				result.point.x,
+				result.point.y,
+				result.point.z,
+			);
+			mat4.getRotation( rootGoalJoint.quaternion, lookMat );
+
+			const goalLink = new Link;
+
+			const goalJoint = new Joint();
+			ikLink.getWorldPosition( goalJoint.position );
+			ikLink.getWorldQuaternion( goalJoint.quaternion );
+			goalJoint.setMatrixNeedsUpdate();
+
+			rootGoalJoint.attachChild( goalLink );
+			goalLink.attachChild( goalJoint );
+			goalJoint.makeClosure( ikLink );
+
+			// save the relative position
+			ikLink.attachChild( rootGoalJoint );
+			rootGoalJoint.originalPosition = rootGoalJoint.position.slice();
+			rootGoalJoint.originalQuaternion = rootGoalJoint.quaternion.slice();
+			ikLink.detachChild( rootGoalJoint );
+
+			// update the solver
+			solver.roots.push( rootGoalJoint );
+			solver.updateStructure();
+
+			targetObject.position.set( ...rootGoalJoint.position );
+			targetObject.quaternion.set( ...rootGoalJoint.quaternion );
+
+			goalToLinkMap.set( rootGoalJoint, ikLink );
+			linkToGoalMap.set( ikLink, rootGoalJoint );
+			goals.push( rootGoalJoint );
+			selectedGoalIndex = goals.length - 1;
+
+		} else if ( e.button === 0 ) {
+
+			if ( ! transformControls.dragging ) {
+
+				selectedGoalIndex = goalIcons.indexOf( result ? result.object.parent : null );
+
+				if ( selectedGoalIndex !== -1 ) {
+
+					const ikgoal = goals[ selectedGoalIndex ];
+					targetObject.position.set( ...ikgoal.position );
+					targetObject.quaternion.set( ...ikgoal.quaternion );
+
+				} else if ( ikLink && linkToGoalMap.has( ikLink ) ) {
+
+					const goal = linkToGoalMap.get( ikLink );
+					selectedGoalIndex = goals.indexOf( goal );
+					targetObject.position.set( ...goal.position );
+					targetObject.quaternion.set( ...goal.quaternion );
+
+				}
+
+			}
+
+		}
+
+	} );
+
+	window.addEventListener( 'keydown', e => {
+
+		if ( selectedGoalIndex !== - 1 && e.code === 'Delete' ) {
+
+			const goalToRemove = goals[ selectedGoalIndex ];
+			const i = solver.roots.indexOf( goalToRemove );
+			solver.roots.splice( i, 1 );
+			solver.updateStructure();
+
+			goals.splice( selectedGoalIndex, 1 );
+			selectedGoalIndex = - 1;
+
+			const link = goalToLinkMap.get( goalToRemove );
+			goalToLinkMap.delete( goalToRemove );
+			linkToGoalMap.delete( link );
+
+		}
+
+	} );
+
+}
 
 function raycast( e ) {
 
@@ -327,9 +336,9 @@ function raycast( e ) {
 	raycaster.setFromCamera( mouse, camera );
 
 	let results;
-	const fewerGoals = [ ...goalIcons ];
-	fewerGoals.length = extraGoals.length;
-	results = raycaster.intersectObjects( fewerGoals, true );
+	const intersectGoals = [ ...goalIcons ];
+	intersectGoals.length = goals.length;
+	results = raycaster.intersectObjects( intersectGoals, true );
 	if ( results.length !== 0 ) {
 
 		return { ikLink: null, result: results[ 0 ] };
@@ -369,13 +378,11 @@ function raycast( e ) {
 
 }
 
-let averageTime = 0;
-let averageCount = 0;
 function render() {
 
 	requestAnimationFrame( render );
 
-	const allGoals = extraGoals;
+	const allGoals = goals;
 	const selectedGoal = allGoals[ selectedGoalIndex ];
 	if ( ikRoot ) {
 
@@ -572,35 +579,6 @@ function rebuildGUI() {
 	solveFolder.add( solverOptions, 'restPoseFactor' ).min( 0 ).max( 1e-1 ).step( 1e-4 ).listen();
 	solveFolder.open();
 
-	// ikRoot.traverse( c => {
-
-    //     if ( c instanceof Joint ) {
-
-    //         const folder = gui.addFolder( c.name );
-    //         folder.open();
-
-    //         const names = Object.keys( DOF );
-    //         c.dof.forEach( ( dof, i ) => {
-
-    //             folder
-    //                 .add( c.dofValues, dof )
-    //                 .name( names[ dof ] )
-    //                 .min( - Math.PI )
-    //                 .max( Math.PI )
-    //                 .step( 0.001 )
-    //                 .onChange( v => {
-
-	// 					c.setMatrixDoFNeedsUpdate();
-
-	// 				} )
-	// 				.listen();
-
-    //         } );
-
-    //     }
-
-    // } );
-
 }
 
 function dispose( c ) {
@@ -659,7 +637,7 @@ function loadModel( promise ) {
 	urdfRoot = null;
 	ikHelper = null;
 	drawThroughIkHelper = null;
-	extraGoals.length = 0;
+	goals.length = 0;
 	goalToLinkMap.clear();
 	linkToGoalMap.clear();
 	selectedGoalIndex = - 1;
@@ -712,26 +690,26 @@ function loadModel( promise ) {
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 
-			const goals = [];
+			const loadedGoals = [];
 			goalMap.forEach( ( link, goal ) => {
 
-				goals.push( goal );
+				loadedGoals.push( goal );
 				goalToLinkMap.set( goal, link );
 				linkToGoalMap.set( link, goal );
 
 			} );
 
-			solver = params.webworker ? new WorkerSolver( [ ik, ...goals ] ) : new Solver( [ ik, ...goals ] );
+			solver = params.webworker ? new WorkerSolver( [ ik, ...loadedGoals ] ) : new Solver( [ ik, ...loadedGoals ] );
 			solver.maxIterations = 3;
 			solver.translationErrorClamp = 0.25;
 			solver.rotationErrorClamp = 0.25;
 			solver.restPoseFactor = 0.01;
 			solver.divergeThreshold = 0.05;
 
-			if ( goals.length ) {
+			if ( loadedGoals.length ) {
 
-				targetObject.position.set( ...goals[ 0 ].position );
-				targetObject.quaternion.set( ...goals[ 0 ].quaternion );
+				targetObject.position.set( ...loadedGoals[ 0 ].position );
+				targetObject.quaternion.set( ...loadedGoals[ 0 ].quaternion );
 				selectedGoalIndex = 0;
 
 			} else {
@@ -740,7 +718,7 @@ function loadModel( promise ) {
 
 			}
 
-			goals.forEach( g => {
+			loadedGoals.forEach( g => {
 
 				g.originalPosition = [ 0, 0, 0 ];
 				g.originalQuaternion = [ 0, 0, 0, 1 ];
@@ -749,7 +727,7 @@ function loadModel( promise ) {
 
 			ikRoot = ik;
 			urdfRoot = urdf;
-			extraGoals.push( ...goals );
+			goals.push( ...loadedGoals );
 
 			rebuildGUI();
 
