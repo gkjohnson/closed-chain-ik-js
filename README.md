@@ -68,7 +68,6 @@ const solver = new WorkerSolver( [ link1, goal ] );
 
 // ...
 
-
 // move the goal around and solve asynchronously
 solver.solve();
 ```
