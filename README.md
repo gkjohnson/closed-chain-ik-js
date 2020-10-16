@@ -156,6 +156,102 @@ readonly parent : Frame
 readonly children : Array<Frame>
 ```
 
+### .setPosition
+
+```js
+setPosition( x : Number, y : Number, z : Number ) : void
+```
+
+### .setWorldPosition
+
+```js
+setWorldPosition( x : Number, y : Number, z : Number ) : void
+```
+
+### .getWorldPosition
+
+```js
+getWorldPosition( pos : FloatArray[ 3 ] ) : void
+```
+
+### .setQuaternion
+
+```js
+setQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
+```
+
+### .setWorldQuaternion
+
+```js
+setWorldQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
+```
+
+### .getWorldQuaternion
+
+```js
+getWorldQuaternion( pos : FloatArray[ 4 ] ) : void
+```
+
+### .traverseParents
+
+```js
+traverseParents( cb : ( child : Frame ) => Boolean ) : void
+```
+
+### .traverse
+
+```js
+traverse( cb : ( child : Frame ) => Boolean ) : void
+```
+
+### .addChild
+
+```js
+addChild( child : Frame ) : void
+```
+
+### .removeChild
+
+```js
+removeChild( child : Frame ) : void
+```
+
+### .attachChild
+
+```js
+attachChild( child : Frame ) : void
+```
+
+### .detachChild
+
+```js
+detachChild( child : Frame ) : void
+```
+
+### .updateMatrix
+
+```js
+updateMatrixWorld() : void
+```
+
+### .updateMatrixWorld
+
+```js
+updateMatrixWorld( includeChildren : true ) : void
+```
+
+### .setMatrixNeedsUpdate
+
+```js
+setMatrixNeedsUpdate() : void
+```
+
+### .setMatrixWorldNeedsUpdate
+
+```js
+setMatrixNeedsUpdate() : void
+```
+
 ## Joint
 
 _extends [Frame](#Frame)_
