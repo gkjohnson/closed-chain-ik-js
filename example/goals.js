@@ -39,12 +39,12 @@ const params = {
 const solverOptions = {
 	maxIterations: 3,
 	divergeThreshold: 0.005,
-	stallThreshold: 1e-4,
+	stallThreshold: 1e-3,
 	translationErrorClamp: 0.25,
 	rotationErrorClamp: 0.25,
 	translationConvergeThreshold: 1e-3,
 	rotationConvergeThreshold: 1e-3,
-	restPoseFactor: 0.0001,
+	restPoseFactor: 0.001,
 };
 
 let gui, stats;
