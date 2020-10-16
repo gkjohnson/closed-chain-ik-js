@@ -338,7 +338,7 @@ setDoF( ...dof : Array<DOF> ) : void
 clearDoF() : void
 ```
 
-### .set\*Values
+### .set\[ \* \]Values
 
 ```js
 setDoFValues( ...values : Array<Number> ) : void;
@@ -348,7 +348,7 @@ setMinLimits( ...values : Array<Number> ) : void;
 setMaxLimits( ...values : Array<Number> ) : void;
 ```
 
-### .set\*Value
+### .set\[ \* \]Value
 
 ```js
 setDoFValue( dof : DOF, value : Number ) : Boolean
@@ -358,7 +358,7 @@ setMinLimit( dof : DOF, value : Number ) : Boolean
 setMaxLimit( dof : DOF, value : Number ) : Boolean
 ```
 
-### .get\*Value
+### .get\[ \* \]Value
 
 ```js
 getDoFValue( dof : DOF ) : Number
