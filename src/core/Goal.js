@@ -1,5 +1,4 @@
-import { DOF } from './Joint.js';
-import { Joint } from './Joint.js';
+import { Joint, DOF } from './Joint.js';
 
 export class Goal extends Joint {
 

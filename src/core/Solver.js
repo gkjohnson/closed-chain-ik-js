@@ -1,6 +1,4 @@
-import { ChainSolver, SOLVE_STATUS, SOLVE_STATUS_NAMES } from './ChainSolver.js';
-
-export { SOLVE_STATUS, SOLVE_STATUS_NAMES };
+import { ChainSolver } from './ChainSolver.js';
 
 export class Solver {
 
