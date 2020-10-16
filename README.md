@@ -88,7 +88,7 @@ Enumerated fields representing different degrees of freedom for Joints.
 // Translation DoF
 DOF.X, DOF.Y, DOF.Z,
 
-// Rotation DoF
+// Euler Rotation DoF
 DOF.EX, DOF.EY, DOF.EZ,
 ```
 
