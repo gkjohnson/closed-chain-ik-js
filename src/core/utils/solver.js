@@ -25,8 +25,7 @@ export function accumulateClosureError(
 		dof,
 	} = joint;
 
-	// TODO: If this is a Goal and we have less than three euler DoF we should use euler angles (and adjust the rows). Otherwise we
-	// should use a quat.
+	// Get the error from child towards the closure target
 	joint.getClosureError( tempPos, tempQuat );
 
 	let rowCount = 7;

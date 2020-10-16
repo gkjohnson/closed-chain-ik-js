@@ -443,16 +443,6 @@ export class Joint extends Frame {
 
 	}
 
-	// TODO: remove this and put it in solver
-	getDeltaClosureError( dof, delta, outPos, outQuat ) {
-
-		this.getDeltaWorldMatrix( dof, delta, tempMatrix2 );
-
-		this.child.updateMatrixWorld();
-		getMatrixDifference( tempMatrix2, this.child.matrixWorld, outPos, outQuat );
-
-	}
-
 	// Update matrix overrides
 	// TODO: it might be best if we skip this and try to characterize joint error with quats in
 	// the error vector

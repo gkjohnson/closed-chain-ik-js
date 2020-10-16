@@ -523,8 +523,6 @@ export class ChainSolver {
 				let rowIndex = 0;
 
 				// generate the adjusted matrix based on the epsilon for the joint.
-				// TODO: is it really necessary that this be different for translation vs
-				// rotation? It just needs to be a small epsilon...
 				let delta = dof < 3 ? translationStep : rotationStep;
 				if ( freeJoint.getDeltaWorldMatrix( dof, delta, tempDeltaWorldMatrix ) ) {
 
@@ -544,8 +542,9 @@ export class ChainSolver {
 
 							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set. Quat is only
 							// needed if 3 eulers are used.
-							// TODO: these could be cached per target joint
-							// get the current error within the closure joint
+							// TODO: these could be cached per target joint get the current error within the closure joint
+
+							// Get the error from child towards the closure target
 							targetJoint.getClosureError( tempPos, tempQuat );
 							if ( relevantConnectedClosures.has( targetJoint ) ) {
 
