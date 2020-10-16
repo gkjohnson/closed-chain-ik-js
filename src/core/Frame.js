@@ -6,6 +6,7 @@ const tempInverse = new Float64Array( 16 );
 const tempQuat = new Float64Array( 4 );
 const tempMatrix = new Float64Array( 16 );
 const tempPos = new Float64Array( 3 );
+const traversedChildren = new Set();
 export class Frame {
 
 	constructor() {
@@ -150,6 +151,8 @@ export class Frame {
 
 	traverse( cb ) {
 
+		traversedChildren.clear();
+		traversedChildren.add( this );
 		const stack = [ this ];
 
 		let i = 0;
@@ -163,8 +166,18 @@ export class Frame {
 				const children = curr.children;
 				for ( let c = 0, l = children.length; c < l; c ++ ) {
 
-					stack[ tot ] = children[ c ];
-					tot ++;
+					const child = children[ c ];
+					if ( traversedChildren.has( child ) ) {
+
+						continue;
+
+					} else {
+
+						traversedChildren.add( child );
+						stack[ tot ] = child;
+						tot ++;
+
+					}
 
 				}
 

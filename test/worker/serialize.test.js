@@ -76,28 +76,27 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	// See issue #9
-	// it ( 'should be able to deserialize a cyclic structure.', () => {
+	it ( 'should be able to deserialize a cyclic structure.', () => {
 
-	// 	const l1 = new Link();
-	// 	const j1 = new Joint();
-	// 	const l2 = new Link();
-	// 	const j2 = new Joint();
+		const l1 = new Link();
+		const j1 = new Joint();
+		const l2 = new Link();
+		const j2 = new Joint();
 
-	// 	l1.addChild( j1 );
-	// 	j1.addChild( l2 );
-	// 	l2.addChild( j2 );
-	// 	j2.addChild( l1 );
+		l1.addChild( j1 );
+		j1.addChild( l2 );
+		l2.addChild( j2 );
+		j2.makeClosure( l1 );
 
-	// 	l1.updateMatrixWorld( true );
+		l1.updateMatrixWorld( true );
 
-	// 	const serialized = serialize( [ l1, j1, l2, j2 ] );
-	// 	const deserialized = deserialize( serialized );
-	// 	deserialized.forEach( f => f.updateMatrixWorld() );
+		const serialized = serialize( [ l1, j1, l2, j2 ] );
+		const deserialized = deserialize( serialized );
+		deserialized.forEach( f => f.updateMatrixWorld() );
 
-	// 	expect( deserialized ).toEqual( [ l1, j1, l2, j2 ] );
+		expect( deserialized ).toEqual( [ l1, j1, l2, j2 ] );
 
-	// } );
+	} );
 
 	it ( 'should be able to deserialize a closure structure.', () => {
 
@@ -108,7 +107,7 @@ describe( 'serialize / deserialize', () => {
 
 		l1.addChild( j1 );
 		j1.addChild( l2 );
-		j2.addChild( l2 );
+		j2.makeClosure( l2 );
 
 		l1.updateMatrixWorld( true );
 
