@@ -80,6 +80,8 @@ TODO
 
 ## Frame
 
+TODO
+
 ## Joint
 
 _extends [Frame](#Frame)_
