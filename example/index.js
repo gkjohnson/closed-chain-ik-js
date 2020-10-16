@@ -30,6 +30,7 @@ import {
 	WorkerSolver,
 	Link,
 	Joint,
+	Goal,
 	SOLVE_STATUS_NAMES,
 
 	IKRootsHelper,
@@ -690,26 +691,26 @@ function loadModel( promise ) {
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 
-			const goals = [];
+			const loadedGoals = [];
 			goalMap.forEach( ( link, goal ) => {
 
-				goals.push( goal );
+				loadedGoals.push( goal );
 				goalToLinkMap.set( goal, link );
 				linkToGoalMap.set( link, goal );
 
 			} );
 
-			solver = params.webworker ? new WorkerSolver( [ ik, ...goals ] ) : new Solver( [ ik, ...goals ] );
+			solver = params.webworker ? new WorkerSolver( [ ik, ...loadedGoals ] ) : new Solver( [ ik, ...loadedGoals ] );
 			solver.maxIterations = 3;
 			solver.translationErrorClamp = 0.25;
 			solver.rotationErrorClamp = 0.25;
 			solver.restPoseFactor = 0.01;
 			solver.divergeThreshold = 0.05;
 
-			if ( goals.length ) {
+			if ( loadedGoals.length ) {
 
-				targetObject.position.set( ...goals[ 0 ].position );
-				targetObject.quaternion.set( ...goals[ 0 ].quaternion );
+				targetObject.position.set( ...loadedGoals[ 0 ].position );
+				targetObject.quaternion.set( ...loadedGoals[ 0 ].quaternion );
 				selectedGoalIndex = 0;
 
 			} else {
@@ -718,7 +719,7 @@ function loadModel( promise ) {
 
 			}
 
-			goals.forEach( g => {
+			loadedGoals.forEach( g => {
 
 				g.originalPosition = [ 0, 0, 0 ];
 				g.originalQuaternion = [ 0, 0, 0, 1 ];
@@ -727,7 +728,7 @@ function loadModel( promise ) {
 
 			ikRoot = ik;
 			urdfRoot = urdf;
-			goals.push( ...goals );
+			goals.push( ...loadedGoals );
 
 			rebuildGUI();
 

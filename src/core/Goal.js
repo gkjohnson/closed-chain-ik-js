@@ -1,7 +1,7 @@
 import { DOF } from './Joint.js';
-import { Frame } from './Frame.js';
+import { Joint } from './Joint.js';
 
-export class Goal extends Frame {
+export class Goal extends Joint {
 
 	constructor( ...args ) {
 
@@ -17,7 +17,7 @@ export class Goal extends Frame {
 			Number( args.includes( DOF.EY ) ) +
 			Number( args.includes( DOF.EZ ) );
 
-		if ( rotCount !== 0 || rotCount !== 3 ) {
+		if ( rotCount !== 0 && rotCount !== 3 ) {
 
 			throw new Error();
 
