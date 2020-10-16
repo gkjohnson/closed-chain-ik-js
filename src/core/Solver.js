@@ -13,7 +13,7 @@ export class Solver {
 		this.restPoseFactor = 0.01;
 
 		this.translationConvergeThreshold = 1e-3;
-		this.rotationConvergeThreshold = 1e-3;
+		this.rotationConvergeThreshold = 1e-5;
 
 		this.translationFactor = 1;
 		this.rotationFactor = 1;

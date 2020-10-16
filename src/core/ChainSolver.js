@@ -33,8 +33,8 @@ const dofResultInfo = {
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
-	STALLED: 2,
-	DIVERGED: 1,
+	STALLED: 1,
+	DIVERGED: 2,
 	TIMEOUT: 3,
 
 };
@@ -495,6 +495,7 @@ export class ChainSolver {
 		let colIndex = 0;
 		for ( let c = 0, tc = freeJoints.length; c < tc; c ++ ) {
 
+			// TODO: If this is a goal we should skip adding it to the jacabian columns
 			const freeJoint = freeJoints[ c ];
 			const relevantClosures = affectedClosures.get( freeJoint );
 			const relevantConnectedClosures = affectedConnectedClosures.get( freeJoint );
@@ -522,12 +523,10 @@ export class ChainSolver {
 				let rowIndex = 0;
 
 				// generate the adjusted matrix based on the epsilon for the joint.
-				// TODO: is it really necessary that this be different for translation vs
-				// rotation? It just needs to be a small epsilon...
 				let delta = dof < 3 ? translationStep : rotationStep;
 				if ( freeJoint.getDeltaWorldMatrix( dof, delta, tempDeltaWorldMatrix ) ) {
 
-					delta *= -1;
+					delta *= - 1;
 
 				}
 
@@ -541,8 +540,11 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: these could be cached per target joint
-							// get the current error within the closure joint
+							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set. Quat is only
+							// needed if 3 eulers are used.
+							// TODO: these could be cached per target joint get the current error within the closure joint
+
+							// Get the error from child towards the closure target
 							targetJoint.getClosureError( tempPos, tempQuat );
 							if ( relevantConnectedClosures.has( targetJoint ) ) {
 
@@ -574,29 +576,67 @@ export class ChainSolver {
 							vec4.subtract( tempQuat, tempQuat2, tempQuat );
 							vec4.scale( tempQuat, tempQuat, 1 / delta );
 
-							// set translation
-							outJacobian[ rowIndex + 0 ][ colIndex ] = tempPos[ 0 ];
-							outJacobian[ rowIndex + 1 ][ colIndex ] = tempPos[ 1 ];
-							outJacobian[ rowIndex + 2 ][ colIndex ] = tempPos[ 2 ];
+							if ( targetJoint.isGoal ) {
 
-							// set rotation
-							outJacobian[ rowIndex + 3 ][ colIndex ] = tempQuat[ 0 ];
-							outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
-							outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
-							outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+								const { translationDoFCount, rotationDoFCount, dof } = targetJoint;
+								for ( let i = 0; i < translationDoFCount; i ++ ) {
+
+									const d = dof[ i ];
+									outJacobian[ rowIndex + i ][ colIndex ] = tempPos[ d ];
+
+								}
+
+								if ( rotationDoFCount === 3 ) {
+
+									outJacobian[ rowIndex + translationDoFCount + 0 ][ colIndex ] = tempQuat[ 0 ];
+									outJacobian[ rowIndex + translationDoFCount + 1 ][ colIndex ] = tempQuat[ 1 ];
+									outJacobian[ rowIndex + translationDoFCount + 2 ][ colIndex ] = tempQuat[ 2 ];
+									outJacobian[ rowIndex + translationDoFCount + 3 ][ colIndex ] = tempQuat[ 3 ];
+									rowIndex += 4;
+
+								}
+								rowIndex += translationDoFCount;
+
+							} else {
+
+								// set translation
+								outJacobian[ rowIndex + 0 ][ colIndex ] = tempPos[ 0 ];
+								outJacobian[ rowIndex + 1 ][ colIndex ] = tempPos[ 1 ];
+								outJacobian[ rowIndex + 2 ][ colIndex ] = tempPos[ 2 ];
+
+								// set rotation
+								outJacobian[ rowIndex + 3 ][ colIndex ] = tempQuat[ 0 ];
+								outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
+								outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
+								outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+								rowIndex += 7;
+
+							}
 
 						} else {
 
 							// if the target isn't relevant then there's no delta
-							for ( let i = 0; i < 7; i ++ ) {
+							let totalRows = 7;
+							if ( targetJoint.isGoal  ) {
+
+								totalRows = targetJoint.translationDoFCount;
+								if ( targetJoint.rotationDoFCount === 3 ) {
+
+									totalRows += 4;
+
+								}
+
+							}
+
+							for ( let i = 0; i < totalRows; i ++ ) {
 
 								outJacobian[ rowIndex + i ][ colIndex ] = 0;
 
 							}
 
-						}
+							rowIndex += totalRows;
 
-						rowIndex += 7;
+						}
 
 					}
 
@@ -613,6 +653,8 @@ export class ChainSolver {
 							// TODO: Having noted that is this really necessary? Is there any way that this doesn't just
 							// jump to the solution and lock? How can we afford some slack? With a low weight? Does that
 							// get applied here?
+							// TODO: If this joint happens to have three euler joints we need to use a quat here. Otherwise we
+							// use the euler angles.
 							for ( let i = 0; i < rowCount; i ++ ) {
 
 								outJacobian[ rowIndex + colIndex ][ colIndex ] = - 1;
@@ -697,6 +739,9 @@ export class ChainSolver {
 			// TODO: We may be able to speed this up by using the square distance and length
 			// to compare error.
 
+			// TODO: If this is a goal we shouldnt add to the free dof because they won't be added
+			// to the jacobian
+
 			// If this is a closure joint then we need to make sure we're solving
 			// for the other child end to meet this joint so this error is important.
 			if ( joint.isClosure ) {
@@ -730,8 +775,12 @@ export class ChainSolver {
 
 			}
 
-			freeDoF += dofList.length - lockedDoF;
-			freeJoints.push( joint );
+			if ( ! joint.isGoal ) {
+
+				freeDoF += dofList.length - lockedDoF;
+				freeJoints.push( joint );
+
+			}
 
 			if ( addToTargetList ) {
 

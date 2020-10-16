@@ -31,7 +31,6 @@ import {
 	Link,
 	Joint,
 	SOLVE_STATUS_NAMES,
-
 	IKRootsHelper,
 	setUrdfFromIK,
 } from '../src/index.js';
