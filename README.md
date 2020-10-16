@@ -74,4 +74,34 @@ solver.solve();
 
 # API
 
+## Functions
+
+TODO
+
+## Frame
+
+## Joint
+
+_extends [Frame](#Frame)_
+
+TODO
+
+## Link
+
+_extends [Frame](#Frame)_
+
+TODO
+
+## Goal
+
+_extends [Joint](#Joint)_
+
+TODO
+
+## Solver
+
+TODO
+
+## WorkerSolver
+
 TODO
