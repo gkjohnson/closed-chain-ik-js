@@ -15,7 +15,7 @@ Robitics models used in the project are for demonstration purposes only and subj
 ## Simple 2 DoF System
 
 ```js
-import { Joint, Link, Goal, DOF } from 'closed-chain-ik';
+import { Solve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
 
 // Create links and joints
 const link1 = new Link();
@@ -57,6 +57,21 @@ const solver = new Solver( [ link1, goal ] );
 solver.solve();
 ```
 
+## Using a WebWorker Solver
+
+```js
+import { WorkerSolve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
+
+// ... instiate kinematic system...
+
+const solver = new WorkerSolver( [ link1, goal ] );
+
+// ...
+
+
+// move the goal around and solve asynchronously
+solver.solve();
+```
 
 # API
 
