@@ -82,7 +82,7 @@ export class WorkerSolver {
 		const frames = Array.from( framesSet );
 		const serialized = serialize( frames );
 		const buffer = generateSharedBuffer( frames );
-		const floatBuffer = new Float64Array( buffer );
+		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 
 		// Filter all the frames down to joints that should be updated from
