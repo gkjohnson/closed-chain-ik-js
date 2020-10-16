@@ -78,6 +78,46 @@ solver.solve();
 
 TODO
 
+## Constants
+
+### DOF
+
+Enumerated fields representing different degrees of freedom for Joints.
+
+```js
+// Translation DoF
+DOF.X, DOF.Y, DOF.Z,
+
+// Euler Rotation DoF
+DOF.EX, DOF.EY, DOF.EZ,
+```
+
+### DOF_NAMES
+
+An array of strings representing the names of the above degrees of freedom.
+
+### SOLVE_STATUS
+
+Enumerated fields representing the state of a solve result.
+
+```js
+// Error for all goals are within the threshold.
+SOLVE_STATUS.CONVERGED,
+
+// Error for the goals has begun to diverge.
+SOLVE_STATUS.DIVERGED,
+
+// Resulting angles has not changed significantly enough to reach the stall threshold.
+SOLVE_STATUS.STALLED,
+
+// The solve has reached the maximum number of allowed iterations.
+SOLVE_STATUS.TIMEOUT,
+```
+
+### SOLVE_STATUS_NAMES
+
+An array of strings representing the names of the above solve statuses.
+
 ## Frame
 
 TODO
