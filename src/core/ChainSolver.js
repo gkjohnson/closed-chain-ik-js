@@ -33,8 +33,8 @@ const dofResultInfo = {
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
-	STALLED: 2,
-	DIVERGED: 1,
+	STALLED: 1,
+	DIVERGED: 2,
 	TIMEOUT: 3,
 
 };

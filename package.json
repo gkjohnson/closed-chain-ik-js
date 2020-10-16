@@ -2,7 +2,7 @@
   "name": "closed-chain-ik",
   "type": "module",
   "scripts": {
-    "start": "parcel serve ./example/index.html",
+    "start": "parcel serve ./example/*.html",
     "test": "jest"
   },
   "repository": {

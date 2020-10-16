@@ -30,9 +30,7 @@ import {
 	WorkerSolver,
 	Link,
 	Joint,
-	Goal,
 	SOLVE_STATUS_NAMES,
-
 	IKRootsHelper,
 	setUrdfFromIK,
 } from '../src/index.js';

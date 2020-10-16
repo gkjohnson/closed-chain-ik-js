@@ -1,0 +1,44 @@
+<html>
+    <head>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+				user-select: none;
+				box-sizing: border-box;
+            }
+
+			html, body {
+				overflow: hidden;
+			}
+
+			#output {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				padding: 10px;
+				white-space: pre;
+				line-height: 1.5em;
+				color: white;
+				font-family: monospace;
+			}
+
+			#info {
+				position: absolute;
+				text-align: center;
+				margin: auto;
+				width: 100%;
+				padding: 10px;
+				color: white;
+				pointer-events: none;
+				font-family: monospace;
+			}
+        </style>
+    </head>
+    <body>
+		<div id="info"></div>
+		<div id="output"></div>
+        <script src="./goals.js"></script>
+    </body>
+</html>

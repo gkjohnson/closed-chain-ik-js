@@ -58,6 +58,7 @@ export class IKRootsHelper extends Group {
 		for ( let i = 0, l = roots.length; i < l; i ++ ) {
 
 			const root = roots[ i ];
+			root.updateMatrixWorld( true );
 			root.traverse( c => {
 
 				if ( c.isJoint ) {
