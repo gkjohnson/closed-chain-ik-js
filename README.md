@@ -105,16 +105,21 @@ An array of strings representing the names of the above degrees of freedom.
 Enumerated fields representing the state of a solve result.
 
 ```js
-// Error for all goals are within the threshold.
+// Error for all goals are within
+// the threshold.
 SOLVE_STATUS.CONVERGED,
 
-// Error for the goals has begun to diverge.
+// Error for the goals has begun
+// to diverge.
 SOLVE_STATUS.DIVERGED,
 
-// Resulting angles has not changed significantly enough to reach the stall threshold.
+// Resulting angles has not changed
+// significantly enough to reach the
+// stall threshold.
 SOLVE_STATUS.STALLED,
 
-// The solve has reached the maximum number of allowed iterations.
+// The solve has reached the maximum
+// number of allowed iterations.
 SOLVE_STATUS.TIMEOUT,
 ```
 
