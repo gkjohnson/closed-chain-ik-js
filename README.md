@@ -6,9 +6,9 @@ An inverse kinematics solver that supports closed chains for parallel kinematics
 
 _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>_
 
-[ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/build/index.html)!
+[ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
 
-[Partial degrees of freedom Goal demo here](https://gkjohnson.github.io/closed-chain-ik-js/build/goals.html)!
+[Partial degrees of freedom Goal demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/goals.html)!
 
 ## Model License Information
 
