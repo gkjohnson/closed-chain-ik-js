@@ -441,3 +441,45 @@ stop() : void
 ```js
 dispose() : void
 ```
+
+## IKRootsHelper
+
+_extends THREE.Group_
+
+A helper class for rendering the joints and links in a three.js scene.
+
+### .roots
+
+```js
+roots : Array<Frame>
+```
+
+### .constructor
+
+```js
+constructor( roots : Array<Frame> )
+```
+
+### .setJointScale
+
+```js
+setJointScale( scale : Number ) : void
+```
+
+### .setResolution
+
+```js
+setResolution( width : Number, height : Number ) : void
+```
+
+### .update
+
+```js
+update() : void
+```
+
+### .dispose
+
+```js
+dispose() : void
+```
