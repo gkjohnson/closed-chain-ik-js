@@ -97,12 +97,12 @@ function init() {
 
 	ikRoot = null;
 	let currRoot = null;
-	for ( let i = 0; i < 9; i ++ ) {
+	for ( let i = 0; i < 6; i ++ ) {
 
 		const link = new Link();
 		const joint = new Joint();
 		joint.setPosition( 0, 0.5, 0 );
-		joint.setDoF( 3 + i % 3 );
+		joint.setDoF( i % 2 ? DOF.EX : DOF.EZ );
 		joint.setDoFValues( Math.PI / 4 );
 		joint.setRestPoseValues( Math.PI / 4 );
 		joint.restPoseSet = true;
