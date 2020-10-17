@@ -120,30 +120,324 @@ An array of strings representing the names of the above solve statuses.
 
 ## Frame
 
-TODO
+A base class for `Link`, `Joint`, and `Goal` representing a frame defined by a position and rotation in space.
 
-## Joint
+### .position
 
-_extends [Frame](#Frame)_
+```js
+position : Float32Array[ 3 ]
+```
 
-TODO
+### .quaternion
+
+```js
+quaternion : Float32Array[ 4 ]
+```
+
+### .matrix
+
+```js
+readonly matrix : Float64Array[ 16 ]
+```
+
+### .matrixWorld
+
+```js
+readonly matrixWorld : Float64Array[ 16 ]
+```
+
+### .parent
+
+```js
+readonly parent : Frame
+```
+
+### .children
+
+```js
+readonly children : Array<Frame>
+```
+
+### .setPosition
+
+```js
+setPosition( x : Number, y : Number, z : Number ) : void
+```
+
+### .setWorldPosition
+
+```js
+setWorldPosition( x : Number, y : Number, z : Number ) : void
+```
+
+### .getWorldPosition
+
+```js
+getWorldPosition( pos : FloatArray[ 3 ] ) : void
+```
+
+### .setQuaternion
+
+```js
+setQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
+```
+
+### .setWorldQuaternion
+
+```js
+setWorldQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
+```
+
+### .getWorldQuaternion
+
+```js
+getWorldQuaternion( pos : FloatArray[ 4 ] ) : void
+```
+
+### .traverseParents
+
+```js
+traverseParents( cb : ( child : Frame ) => Boolean ) : void
+```
+
+### .traverse
+
+```js
+traverse( cb : ( child : Frame ) => Boolean ) : void
+```
+
+### .addChild
+
+```js
+addChild( child : Frame ) : void
+```
+
+### .removeChild
+
+```js
+removeChild( child : Frame ) : void
+```
+
+### .attachChild
+
+```js
+attachChild( child : Frame ) : void
+```
+
+### .detachChild
+
+```js
+detachChild( child : Frame ) : void
+```
+
+### .updateMatrix
+
+```js
+updateMatrixWorld() : void
+```
+
+### .updateMatrixWorld
+
+```js
+updateMatrixWorld( includeChildren : true ) : void
+```
+
+### .setMatrixNeedsUpdate
+
+```js
+setMatrixNeedsUpdate() : void
+```
+
+### .setMatrixWorldNeedsUpdate
+
+```js
+setMatrixNeedsUpdate() : void
+```
 
 ## Link
 
 _extends [Frame](#Frame)_
 
-TODO
+A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only [Joints](#Joint) may be added as children.
+
+## Joint
+
+_extends [Frame](#Frame)_
+
+A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children.
+
+### .dof
+
+```js
+readonly dof : Array<Number>
+```
+
+### .dofFlags
+
+```js
+readonly dofFlags : Uint8Array[6]
+```
+
+### .dofValues
+
+```js
+readonly dofValues : Float32Array[6]
+```
+
+### .dofTarget
+
+```js
+readonly dofTarget : Float32Array[6]
+```
+
+### .dofRestPose
+
+```js
+readonly dofRestPose : Float32Array[6]
+```
+
+### .minDoFLimit
+
+```js
+readonly minDoFLimit : Float32Array[6]
+```
+
+### .maxDoFLimit
+
+```js
+readonly maxDoFLimit : Float32Array[6]
+```
+
+### .matrixDoF
+
+```js
+readonly matrixDoF : Float64Array[16]
+```
+
+### .targetSet
+
+```js
+targetSet : Boolean = false
+```
+
+### .restPoseSet
+
+```js
+restPoseSet : Boolean = false
+```
+
+### .setDoF
+
+```js
+setDoF( ...dof : Array<DOF> ) : void
+```
+
+### .clearDoF
+
+```js
+clearDoF() : void
+```
+
+### .set\[ \* \]Values
+
+```js
+setDoFValues( ...values : Array<Number> ) : void;
+setRestPoseValues( ...values : Array<Number> ) : void;
+setTargetValues( ...values : Array<Number> ) : void;
+setMinLimits( ...values : Array<Number> ) : void;
+setMaxLimits( ...values : Array<Number> ) : void;
+```
+
+### .set\[ \* \]Value
+
+```js
+setDoFValue( dof : DOF, value : Number ) : Boolean
+setRestPoseValue( dof : DOF, value : Number ) : Boolean
+setTargetValue( dof : DOF, value : Number ) : Boolean
+setMinLimit( dof : DOF, value : Number ) : Boolean
+setMaxLimit( dof : DOF, value : Number ) : Boolean
+```
+
+### .get\[ \* \]Value
+
+```js
+getDoFValue( dof : DOF ) : Number
+getRestPoseValue( dof : DOF ) : Number
+getTargetValue( dof : DOF ) : Number
+getMinLimit( dof : DOF ) : Number
+getMaxLimit( dof : DOF ) : Number
+```
+
+### .makeClosure
+
+```js
+makeClosure( child : Link ) : void
+```
 
 ## Goal
 
 _extends [Joint](#Joint)_
 
-TODO
+A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal can only be used to make a closure.
 
 ## Solver
 
-TODO
+Class for solving the closure and target joint constraints of a sytem.
+
+### .roots
+
+```js
+roots : Array<Frame>
+```
+
+### .constructor
+
+```js
+constructor( roots : Array<Frame> )
+```
+
+### .solve
+
+```js
+solve() : Array<SOLVE_STATUS>
+```
+
+### .updateStructure
+
+```js
+updateStructure() : void
+```
 
 ## WorkerSolver
 
-TODO
+Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker.
+
+### .updateSolverSettings
+
+```js
+updateSolverSettings( settings : Object ) : void
+```
+
+### .updateFrameState
+
+```js
+updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
+```
+
+### .solve
+
+```js
+solve() : void
+```
+
+### .stop
+
+```js
+stop() : void
+```
+
+### .dispose
+
+```js
+dispose() : void
+```
