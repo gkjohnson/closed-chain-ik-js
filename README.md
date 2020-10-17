@@ -444,6 +444,12 @@ dispose() : void
 
 ## IKRootsHelper
 
+### .roots
+
+```js
+roots : Array<Frame>
+```
+
 ### .constructor
 
 ```js
