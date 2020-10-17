@@ -1,10 +1,10 @@
 {
   "name": "closed-chain-ik",
-	"version": "0.0.1",
+  "version": "0.0.1",
   "type": "module",
-	"files": [
+  "files": [
     "src/*"
-	],
+  ],
   "scripts": {
     "start": "parcel serve ./example/*.html --out-dir local",
     "build": "parcel build --out-dir dist --no-content-hash ./example/*.html",
@@ -34,5 +34,5 @@
     "jest-cli": "^26.4.2",
     "parcel-bundler": "^1.12.4"
   },
-	"license": "Apache-2.0"
+  "license": "Apache-2.0"
 }
