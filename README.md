@@ -2,6 +2,14 @@
 
 An inverse kinematics solver that supports closed chains and dynamic reconfiguration based on damped least squares error minimization techniques. Inspired in part by [Marty Vona's MSim research work](https://www2.ccs.neu.edu/research/gpc/MSim/MSim-info.html) and using techniques outlined in this [2009 paper by Samuel Buss](https://math.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf). Developed with some aid and advice from [Marty Vona](https://www2.ccs.neu.edu/research/gpc/vona.html).
 
+![](./images/banner.png)
+
+_<p align="center">IK solver being used on JPL's ATHLETE robot for full body IK</p>_
+
+[URDF robots example here]()!
+
+[Partial degrees of freedom Goal example]()!
+
 ## Model License Information
 
 Robitics models used in the project are for demonstration purposes only and subject to the lincenses of their respective projects.
@@ -74,10 +82,6 @@ solver.solve();
 
 # API
 
-## Functions
-
-TODO
-
 ## Constants
 
 ### DOF
@@ -117,6 +121,28 @@ SOLVE_STATUS.TIMEOUT,
 ### SOLVE_STATUS_NAMES
 
 An array of strings representing the names of the above solve statuses.
+
+## Functions
+
+Set of functions for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+
+### urdfRobotToIKRoot
+
+```js
+urdfRobotToIKRoot( robot : URDFRobot ) : Joint
+```
+
+### setUrdfFromIK
+
+```js
+setUrdfFromIK( robot : URDFRobot, ikRoot : Joint ) : void
+```
+
+### setIKFromUrdf
+
+```js
+setIKFromUrdf( ikRoot : Joint, robot : URDFRobot ) : void
+```
 
 ## Frame
 
