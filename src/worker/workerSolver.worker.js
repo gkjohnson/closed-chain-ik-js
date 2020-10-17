@@ -1,4 +1,5 @@
-import { Solver, SOLVE_STATUS } from '../core/Solver.js';
+import { Solver } from '../core/Solver.js';
+import { SOLVE_STATUS } from '../core/ChainSolver.js';
 import { deserialize } from './serialize.js';
 import { applyToBuffer, applyFromBuffer } from './utils.js';
 

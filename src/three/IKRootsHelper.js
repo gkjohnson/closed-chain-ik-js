@@ -12,7 +12,8 @@ export class IKRootsHelper extends Group {
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
 		this.joints = new Map();
 		this.links = new Map();
-		this.resolution = new Vector2( 1, 1 );
+		this.resolution = new Vector2( 1000, 1000 );
+		this.update();
 
 	}
 

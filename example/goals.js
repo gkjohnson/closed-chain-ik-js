@@ -141,7 +141,6 @@ function init() {
 	goal.makeClosure( finalLink );
 
 	ikHelper = new IKRootsHelper( ikRoot );
-	ikHelper.update();
 	ikHelper.setResolution( window.innerWidth, window.innerHeight );
 	ikHelper.traverse( c => {
 

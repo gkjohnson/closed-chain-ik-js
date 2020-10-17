@@ -656,7 +656,6 @@ function loadModel( promise ) {
 
 			// create the helper
 			ikHelper = new IKRootsHelper( [ ik ] );
-			ikHelper.update();
 			ikHelper.setJointScale( helperScale );
 			ikHelper.setResolution( window.innerWidth, window.innerHeight );
 			ikHelper.traverse( c => {
@@ -670,7 +669,6 @@ function loadModel( promise ) {
 			} );
 
 			drawThroughIkHelper = new IKRootsHelper( [ ik ] );
-			drawThroughIkHelper.update();
 			drawThroughIkHelper.setJointScale( helperScale );
 			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
 			drawThroughIkHelper.traverse( c => {
