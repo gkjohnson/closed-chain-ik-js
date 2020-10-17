@@ -70,7 +70,7 @@ solver.solve();
 ```js
 import { WorkerSolve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
 
-// ... instiate kinematic system...
+// ... instantiate kinematic system...
 
 const solver = new WorkerSolver( [ link1, goal ] );
 
