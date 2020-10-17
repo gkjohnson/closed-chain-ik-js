@@ -23,7 +23,7 @@ Robitics models used in the project are for demonstration purposes only and subj
 ## Simple 2 DoF System
 
 ```js
-import { Solve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
+import { Solver, Joint, Link, Goal, DOF } from 'closed-chain-ik';
 
 // Create links and joints
 const link1 = new Link();
