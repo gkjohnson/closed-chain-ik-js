@@ -133,8 +133,16 @@ export class Frame {
 
 	traverseParents( cb ) {
 
+		traversedChildren.clear();
+		traversedChildren.add( this );
 		let curr = this;
 		while ( curr ) {
+
+			if ( traversedChildren.has( curr ) ) {
+
+				break;
+
+			}
 
 			const stop = cb( curr );
 			if ( stop ) {
@@ -143,6 +151,7 @@ export class Frame {
 
 			}
 
+			traversedChildren.add( curr );
 			curr = curr.parent;
 
 		}

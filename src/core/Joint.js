@@ -58,8 +58,6 @@ export class Joint extends Frame {
 
 		this.targetSet = false;
 		this.restPoseSet = false;
-		this.targetWeight = 1;
-		this.restPoseWeight = 1;
 
 		this.matrixDoFNeedsUpdate = false;
 		this.matrixDoF = new Float64Array( 16 );
