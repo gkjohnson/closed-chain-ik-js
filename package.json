@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "start": "parcel serve ./example/*.html --out-dir local",
-    "build": "parcel build --out-dir dist --no-content-hash ./example/*.html --public-url=./",
+    "build": "parcel build --out-dir dist --no-content-hash ./example/*.html --public-url=.",
     "test": "jest"
   },
   "repository": {
