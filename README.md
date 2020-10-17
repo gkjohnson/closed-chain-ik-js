@@ -6,7 +6,7 @@ An inverse kinematics solver that supports closed chains and dynamic reconfigura
 
 _<p align="center">IK solver being used on JPL's ATHLETE robot for full body IK</p>_
 
-[URDF robots example here]()!
+[ATHLETE and Robonaut example here]()!
 
 [Partial degrees of freedom Goal example]()!
 
