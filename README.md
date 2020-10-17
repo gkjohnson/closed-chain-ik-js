@@ -441,3 +441,35 @@ stop() : void
 ```js
 dispose() : void
 ```
+
+## IKRootsHelper
+
+### .constructor
+
+```js
+constructor( roots : Array<Frame> )
+```
+
+### .setJointScale
+
+```js
+setJointScale( scale : Number ) : void
+```
+
+### .setResolution
+
+```js
+setResolution( width : Number, height : Number ) : void
+```
+
+### .update
+
+```js
+update() : void
+```
+
+### .dispose
+
+```js
+dispose() : void
+```
