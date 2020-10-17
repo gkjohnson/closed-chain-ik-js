@@ -444,6 +444,10 @@ dispose() : void
 
 ## IKRootsHelper
 
+_extends THREE.Group_
+
+A helper class for rendering the joints and links in a three.js scene.
+
 ### .roots
 
 ```js
