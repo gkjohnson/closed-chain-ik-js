@@ -56,4 +56,4 @@ var t=function(){function t(r,a){this.data=new Array(r.length);for(var i=0,n=r[0
 var global = arguments[3];
 var e=arguments[3],r=require("../core/Solver.js"),a=require("../core/ChainSolver.js"),t=require("./serialize.js"),u=require("./utils.js"),l=new r.Solver,s=-1,i=null,n=null,o=null,c=null;function S(){(0,u.applyFromBuffer)(i,o,c,!1,!0);var e=l.solve();(0,u.applyToBuffer)(i,o,c,!0,!1),s=e===a.SOLVE_STATUS.TIMEOUT?setTimeout(S):-1,this.postMessage({type:"updateSolve",data:e})}e.onmessage=function(e){var r=e.data,a=r.type,u=r.data;switch(a){case"updateStructure":i=(0,t.deserialize)(u.serialized),l.roots=i.filter(function(e){return null===e.parent}),l.updateStructure(),n=u.buffer,c=new Uint8Array(n),o=new Float32Array(n);break;case"updateSolverSettings":Object.assign(l,u);break;case"startSolve":-1===s&&S();break;case"endSolve":-1!==s&&(clearTimeout(s),s=-1)}};
 },{"../core/Solver.js":"a3Ki","../core/ChainSolver.js":"rw8i","./serialize.js":"SSkq","./utils.js":"oRpC"}]},{},["L8yv"], null)
-//# sourceMappingURL=/workerSolver.worker.316d40ac.js.map
+//# sourceMappingURL=workerSolver.worker.316d40ac.js.map
