@@ -9,7 +9,7 @@ import {
 	Group,
 } from 'three';
 import {
-    OrbitControls,
+	OrbitControls,
 } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
 	TransformControls
@@ -91,7 +91,7 @@ function init() {
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
 
 	targetObject = new Group();
-	targetObject.position.set( 0, 1, 1 )
+	targetObject.position.set( 0, 1, 1 );
 	scene.add( targetObject );
 	transformControls.attach( targetObject );
 
@@ -174,6 +174,7 @@ function init() {
 		goal.setGoalDoF( ...dof );
 
 	}
+
 	updateGoalDoF();
 
 	gui = new GUI();
@@ -213,7 +214,8 @@ function init() {
 
 	window.addEventListener( 'keydown', e => {
 
-		switch( e.key ) {
+		switch ( e.key ) {
+
 			case 'w':
 				transformControls.setMode( 'translate' );
 				params.controls = 'translate';
@@ -226,6 +228,7 @@ function init() {
 				controls.target.set( 0, 0, 0 );
 				controls.update();
 				break;
+
 		}
 
 	} );
