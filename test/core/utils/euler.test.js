@@ -33,7 +33,7 @@ function compare( a, b ) {
 
 describe( 'clampEulerValue', () => {
 
-	it( 'should clamp the angle to ( -PI, PI ].' , () => {
+	it( 'should clamp the angle to ( -PI, PI ].', () => {
 
 		expect( clampEulerValue( PI ) ).toEqual( PI );
 		expect( clampEulerValue( - PI ) ).toEqual( PI );
@@ -58,7 +58,7 @@ describe( 'clampEulerValue', () => {
 
 describe( 'toSmallestEulerValueDistance', () => {
 
-	it( 'should find the smallest distance to the given target.' , () => {
+	it( 'should find the smallest distance to the given target.', () => {
 
 		expect( toSmallestEulerValueDistance( 0, PI ) ).toEqual( PI );
 		expect( toSmallestEulerValueDistance( 0, PI + 1 ) ).toEqual( - PI + 1 );
@@ -114,8 +114,8 @@ describe( 'toSmallestRedundantTwistRepresentation', () => {
 	it( 'should return false if input is not a redundant twist representation.', () => {
 
 		expect( toSmallestRedundantTwistRepresentation( [], [], [ 0, 0, 0 ] ) ).toBeFalsy();
-		expect( toSmallestRedundantTwistRepresentation( [], [], [ 100, 0, -10 ] ) ).toBeFalsy();
-		expect( toSmallestRedundantTwistRepresentation( [], [], [ -10, 0, 10 ] ) ).toBeFalsy();
+		expect( toSmallestRedundantTwistRepresentation( [], [], [ 100, 0, - 10 ] ) ).toBeFalsy();
+		expect( toSmallestRedundantTwistRepresentation( [], [], [ - 10, 0, 10 ] ) ).toBeFalsy();
 
 		expect( toSmallestRedundantTwistRepresentation( [], [], [ 0, HALF_PI - 0.1, 0 ] ) ).toBeFalsy();
 		expect( toSmallestRedundantTwistRepresentation( [], [], [ 0, HALF_PI + 0.1, 0 ] ) ).toBeFalsy();
@@ -183,7 +183,7 @@ describe( 'toSmallestRedundantTwistRepresentation', () => {
 
 describe( 'getClosestEulerRepresentation', () => {
 
-	it ( 'should return the closest of the euler representations.', () => {
+	it( 'should return the closest of the euler representations.', () => {
 
 		for ( let i = 0; i < 100; i ++ ) {
 

@@ -99,6 +99,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
 
 		}
+
 	} else {
 
 		return null;

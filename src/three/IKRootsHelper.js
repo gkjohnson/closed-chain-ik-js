@@ -76,6 +76,7 @@ export class IKRootsHelper extends Group {
 						joints.set( c, helper );
 
 					}
+
 					helper.update();
 					currJoints.delete( c );
 
@@ -93,6 +94,7 @@ export class IKRootsHelper extends Group {
 						links.set( c, helper );
 
 					}
+
 					helper.update();
 					currLinks.delete( c );
 

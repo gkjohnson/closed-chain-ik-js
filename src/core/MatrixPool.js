@@ -7,7 +7,7 @@ class FixedMatrixPool {
 		const matrices = [];
 		let index = 0;
 
-		this.get = function() {
+		this.get = function () {
 
 			let matrix = matrices[ index ];
 			if ( ! matrix ) {
@@ -15,12 +15,13 @@ class FixedMatrixPool {
 				matrices[ index ] = matrix = mat.create( row, col );
 
 			}
+
 			index ++;
 			return matrix;
 
 		};
 
-		this.releaseAll = function() {
+		this.releaseAll = function () {
 
 			index = 0;
 
@@ -36,7 +37,7 @@ export class MatrixPool {
 
 		const pools = {};
 		const poolArray = [];
-		this.get = function( row, col ) {
+		this.get = function ( row, col ) {
 
 			let colPools = pools[ row ];
 			if ( ! colPools ) {
@@ -57,7 +58,7 @@ export class MatrixPool {
 
 		};
 
-		this.releaseAll = function() {
+		this.releaseAll = function () {
 
 			for ( let i = 0, l = poolArray.length; i < l; i ++ ) {
 

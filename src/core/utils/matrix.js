@@ -225,9 +225,11 @@ function toString( matrix, dec = 3 ) {
 			str += matrix[ r ][ c ].toFixed( dec ) + ', ';
 
 		}
+
 		str += '\n';
 
 	}
+
 	return str;
 
 }

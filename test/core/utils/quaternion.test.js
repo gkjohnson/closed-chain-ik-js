@@ -6,10 +6,10 @@ describe( 'smallestDifferenceQuaternion', () => {
 
 		const output = new Array( 4 );
 
-		smallestDifferenceQuaternion( output, [ 1, 1, 1, 1 ], [ - 1, - 1, - 1, -1 ] );
+		smallestDifferenceQuaternion( output, [ 1, 1, 1, 1 ], [ - 1, - 1, - 1, - 1 ] );
 		expect( output ).toEqual( [ 0, 0, 0, 0 ] );
 
-		smallestDifferenceQuaternion( output, [ 0, 0, 1, 0 ], [ 0, 0, 0, -1 ] );
+		smallestDifferenceQuaternion( output, [ 0, 0, 1, 0 ], [ 0, 0, 0, - 1 ] );
 		expect( output ).toEqual( [ 0, 0, 1, 1 ] );
 
 	} );

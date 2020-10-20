@@ -1,6 +1,6 @@
 import { vec3, vec4, mat4 } from 'gl-matrix';
 import { MatrixPool } from './MatrixPool.js';
-import { accumulateClosureError } from './utils/solver.js';
+import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
 
@@ -210,7 +210,7 @@ export class ChainSolver {
 			// lock joints inside this function so maybe we can forgo that?
 			targetJoints.length = 0;
 			freeJoints.length = 0;
-			this.countUnconvergedVariables( freeJoints, targetJoints, dofResultInfo )
+			this.countUnconvergedVariables( freeJoints, targetJoints, dofResultInfo );
 			const { freeDoF, errorRows, totalError } = dofResultInfo;
 
 			// Check if we've converged
@@ -236,6 +236,7 @@ export class ChainSolver {
 				break;
 
 			}
+
 			prevErrorMagnitude = totalError;
 
 			// Check if we've hit max iterations
@@ -404,7 +405,8 @@ export class ChainSolver {
 			this.applyJointAngles( freeJoints, deltaTheta );
 
 			// there's still error and we're under the max iterations
-		} while( true );
+
+		} while ( true );
 
 		targetJoints.length = 0;
 		freeJoints.length = 0;
@@ -440,7 +442,7 @@ export class ChainSolver {
 				}
 
 				// TODO: why are we negating here?
-				const value = joint.getDoFValue( dof )
+				const value = joint.getDoFValue( dof );
 				const hitLimit = joint.setDoFValue( dof, value - deltaTheta[ dti ][ 0 ] );
 
 				// lock the joint if we hit a limit
@@ -452,6 +454,7 @@ export class ChainSolver {
 						lockedDoF.fill( 0 );
 
 					}
+
 					const lockedCount = lockedJointDoFCount.get( joint );
 					lockedJointDoFCount.set( joint, lockedCount + 1 );
 					lockedDoF[ dof ] = 1;
@@ -597,6 +600,7 @@ export class ChainSolver {
 									rowIndex += 4;
 
 								}
+
 								rowIndex += translationDoFCount;
 
 							} else {
@@ -619,7 +623,7 @@ export class ChainSolver {
 
 							// if the target isn't relevant then there's no delta
 							let totalRows = 7;
-							if ( targetJoint.isGoal  ) {
+							if ( targetJoint.isGoal ) {
 
 								totalRows = targetJoint.translationDoFCount;
 								if ( targetJoint.rotationDoFCount === 3 ) {
@@ -755,6 +759,7 @@ export class ChainSolver {
 					totalError += errorResultInfo.totalError;
 
 				}
+
 				addToTargetList = true;
 				errorRows += errorResultInfo.rowCount;
 

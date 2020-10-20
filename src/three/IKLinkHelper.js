@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { Group, Matrix4 } from 'three';
-import { Line2,  } from 'three/examples/jsm/lines/Line2.js';
+import { Line2, } from 'three/examples/jsm/lines/Line2.js';
 
 const glTempPos = new Float64Array( 3 );
 const glTempMatrix = new Float64Array( 16 );

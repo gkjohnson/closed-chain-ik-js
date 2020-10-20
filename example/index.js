@@ -15,7 +15,7 @@ import {
 	MeshBasicMaterial,
 } from 'three';
 import {
-    OrbitControls,
+	OrbitControls,
 } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
 	TransformControls
@@ -113,7 +113,7 @@ function init() {
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
 
 	targetObject = new Group();
-	targetObject.position.set( 0, 1, 1 )
+	targetObject.position.set( 0, 1, 1 );
 	scene.add( targetObject );
 	transformControls.attach( targetObject );
 
@@ -135,7 +135,8 @@ function init() {
 
 	window.addEventListener( 'keydown', e => {
 
-		switch( e.key ) {
+		switch ( e.key ) {
+
 			case 'w':
 				transformControls.setMode( 'translate' );
 				break;
@@ -149,6 +150,7 @@ function init() {
 				controls.target.set( 0, 0, 0 );
 				controls.update();
 				break;
+
 		}
 
 	} );
@@ -186,7 +188,7 @@ function init() {
 
 	renderer.domElement.addEventListener( 'pointerup', e => {
 
-		if ( Math.abs( e.clientX - mouse.x ) > 3 ||  Math.abs( e.clientY - mouse.y ) > 3 ) return;
+		if ( Math.abs( e.clientX - mouse.x ) > 3 || Math.abs( e.clientY - mouse.y ) > 3 ) return;
 
 		if ( ! urdfRoot ) return;
 
@@ -237,6 +239,7 @@ function init() {
 				upVec = [ 0, 0, 1 ];
 
 			}
+
 			mat4.targetTo( lookMat, eyeVec, posVec, upVec );
 
 			const rootGoalJoint = new Joint();
@@ -247,7 +250,7 @@ function init() {
 			);
 			mat4.getRotation( rootGoalJoint.quaternion, lookMat );
 
-			const goalLink = new Link;
+			const goalLink = new Link();
 
 			const goalJoint = new Joint();
 			ikLink.getWorldPosition( goalJoint.position );
@@ -282,7 +285,7 @@ function init() {
 
 				selectedGoalIndex = goalIcons.indexOf( result ? result.object.parent : null );
 
-				if ( selectedGoalIndex !== -1 ) {
+				if ( selectedGoalIndex !== - 1 ) {
 
 					const ikgoal = goals[ selectedGoalIndex ];
 					targetObject.position.set( ...ikgoal.position );
@@ -350,6 +353,7 @@ function raycast( e ) {
 		return { ikLink: null, result: null };
 
 	}
+
 	const result = results[ 0 ];
 
 	let nearestLink = null;
@@ -414,6 +418,7 @@ function render() {
 				statuses = solver.solve();
 
 			}
+
 			const endTime = window.performance.now();
 			const deltaTime = endTime - startTime;
 
@@ -495,9 +500,9 @@ function render() {
 
 function rebuildGUI() {
 
-    if ( gui ) {
+	if ( gui ) {
 
-        gui.destroy();
+		gui.destroy();
 
 	}
 
@@ -509,7 +514,7 @@ function rebuildGUI() {
 	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut' ] ).onChange( value => {
 
 		let promise = null;
-		switch( value ) {
+		switch ( value ) {
 
 			case 'ATHLETE':
 				promise = loadATHLETE();
@@ -526,7 +531,7 @@ function rebuildGUI() {
 	} );
 	gui.add( params, 'displayMesh' ).name( 'display mesh' );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
-	gui.add( params, 'displayIk' ).name( 'display ik chains');
+	gui.add( params, 'displayIk' ).name( 'display ik chains' );
 	gui.add( params, 'webworker' ).onChange( v => {
 
 		if ( v ) {
@@ -544,7 +549,7 @@ function rebuildGUI() {
 	gui.add( { reset: () => {
 
 		let promise = null;
-		switch( params.model ) {
+		switch ( params.model ) {
 
 			case 'ATHLETE':
 				promise = loadATHLETE();

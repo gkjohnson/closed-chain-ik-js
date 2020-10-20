@@ -168,6 +168,7 @@ export class Joint extends Frame {
 			target[ i ] = dofFlags[ i ] * values[ i - 3 ];
 
 		}
+
 		this.tryMinimizeEulerAngles();
 
 	}
@@ -191,6 +192,7 @@ export class Joint extends Frame {
 			getClosestEulerRepresentation( quatEuler, tempEuler, quatEuler );
 
 		}
+
 		this._setViaFullEuler( target, quatEuler );
 
 	}
@@ -206,7 +208,7 @@ export class Joint extends Frame {
 
 		args.forEach( ( dof, i ) => {
 
-			if ( dof < 0 || dof >= 6 ){
+			if ( dof < 0 || dof >= 6 ) {
 
 				throw new Error( 'Joint: Invalid degree of freedom enum ' + dof + '.' );
 
@@ -221,6 +223,7 @@ export class Joint extends Frame {
 			if ( i !== 0 && args[ i - 1 ] > dof ) {
 
 				throw new Error( 'Joint: Joints degrees of freedom must be specified in position then rotation, XYZ order' );
+
 			}
 
 		} );
@@ -268,7 +271,7 @@ export class Joint extends Frame {
 
 	setDoFQuaternion( ...values ) {
 
-		this._setViaQuaternion( this.dofValues, values )
+		this._setViaQuaternion( this.dofValues, values );
 		this.setMatrixDoFNeedsUpdate();
 
 	}
@@ -337,7 +340,7 @@ export class Joint extends Frame {
 	// Get and set the restPose values of the different degrees of freedom
 	setTargetValues( ...values ) {
 
-		this._setValues( this.dofTarget,  values );
+		this._setValues( this.dofTarget, values );
 
 	}
 
@@ -378,7 +381,7 @@ export class Joint extends Frame {
 		for ( const i in values ) {
 
 			const d = dof[ i ];
-			this.setMinLimit( d, values[ i ] )
+			this.setMinLimit( d, values[ i ] );
 
 		}
 
@@ -403,7 +406,7 @@ export class Joint extends Frame {
 		for ( const i in values ) {
 
 			const d = dof[ i ];
-			this.setMaxLimit( d, values[ i ] )
+			this.setMaxLimit( d, values[ i ] );
 
 		}
 
