@@ -74,7 +74,7 @@ export class Solver {
 
 					traversal.forEach( c => {
 
-						chainSet.add( c )
+						chainSet.add( c );
 						allChainJoints.add( c );
 
 					} );

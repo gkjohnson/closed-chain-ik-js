@@ -14,6 +14,7 @@ function clampEulerValue( value ) {
 		result += PI2;
 
 	}
+
 	return result;
 
 }
@@ -31,6 +32,7 @@ function toSmallestEulerValueDistance( target, toAdjust ) {
 		result -= Math.sign( delta ) * PI2;
 
 	}
+
 	return result;
 
 }
@@ -100,7 +102,7 @@ function toSmallestRedundantTwistRepresentation( output, target, toAdjust ) {
 
 	output[ 0 ] = target[ 0 ];
 	output[ 1 ] = toSmallestEulerValueDistance( target[ 1 ], toAdjust[ 1 ] );
-	output[ 2 ] = toSmallestEulerValueDistance( target[ 2 ],  zRotationSign * ( combinedXRotation - target[ 0 ] ) );
+	output[ 2 ] = toSmallestEulerValueDistance( target[ 2 ], zRotationSign * ( combinedXRotation - target[ 0 ] ) );
 
 	toSmallestEulerDistance( output, target, output );
 

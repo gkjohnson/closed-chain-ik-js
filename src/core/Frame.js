@@ -191,7 +191,8 @@ export class Frame {
 				}
 
 			}
-			i++;
+
+			i ++;
 
 		}
 

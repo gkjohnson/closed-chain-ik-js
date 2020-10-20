@@ -75,6 +75,7 @@ export function accumulateClosureError(
 			vec3.scale( tempPos, tempPos, translationErrorClamp / posMag );
 
 		}
+
 		vec4.scale( tempPos, tempPos, translationFactor );
 
 		if ( rotMag > rotationErrorClamp ) {
@@ -82,6 +83,7 @@ export function accumulateClosureError(
 			vec4.scale( tempQuat, tempQuat, rotationErrorClamp / rotMag );
 
 		}
+
 		vec4.scale( tempQuat, tempQuat, rotationFactor );
 
 		if ( joint.isGoal ) {

@@ -35,7 +35,7 @@ export function applyToBuffer( frames, floatBuffer, byteBuffer, copyDoFValues = 
 
 }
 
-export function applyFromBuffer( frames, floatBuffer, byteBuffer, copyDoFValues = true, copyJointSettings = true  ) {
+export function applyFromBuffer( frames, floatBuffer, byteBuffer, copyDoFValues = true, copyJointSettings = true ) {
 
 	for ( let i = 0, l = frames.length; i < l; i ++ ) {
 

@@ -111,6 +111,7 @@ export function deserialize( data ) {
 
 			let frame;
 			switch ( type ) {
+
 				case 'Goal':
 				case 'Joint':
 					frame = type === 'Goal' ? new Goal() : new Joint();
@@ -129,6 +130,7 @@ export function deserialize( data ) {
 				case 'Link':
 					frame = new Link();
 					break;
+
 			}
 
 			frame.name = name;

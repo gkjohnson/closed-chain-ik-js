@@ -28,6 +28,7 @@ class RotationLimitHelper extends Mesh {
 			min = 0;
 
 		}
+
 		if ( this._min === min && this._delta === delta ) {
 
 			return;
