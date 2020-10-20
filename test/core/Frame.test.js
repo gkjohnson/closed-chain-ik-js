@@ -193,14 +193,19 @@ describe( 'Frame', () => {
 		it( 'should not be able to add itself as a child.', () => {
 
 			const f = new Frame();
+			let caught = false;
 			try {
 
 				f.addChild( f );
 				throw new Error();
 
-			} catch {
+			} catch ( e ) {
+
+				caught = true;
 
 			}
+
+			expect( caught ).toBeTruthy();
 
 		} );
 
@@ -224,7 +229,7 @@ describe( 'Frame', () => {
 			expect( c3.matrixNeedsUpdate ).toBeFalsy();
 			expect( f1.children.map( f => f.name ) ).toEqual( [] );
 
-			f1.addChild( c1 )
+			f1.addChild( c1 );
 			expect( f1.children.map( f => f.name ) ).toEqual( [ 'c1' ] );
 			expect( c1.matrixWorldNeedsUpdate ).toBeTruthy();
 			expect( c1.matrixNeedsUpdate ).toBeFalsy();
@@ -447,7 +452,7 @@ describe( 'Frame', () => {
 			c1.addChild( c2 );
 			f.updateMatrixWorld( true );
 
-			f.setPosition( 1, 2, 3);
+			f.setPosition( 1, 2, 3 );
 			expect( f.matrixNeedsUpdate ).toBeTruthy();
 
 			c2.updateMatrixWorld();

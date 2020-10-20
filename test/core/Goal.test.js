@@ -37,11 +37,12 @@ describe( 'Goal', () => {
 
 				goal.setGoalDoF( DOF.EX );
 
-			} catch {
+			} catch ( e ) {
 
 				caught = true;
 
 			}
+
 			expect( caught ).toBeTruthy();
 
 		} );
@@ -59,11 +60,12 @@ describe( 'Goal', () => {
 
 				goal.addChild( new Link() );
 
-			} catch {
+			} catch ( e ) {
 
 				caught = true;
 
 			}
+
 			expect( caught ).toBeTruthy();
 
 			caught = false;
@@ -71,11 +73,12 @@ describe( 'Goal', () => {
 
 				goal.attachChild( new Link() );
 
-			} catch {
+			} catch ( e ) {
 
 				caught = true;
 
 			}
+
 			expect( caught ).toBeTruthy();
 
 		} );

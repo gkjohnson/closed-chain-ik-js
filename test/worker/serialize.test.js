@@ -5,7 +5,7 @@ import { randomizeFrame } from './utils.js';
 
 describe( 'serialize / deserialize', () => {
 
-	it ( 'should serialize to different arrays.', () => {
+	it( 'should serialize to different arrays.', () => {
 
 		const joint = new Joint();
 		const link = new Link();
@@ -35,7 +35,7 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	it ( 'should deserialize to the same list.', () => {
+	it( 'should deserialize to the same list.', () => {
 
 		const joint = new Joint();
 		const link = new Link();
@@ -52,7 +52,7 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	it ( 'should deserialize to the same structure.', () => {
+	it( 'should deserialize to the same structure.', () => {
 
 		const joint = new Joint();
 		const link = new Link();
@@ -76,7 +76,7 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	it ( 'should be able to deserialize a cyclic structure.', () => {
+	it( 'should be able to deserialize a cyclic structure.', () => {
 
 		const l1 = new Link();
 		const j1 = new Joint();
@@ -98,7 +98,7 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	it ( 'should be able to deserialize a closure structure.', () => {
+	it( 'should be able to deserialize a closure structure.', () => {
 
 		const l1 = new Link();
 		const j1 = new Joint();
@@ -120,7 +120,7 @@ describe( 'serialize / deserialize', () => {
 
 	} );
 
-	it ( 'should be able to deserialize a deep structure.', () => {
+	it( 'should be able to deserialize a deep structure.', () => {
 
 		const list = [];
 		const root = generate( 3, 4 );
@@ -140,7 +140,7 @@ describe( 'serialize / deserialize', () => {
 			const j = new Joint();
 			randomizeFrame( j );
 
-			const l = new Link;
+			const l = new Link();
 			randomizeFrame( l );
 
 			j.addChild( l );
