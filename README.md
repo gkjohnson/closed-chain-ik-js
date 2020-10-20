@@ -1,6 +1,5 @@
 # Closed Chain Inverse Kinematics
 
-<!--[![npm version](https://img.shields.io/npm/v/urdf-loader.svg?style=flat-square)](https://www.npmjs.com/package/urdf-loader)-->
 [![travis build](https://img.shields.io/travis/gkjohnson/closed-chain-ik-js/master.svg?style=flat-square)](https://travis-ci.com/gkjohnson/closed-chain-ik-js)
 [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/closed-chain-ik-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/closed-chain-ik-js/)
 
