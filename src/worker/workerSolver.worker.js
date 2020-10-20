@@ -14,7 +14,7 @@ let buffer = null;
 let floatBuffer = null;
 let byteBuffer = null;
 
-global.onmessage = function( { data: e } ) {
+global.onmessage = function ( { data: e } ) {
 
 	const { type, data } = e;
 	switch ( type ) {
@@ -42,6 +42,7 @@ global.onmessage = function( { data: e } ) {
 				updateSolve();
 
 			}
+
 			break;
 
 		// Stop the solve loop
@@ -52,6 +53,7 @@ global.onmessage = function( { data: e } ) {
 				solveHandle = - 1;
 
 			}
+
 			break;
 
 	}
