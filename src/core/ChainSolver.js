@@ -1,6 +1,6 @@
 import { vec3, vec4, mat4 } from 'gl-matrix';
 import { MatrixPool } from './MatrixPool.js';
-import { accumulateClosureError } from './utils/solver.js';
+import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
 

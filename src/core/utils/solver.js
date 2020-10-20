@@ -1,8 +1,9 @@
 import { vec3, vec4 } from 'gl-matrix';
+import { DOF } from '../Joint.js';
 
 const tempPos = new Float64Array( 3 );
 const tempQuat = new Float64Array( 4 );
-
+const tempEuler = new Float64Array( 3 );
 export function accumulateClosureError(
 	solver,
 	joint,
@@ -151,6 +152,7 @@ export function accumulateTargetError(
 		rotationDoFCount,
 		translationFactor,
 		rotationFactor,
+		dofList,
 	} = joint;
 
 	// get the position delta
@@ -169,7 +171,7 @@ export function accumulateTargetError(
 	const lockedDoFCount = lockedJointDoFCount.get( joint ) || 0;
 	result.rowCount = translationDoFCount + rotationDoFCount - lockedDoFCount;
 	result.isConverged = posDelta < translationConvergeThreshold && rotDelta < rotationConvergeThreshold;
-	errorResult.totalError = posDelta + rotDelta;
+	result.totalError = posDelta + rotDelta;
 
 	if ( errorVector ) {
 
