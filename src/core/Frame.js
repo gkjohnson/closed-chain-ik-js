@@ -7,7 +7,7 @@ const tempMatrix = new Float64Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempPos = new Float32Array( 3 );
 const sharedTraversedChildren = new Set();
-const sharedTraverseArray = new Set();
+const sharedTraverseArray = [];
 let traverseVariablesInUse = false;
 
 export class Frame {
