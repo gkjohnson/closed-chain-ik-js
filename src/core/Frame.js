@@ -6,7 +6,9 @@ const tempInverse = new Float64Array( 16 );
 const tempMatrix = new Float64Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempPos = new Float32Array( 3 );
-const traversedChildren = new Set();
+const sharedTraversedChildren = new Set();
+const sharedTraverseArray = new Set();
+let traverseVariablesInUse = false;
 
 export class Frame {
 
@@ -134,7 +136,21 @@ export class Frame {
 
 	traverseParents( cb ) {
 
-		const traversedChildren = new Set();
+		let traversedChildren;
+		const originalVariablesInUse = traverseVariablesInUse;
+		if ( traverseVariablesInUse ) {
+
+			traversedChildren = new Set();
+
+		} else {
+
+			traversedChildren = sharedTraversedChildren;
+			traversedChildren.clear();
+
+		}
+
+		traverseVariablesInUse = true;
+
 		let curr = this.parent;
 		while ( curr ) {
 
@@ -156,14 +172,31 @@ export class Frame {
 
 		}
 
+		traverseVariablesInUse = originalVariablesInUse;
+
 	}
 
 	traverse( cb ) {
 
-		const traversedChildren = new Set();
-		// traversedChildren.clear();
-		traversedChildren.add( this );
-		const stack = [ this ];
+		let traversedChildren;
+		let stack;
+		const originalVariablesInUse = traverseVariablesInUse;
+		if ( traverseVariablesInUse ) {
+
+			traversedChildren = new Set();
+			stack = [ this ];
+
+		} else {
+
+			traversedChildren = sharedTraversedChildren;
+			traversedChildren.clear();
+
+			stack = sharedTraverseArray;
+			stack[ 0 ] = this;
+
+		}
+
+		traverseVariablesInUse = true;
 
 		let i = 0;
 		let tot = 1;
@@ -196,6 +229,8 @@ export class Frame {
 			i ++;
 
 		}
+
+		traverseVariablesInUse = originalVariablesInUse;
 
 	}
 
