@@ -218,8 +218,6 @@ export class Frame {
 
 	}
 
-
-	
 	addChild( child ) {
 
 		if ( child.parent ) {
