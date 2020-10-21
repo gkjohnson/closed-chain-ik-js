@@ -136,6 +136,8 @@ export class Frame {
 
 	traverseParents( cb ) {
 
+		// Use the shared variables if they're not already in use to avoid
+		// memory allocation
 		let traversedChildren;
 		const originalVariablesInUse = traverseVariablesInUse;
 		if ( traverseVariablesInUse ) {
@@ -173,14 +175,17 @@ export class Frame {
 		}
 
 		traverseVariablesInUse = originalVariablesInUse;
+		traversedChildren.clear();
 
 	}
 
 	traverse( cb ) {
 
+		// Use the shared variables if they're not already in use to avoid
+		// memory allocation
+		const originalVariablesInUse = traverseVariablesInUse;
 		let traversedChildren;
 		let stack;
-		const originalVariablesInUse = traverseVariablesInUse;
 		if ( traverseVariablesInUse ) {
 
 			traversedChildren = new Set();
@@ -231,6 +236,8 @@ export class Frame {
 		}
 
 		traverseVariablesInUse = originalVariablesInUse;
+		traversedChildren.clear();
+		stack.fill( null );
 
 	}
 
