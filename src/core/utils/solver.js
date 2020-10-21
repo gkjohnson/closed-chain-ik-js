@@ -178,7 +178,7 @@ export function accumulateTargetError(
 		const lockedDoF = lockedJointDoF.get( joint );
 		const isLocked = lockedDoFCount !== 0;
 
-		const rowIndex = 0;
+		let rowIndex = 0;
 
 		// error from current state to target
 		tempPos[ 0 ] = dofTarget[ 0 ] - dofValues[ 0 ];
