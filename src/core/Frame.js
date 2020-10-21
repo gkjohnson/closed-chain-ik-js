@@ -198,6 +198,29 @@ export class Frame {
 
 	}
 
+	find( cb ) {
+
+		let result = null;
+		this.traverse( c => {
+
+			if ( result ) {
+
+				return true;
+
+			} else if ( cb( c ) ) {
+
+				result = c;
+				return true;
+
+			}
+
+		} );
+		return result;
+
+	}
+
+
+	
 	addChild( child ) {
 
 		if ( child.parent ) {
