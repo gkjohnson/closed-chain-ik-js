@@ -1,5 +1,4 @@
 import { Link } from '../../src/index.js';
-import { JOINT_STRIDE } from '../../src/worker/utils.js';
 import { Joint, DOF } from '../core/Joint.test.js';
 
 describe( 'Joint', () => {
