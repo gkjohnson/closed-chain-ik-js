@@ -1,5 +1,5 @@
-import { Link } from '../../src/index.js';
-import { Joint, DOF } from '../core/Joint.test.js';
+import { Link } from '../../src/core/Link.js';
+import { Joint, DOF } from '../../core/Joint.js';
 
 describe( 'Joint', () => {
 
