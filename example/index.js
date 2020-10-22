@@ -45,7 +45,7 @@ const params = {
 	displayIk: true,
 	displayGoals: true,
 	model: 'ATHLETE',
-	webworker: true,
+	webworker: typeof SharedArrayBuffer !== 'undefined',
 };
 
 const solverOptions = {
