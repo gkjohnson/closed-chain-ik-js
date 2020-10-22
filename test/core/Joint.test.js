@@ -45,14 +45,14 @@ describe( 'Joint', () => {
 			const joint = new Joint();
 			joint.setDoF( DOF.X, DOF.Z, DOF.EX );
 
-			joint.setMinValues( 1, 2, 3 );
-			joint.setMaxValues( 2, 4, 6 );
+			joint.setMinLimits( 1, 2, 3 );
+			joint.setMaxLimits( 2, 4, 6 );
 			joint.setTargetValues( 2, 4, 6 );
 			joint.setRestPoseValues( 2, 4, 6 );
 			joint.setDoFValues( 1, 2, 3 );
 
-			expect( joint.minDoFLimit ).toEqual( new Float32Array( [ 1, 0, 2, 3, 0, 0 ] ) );
-			expect( joint.maxDoFLimit ).toEqual( new Float32Array( [ 2, 0, 4, 6, 0, 0 ] ) );
+			expect( joint.minDoFLimit ).toEqual( new Float32Array( [ 1, -Infinity, 2, 3, -Infinity, -Infinity ] ) );
+			expect( joint.maxDoFLimit ).toEqual( new Float32Array( [ 2, Infinity, 4, 6, Infinity, Infinity ] ) );
 			expect( joint.dofTarget ).toEqual( new Float32Array( [ 2, 0, 4, 6, 0, 0 ] ) );
 			expect( joint.dofRestPose ).toEqual( new Float32Array( [ 2, 0, 4, 6, 0, 0 ] ) );
 			expect( joint.dofValues ).toEqual( new Float32Array( [ 1, 0, 2, 3, 0, 0 ] ) );
