@@ -447,6 +447,8 @@ updateStructure() : void
 
 Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker.
 
+> :warning: `WorkerSolver` relies on [SharedArrayBuffers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) which may not be available on all platforms.
+
 ### .updateSolverSettings
 
 ```js
