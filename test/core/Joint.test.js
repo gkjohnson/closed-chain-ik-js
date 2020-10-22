@@ -51,7 +51,7 @@ describe( 'Joint', () => {
 			joint.setRestPoseValues( 2, 4, 6 );
 			joint.setDoFValues( 1, 2, 3 );
 
-			expect( joint.minDoFLimit ).toEqual( new Float32Array( [ 1, -Infinity, 2, 3, -Infinity, -Infinity ] ) );
+			expect( joint.minDoFLimit ).toEqual( new Float32Array( [ 1, - Infinity, 2, 3, - Infinity, - Infinity ] ) );
 			expect( joint.maxDoFLimit ).toEqual( new Float32Array( [ 2, Infinity, 4, 6, Infinity, Infinity ] ) );
 			expect( joint.dofTarget ).toEqual( new Float32Array( [ 2, 0, 4, 6, 0, 0 ] ) );
 			expect( joint.dofRestPose ).toEqual( new Float32Array( [ 2, 0, 4, 6, 0, 0 ] ) );
