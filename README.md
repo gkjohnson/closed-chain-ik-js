@@ -483,7 +483,7 @@ dispose() : void
 
 _extends THREE.Group_
 
-A helper class for rendering the joints and links in a three.js scene.
+A helper class for rendering the joints and links in a three.js scene. Renders frame relationships as lines and joints degrees of freedom with indicators based on the joint type.
 
 ### .roots
 
@@ -491,11 +491,15 @@ A helper class for rendering the joints and links in a three.js scene.
 roots : Array<Frame>
 ```
 
+Set of roots to render in the helper visualization. If this is changed then `.update` must be called.
+
 ### .constructor
 
 ```js
 constructor( roots : Array<Frame> )
 ```
+
+Takes the set of roots to visualize.
 
 ### .setJointScale
 
@@ -503,11 +507,15 @@ constructor( roots : Array<Frame> )
 setJointScale( scale : Number ) : void
 ```
 
+Sets the scale of the joint indicators.
+
 ### .setResolution
 
 ```js
 setResolution( width : Number, height : Number ) : void
 ```
+
+Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
 
 ### .update
 
@@ -515,8 +523,12 @@ setResolution( width : Number, height : Number ) : void
 update() : void
 ```
 
+Must be called if the structure of the IK system being visualized has changed.
+
 ### .dispose
 
 ```js
 dispose() : void
 ```
+
+Calls `dispose` on all created materials and geometry in the tree.
