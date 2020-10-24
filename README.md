@@ -343,13 +343,31 @@ A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only
 
 _extends [Frame](#Frame)_
 
-A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children.
+A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children and a Joint may only have a single child.
+
+### .child
+
+```js
+readonly child : Link = null
+```
+
+Reference to the joint child.
+
+### .isClosure
+
+```js
+readonly isClosure : Boolean = false
+```
+
+Whether or not the child relationship is a closure or not.
 
 ### .dof
 
 ```js
-readonly dof : Array<Number>
+readonly dof : Array<DOF>
 ```
+
+A list of all the free degrees of freedom.
 
 ### .dofFlags
 
@@ -357,11 +375,15 @@ readonly dof : Array<Number>
 readonly dofFlags : Uint8Array[6]
 ```
 
+A list of `0` and `1` flags with `1` corresonding to a field in `dof`.
+
 ### .dofValues
 
 ```js
 readonly dofValues : Float32Array[6]
 ```
+
+The current joint values for all joint degrees of freedom.
 
 ### .dofTarget
 
@@ -369,11 +391,15 @@ readonly dofValues : Float32Array[6]
 readonly dofTarget : Float32Array[6]
 ```
 
+The joint value targets for each degree of freedom. [Solver](#Solver) will attempt to solve for these targets if [targetSet](#targetSet) is true.
+
 ### .dofRestPose
 
 ```js
 readonly dofRestPose : Float32Array[6]
 ```
+
+The rest pose for each joint degree of freedom. [Solver](#Solver) will attempt to move the joint towards this position when it does not compromise solving for the other goals and when [restPoseSet](#restPoseSet) is true.
 
 ### .minDoFLimit
 
@@ -381,11 +407,15 @@ readonly dofRestPose : Float32Array[6]
 readonly minDoFLimit : Float32Array[6]
 ```
 
+The minimum value limits for each joint degree of freeom.
+
 ### .maxDoFLimit
 
 ```js
 readonly maxDoFLimit : Float32Array[6]
 ```
+
+The maximum value limits for each joint degree of freeom.
 
 ### .matrixDoF
 
@@ -393,11 +423,15 @@ readonly maxDoFLimit : Float32Array[6]
 readonly matrixDoF : Float64Array[16]
 ```
 
+The matrix representing the transformation offset due to the current joint values.
+
 ### .targetSet
 
 ```js
 targetSet : Boolean = false
 ```
+
+When set to `true` [Solver](#Solver) will try to move this joints dofValues towards the target values.
 
 ### .restPoseSet
 
@@ -405,17 +439,23 @@ targetSet : Boolean = false
 restPoseSet : Boolean = false
 ```
 
+When set to `true` [Solver](#Solver) will try to move this joints dofValues towards the rest pose values without compromising the other goals.
+
 ### .setDoF
 
 ```js
 setDoF( ...dof : Array<DOF> ) : void
 ```
 
+Sets the degrees of freedom of the joint. Arguments must be passed in X, Y, Z, EX, EY, EZ order without duplicate values. All relatd degree of freedom values are reset.
+
 ### .clearDoF
 
 ```js
 clearDoF() : void
 ```
+
+Clears all degrees of freedom.
 
 ### .set\[ \* \]Values
 
@@ -426,6 +466,8 @@ setTargetValues( ...values : Array<Number> ) : void;
 setMinLimits( ...values : Array<Number> ) : void;
 setMaxLimits( ...values : Array<Number> ) : void;
 ```
+
+The number of arguments must match the number of degrees of freedom of the joint.
 
 ### .set\[ \* \]Value
 
@@ -452,6 +494,8 @@ getMaxLimit( dof : DOF ) : Number
 ```js
 makeClosure( child : Link ) : void
 ```
+
+Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
 
 ## Goal
 
