@@ -417,7 +417,51 @@ A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). 
 
 ## Solver
 
-Class for solving the closure and target joint constraints of a sytem.
+Class for solving the closure and target joint constraints of a sytem. As well as the listed fields a set of "options" are set on the object which are listed here:
+
+```js
+// The max amount of iterations to try to solve for. The solve will terminate
+// with SOLVE_STATUS.TIMEOUT if this limit is exceeded.
+maxIterations = 5;
+
+// The threshold under which a joint is not considered to have really moved. If
+// no joint is moved more than this threshold then the solve will terminate with
+// SOLVE_STATUS.STALLED.
+stallThreshold = 1e-4;
+
+// The threshold for comparing how much error has changed between solve iterations.
+// If the error has grown by more than this threshold then the solve will terminate
+// with SOLVE_STATUS.DIVERGED.
+divergeThreshold = 0.01;
+
+// The fixed damping factor to use in the DLS calculation.
+dampingFactor = 0.001;
+
+// The factor with which to move the joints towards the rest pose if set. 
+restPoseFactor = 0.01;
+
+// The thresholds with which to compute whether or not the translation or rotation
+// goals have been met. If the error between target and goal is under these
+// thresholds then the solve will terminate with SOLVE_STATUS.CONVERGED.
+translationConvergeThreshold = 1e-3;
+rotationConvergeThreshold = 1e-5;
+
+// Factors to apply to the translation and rotation error in the error vector.
+// Useful for weighting rotation higher than translation if they do not seem to
+// be solved "evenly". Values are expected to be in the range [ 0, 1 ].
+translationFactor = 1;
+rotationFactor = 1;
+
+// The amount to move a joint when calculating the change in error a joint has
+// for a jacobian.
+translationStep = 1e-3;
+rotationStep = 1e-3;
+
+// The step to take towards the IK goals when solving. Setting this to a larger value
+// may solve more quickly but may lead also lead to divergence.
+translationErrorClamp = 0.1;
+rotationErrorClamp = 0.1;
+```
 
 ### .roots
 
@@ -425,11 +469,15 @@ Class for solving the closure and target joint constraints of a sytem.
 roots : Array<Frame>
 ```
 
+The list of roots that should be accounted for in a solve. Note that if a closure joint is not traversable from a root then it or one of its parents must be included in the list of roots.
+
 ### .constructor
 
 ```js
 constructor( roots : Array<Frame> )
 ```
+
+Constructor takes a list of roots to solve for.
 
 ### .solve
 
@@ -437,17 +485,29 @@ constructor( roots : Array<Frame> )
 solve() : Array<SOLVE_STATUS>
 ```
 
+Traverses the given set of roots to find joint chains to solve for and attempts to solve for the error in the system goals. A result is returned for each independent chain found in the system.
+
 ### .updateStructure
 
 ```js
 updateStructure() : void
 ```
 
+Must be called whenever parent child relationships and structural changes related to the tree change or `.roots` is modified.
+
 ## WorkerSolver
 
-Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker.
+Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker. Results are automatically copied to the joint system being solved for.
 
 > :warning: `WorkerSolver` relies on [SharedArrayBuffers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) which may not be available on all platforms.
+
+### .results
+
+```js
+results : Array<Solve_STATUS>
+```
+
+The list of the last results from the solve copied over from the WebWorker.
 
 ### .updateSolverSettings
 
@@ -455,11 +515,15 @@ Implements the interface defined by [Solver](#Solver) but runs the solve asynchr
 updateSolverSettings( settings : Object ) : void
 ```
 
+Sets the solver settings in the WebWorker to the values in the given object. Valid "options" values are listed in the [Solver](#Solver) docs.
+
 ### .updateFrameState
 
 ```js
 updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
 ```
+
+Copies the joint settings for the given joints to the WebWorker for a solve. "Joint settings" include everything except for joint values (that the solver would be solving for) and parent child relationships. If joint values or parent child relationhips change then `updateStructure` must be called.
 
 ### .solve
 
@@ -467,17 +531,23 @@ updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
 solve() : void
 ```
 
+Starts a solve in the WebWorker if one is not active. The solve will terminate automatically if none of the results are `SOLVE_STATUS.TIMEOUT`.
+
 ### .stop
 
 ```js
 stop() : void
 ```
 
+Terminate any active solve in the WebWorker.
+
 ### .dispose
 
 ```js
 dispose() : void
 ```
+
+Terminates the WebWorker and sets members to null.
 
 ## IKRootsHelper
 
