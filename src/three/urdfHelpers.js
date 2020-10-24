@@ -9,6 +9,8 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
 	let rootNode = null;
 	let node;
+	let doReturn = true;
+
 	if ( urdfNode.isURDFRobot ) {
 
 		rootNode = new Joint();
@@ -24,6 +26,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
 		node = new Link();
 		node.name = urdfNode.name;
+		doReturn = false;
 
 	} else if ( urdfNode.isURDFJoint ) {
 
@@ -88,6 +91,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 			case 'fixed': {
 
 				node = rootNode;
+				doReturn = false;
 				break;
 
 			}
@@ -97,6 +101,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 			default:
 
 				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
+				doReturn = false;
 
 		}
 
@@ -135,12 +140,13 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 		if ( res ) {
 
 			node.addChild( res );
+			doReturn = true;
 
 		}
 
 	}
 
-	return rootNode || node;
+	return doReturn ? rootNode || node : null;
 
 }
 
