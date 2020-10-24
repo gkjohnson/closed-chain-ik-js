@@ -141,17 +141,23 @@ Set of functions for creating an ik system from and working with results from [U
 urdfRobotToIKRoot( robot : URDFRobot ) : Joint
 ```
 
+Generates an IK three based on the provided `URDFRobot` with the root joint having a all 6 degrees of freedom set. Returns the root joint.
+
 ### setUrdfFromIK
 
 ```js
 setUrdfFromIK( robot : URDFRobot, ikRoot : Joint ) : void
 ```
 
+Copies the joint values from `robot` onto `ikRoot` based on joint names.
+
 ### setIKFromUrdf
 
 ```js
 setIKFromUrdf( ikRoot : Joint, robot : URDFRobot ) : void
 ```
+
+Copies the joint values from `ikRoot` onto `robot` based on joint names.
 
 ## Frame
 
