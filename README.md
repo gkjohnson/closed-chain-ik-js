@@ -163,11 +163,15 @@ A base class for `Link`, `Joint`, and `Goal` representing a frame defined by a p
 position : Float32Array[ 3 ]
 ```
 
+The position of the frame. If this is modified directly `setMatrixNeedsUpdate()` must be called.
+
 ### .quaternion
 
 ```js
 quaternion : Float32Array[ 4 ]
 ```
+
+The orientation of the frame. If this is modified directly `setMatrixNeedsUpdate()` must be called.
 
 ### .matrix
 
@@ -175,11 +179,15 @@ quaternion : Float32Array[ 4 ]
 readonly matrix : Float64Array[ 16 ]
 ```
 
+The local transform matrix composed from the position and quaternion.
+
 ### .matrixWorld
 
 ```js
 readonly matrixWorld : Float64Array[ 16 ]
 ```
+
+The world transform matrix computed based on the parent matrixWorld and this local matrix.
 
 ### .parent
 
@@ -187,11 +195,15 @@ readonly matrixWorld : Float64Array[ 16 ]
 readonly parent : Frame
 ```
 
+The parent frame this frame is a child of.
+
 ### .children
 
 ```js
 readonly children : Array<Frame>
 ```
+
+The set of child frames this frame is a parent of.
 
 ### .setPosition
 
@@ -199,17 +211,23 @@ readonly children : Array<Frame>
 setPosition( x : Number, y : Number, z : Number ) : void
 ```
 
+Sets the position of the frame.
+
 ### .setWorldPosition
 
 ```js
 setWorldPosition( x : Number, y : Number, z : Number ) : void
 ```
 
+Sets the positon of the frame in world space. Automatically computes the local position relative to the parent.
+
 ### .getWorldPosition
 
 ```js
-getWorldPosition( pos : FloatArray[ 3 ] ) : void
+getWorldPosition( target : FloatArray[ 3 ] ) : void
 ```
+
+Gets the position of the frame in the world in the `target` argument.
 
 ### .setQuaternion
 
@@ -217,29 +235,39 @@ getWorldPosition( pos : FloatArray[ 3 ] ) : void
 setQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
 ```
 
+Sets the orientation of the frame.
+
 ### .setWorldQuaternion
 
 ```js
 setWorldQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
 ```
 
+Sets the orientation of the frame in world space. Automatically computes the local orientation relative to the parent.
+
 ### .getWorldQuaternion
 
 ```js
-getWorldQuaternion( pos : FloatArray[ 4 ] ) : void
+getWorldQuaternion( target : FloatArray[ 4 ] ) : void
 ```
+
+Gets the quaternion of the frame in the world in the `target` argument.
 
 ### .traverseParents
 
 ```js
-traverseParents( cb : ( child : Frame ) => Boolean ) : void
+traverseParents( callback : ( parent : Frame ) => Boolean ) : void
 ```
+
+Fires the given callback for every parent starting with the closest. If `callback` returns true then the traversal is stopped.
 
 ### .traverse
 
 ```js
-traverse( cb : ( child : Frame ) => Boolean ) : void
+traverse( callback : ( child : Frame ) => Boolean ) : void
 ```
+
+Fires the given callback for every child recursively in breadth first order. If `callback` returns true then the traversal is stopped.
 
 ### .addChild
 
@@ -247,11 +275,15 @@ traverse( cb : ( child : Frame ) => Boolean ) : void
 addChild( child : Frame ) : void
 ```
 
+Adds a child to this frame and sets the childs parent to this frame. Throws an error if the child already has a parent.
+
 ### .removeChild
 
 ```js
 removeChild( child : Frame ) : void
 ```
+
+Removes the given child from this frame. Throws an error if the given frame is not a child of this frame.
 
 ### .attachChild
 
@@ -259,23 +291,31 @@ removeChild( child : Frame ) : void
 attachChild( child : Frame ) : void
 ```
 
+Adds the given frame as a child of this frame while preserving the world position of the child.
+
 ### .detachChild
 
 ```js
 detachChild( child : Frame ) : void
 ```
 
+Removes the given frame as a child of this frame while preserving the world position of the child.
+
 ### .updateMatrix
 
 ```js
-updateMatrixWorld() : void
+updateMatrix() : void
 ```
+
+Updates the local `.matrix` field if it needs to be updated.
 
 ### .updateMatrixWorld
 
 ```js
-updateMatrixWorld( includeChildren : true ) : void
+updateMatrixWorld( includeChildren : Boolean = true ) : void
 ```
+
+Updates the local `.matrix` and `.worldMatrix` fields if they need to be updated. Ensures parent matrices are up to date.
 
 ### .setMatrixNeedsUpdate
 
@@ -283,11 +323,15 @@ updateMatrixWorld( includeChildren : true ) : void
 setMatrixNeedsUpdate() : void
 ```
 
+Flags this frame as needing a matrix and matrix world update.
+
 ### .setMatrixWorldNeedsUpdate
 
 ```js
 setMatrixNeedsUpdate() : void
 ```
+
+Flags this frame and all its children as needing a matrix world update.
 
 ## Link
 
@@ -413,7 +457,7 @@ makeClosure( child : Link ) : void
 
 _extends [Joint](#Joint)_
 
-A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal can only be used to make a closure.
+A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal cannot have children and only be used to make a closure.
 
 ## Solver
 
