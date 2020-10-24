@@ -1,7 +1,7 @@
 # Closed Chain Inverse Kinematics
 
-[![travis build](https://img.shields.io/travis/gkjohnson/closed-chain-ik-js/main.svg?style=flat-square)](https://travis-ci.com/gkjohnson/closed-chain-ik-js)
-<!-- [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/closed-chain-ik-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/closed-chain-ik-js/) -->
+[![travis build](https://img.shields.io/travis/com/gkjohnson/closed-chain-ik-js/main.svg?style=flat-square)](https://travis-ci.com/gkjohnson/closed-chain-ik-js)
+[![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/closed-chain-ik-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/closed-chain-ik-js/)
 
 A generalized inverse kinematics solver that supports closed chains for parallel kinematics systems, dynamic reconfiguration, and arbitrary joint configuration based on damped least squares error minimization techniques. Supports all variety of joints including combinations of rotation and translation degrees of freedom and is agnostic to visualization framework. Inspired by [Marty Vona's MSim research work](https://www2.ccs.neu.edu/research/gpc/MSim/MSim-info.html) and using techniques outlined in this [2009 paper by Samuel Buss](https://math.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf). Developed with some aid and advice from [Marty Vona](https://www2.ccs.neu.edu/research/gpc/vona.html).
 
@@ -20,6 +20,7 @@ Robitics models used in the project are for demonstration purposes only and subj
 [ATHLETE](https://github.com/gkjohnson/urdf-loaders/)
 
 [Robonaut](https://github.com/gkjohnson/nasa-urdf-robots)
+
 
 # Use
 
@@ -140,17 +141,23 @@ Set of functions for creating an ik system from and working with results from [U
 urdfRobotToIKRoot( robot : URDFRobot ) : Joint
 ```
 
+Generates an IK three based on the provided `URDFRobot` with the root joint having a all 6 degrees of freedom set. Returns the root joint.
+
 ### setUrdfFromIK
 
 ```js
 setUrdfFromIK( robot : URDFRobot, ikRoot : Joint ) : void
 ```
 
+Copies the joint values from `robot` onto `ikRoot` based on joint names.
+
 ### setIKFromUrdf
 
 ```js
 setIKFromUrdf( ikRoot : Joint, robot : URDFRobot ) : void
 ```
+
+Copies the joint values from `ikRoot` onto `robot` based on joint names.
 
 ## Frame
 
@@ -162,11 +169,15 @@ A base class for `Link`, `Joint`, and `Goal` representing a frame defined by a p
 position : Float32Array[ 3 ]
 ```
 
+The position of the frame. If this is modified directly `setMatrixNeedsUpdate()` must be called.
+
 ### .quaternion
 
 ```js
 quaternion : Float32Array[ 4 ]
 ```
+
+The orientation of the frame. If this is modified directly `setMatrixNeedsUpdate()` must be called.
 
 ### .matrix
 
@@ -174,11 +185,15 @@ quaternion : Float32Array[ 4 ]
 readonly matrix : Float64Array[ 16 ]
 ```
 
+The local transform matrix composed from the position and quaternion.
+
 ### .matrixWorld
 
 ```js
 readonly matrixWorld : Float64Array[ 16 ]
 ```
+
+The world transform matrix computed based on the parent matrixWorld and this local matrix.
 
 ### .parent
 
@@ -186,11 +201,15 @@ readonly matrixWorld : Float64Array[ 16 ]
 readonly parent : Frame
 ```
 
+The parent frame this frame is a child of.
+
 ### .children
 
 ```js
 readonly children : Array<Frame>
 ```
+
+The set of child frames this frame is a parent of.
 
 ### .setPosition
 
@@ -198,17 +217,23 @@ readonly children : Array<Frame>
 setPosition( x : Number, y : Number, z : Number ) : void
 ```
 
+Sets the position of the frame.
+
 ### .setWorldPosition
 
 ```js
 setWorldPosition( x : Number, y : Number, z : Number ) : void
 ```
 
+Sets the positon of the frame in world space. Automatically computes the local position relative to the parent.
+
 ### .getWorldPosition
 
 ```js
-getWorldPosition( pos : FloatArray[ 3 ] ) : void
+getWorldPosition( target : FloatArray[ 3 ] ) : void
 ```
+
+Gets the position of the frame in the world in the `target` argument.
 
 ### .setQuaternion
 
@@ -216,29 +241,39 @@ getWorldPosition( pos : FloatArray[ 3 ] ) : void
 setQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
 ```
 
+Sets the orientation of the frame.
+
 ### .setWorldQuaternion
 
 ```js
 setWorldQuaternion( x : Number, y : Number, z : Number, w : Number ) : void
 ```
 
+Sets the orientation of the frame in world space. Automatically computes the local orientation relative to the parent.
+
 ### .getWorldQuaternion
 
 ```js
-getWorldQuaternion( pos : FloatArray[ 4 ] ) : void
+getWorldQuaternion( target : FloatArray[ 4 ] ) : void
 ```
+
+Gets the quaternion of the frame in the world in the `target` argument.
 
 ### .traverseParents
 
 ```js
-traverseParents( cb : ( child : Frame ) => Boolean ) : void
+traverseParents( callback : ( parent : Frame ) => Boolean ) : void
 ```
+
+Fires the given callback for every parent starting with the closest. If `callback` returns true then the traversal is stopped.
 
 ### .traverse
 
 ```js
-traverse( cb : ( child : Frame ) => Boolean ) : void
+traverse( callback : ( child : Frame ) => Boolean ) : void
 ```
+
+Fires the given callback for every child recursively in breadth first order. If `callback` returns true then the traversal is stopped.
 
 ### .addChild
 
@@ -246,11 +281,15 @@ traverse( cb : ( child : Frame ) => Boolean ) : void
 addChild( child : Frame ) : void
 ```
 
+Adds a child to this frame and sets the childs parent to this frame. Throws an error if the child already has a parent.
+
 ### .removeChild
 
 ```js
 removeChild( child : Frame ) : void
 ```
+
+Removes the given child from this frame. Throws an error if the given frame is not a child of this frame.
 
 ### .attachChild
 
@@ -258,23 +297,31 @@ removeChild( child : Frame ) : void
 attachChild( child : Frame ) : void
 ```
 
+Adds the given frame as a child of this frame while preserving the world position of the child.
+
 ### .detachChild
 
 ```js
 detachChild( child : Frame ) : void
 ```
 
+Removes the given frame as a child of this frame while preserving the world position of the child.
+
 ### .updateMatrix
 
 ```js
-updateMatrixWorld() : void
+updateMatrix() : void
 ```
+
+Updates the local `.matrix` field if it needs to be updated.
 
 ### .updateMatrixWorld
 
 ```js
-updateMatrixWorld( includeChildren : true ) : void
+updateMatrixWorld( includeChildren : Boolean = true ) : void
 ```
+
+Updates the local `.matrix` and `.worldMatrix` fields if they need to be updated. Ensures parent matrices are up to date.
 
 ### .setMatrixNeedsUpdate
 
@@ -282,11 +329,15 @@ updateMatrixWorld( includeChildren : true ) : void
 setMatrixNeedsUpdate() : void
 ```
 
+Flags this frame as needing a matrix and matrix world update.
+
 ### .setMatrixWorldNeedsUpdate
 
 ```js
 setMatrixNeedsUpdate() : void
 ```
+
+Flags this frame and all its children as needing a matrix world update.
 
 ## Link
 
@@ -298,13 +349,31 @@ A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only
 
 _extends [Frame](#Frame)_
 
-A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children.
+A dynamic [Frame](#Frame) representing a kinematic joint arbitrarily defineable degrees of freedom. A degree of freedom indicates an offset value can be set. Only [Links](#Link) may be added as children and a Joint may only have a single child.
+
+### .child
+
+```js
+readonly child : Link = null
+```
+
+Reference to the joint child.
+
+### .isClosure
+
+```js
+readonly isClosure : Boolean = false
+```
+
+Whether or not the child relationship is a closure or not.
 
 ### .dof
 
 ```js
-readonly dof : Array<Number>
+readonly dof : Array<DOF>
 ```
+
+A list of all the free degrees of freedom.
 
 ### .dofFlags
 
@@ -312,11 +381,15 @@ readonly dof : Array<Number>
 readonly dofFlags : Uint8Array[6]
 ```
 
+A list of `0` and `1` flags with `1` corresonding to a field in `dof`.
+
 ### .dofValues
 
 ```js
 readonly dofValues : Float32Array[6]
 ```
+
+The current joint values for all joint degrees of freedom.
 
 ### .dofTarget
 
@@ -324,11 +397,15 @@ readonly dofValues : Float32Array[6]
 readonly dofTarget : Float32Array[6]
 ```
 
+The joint value targets for each degree of freedom. [Solver](#Solver) will attempt to solve for these targets if [targetSet](#targetSet) is true.
+
 ### .dofRestPose
 
 ```js
 readonly dofRestPose : Float32Array[6]
 ```
+
+The rest pose for each joint degree of freedom. [Solver](#Solver) will attempt to move the joint towards this position when it does not compromise solving for the other goals and when [restPoseSet](#restPoseSet) is true.
 
 ### .minDoFLimit
 
@@ -336,11 +413,15 @@ readonly dofRestPose : Float32Array[6]
 readonly minDoFLimit : Float32Array[6]
 ```
 
+The minimum value limits for each joint degree of freeom.
+
 ### .maxDoFLimit
 
 ```js
 readonly maxDoFLimit : Float32Array[6]
 ```
+
+The maximum value limits for each joint degree of freeom.
 
 ### .matrixDoF
 
@@ -348,11 +429,15 @@ readonly maxDoFLimit : Float32Array[6]
 readonly matrixDoF : Float64Array[16]
 ```
 
+The matrix representing the transformation offset due to the current joint values.
+
 ### .targetSet
 
 ```js
 targetSet : Boolean = false
 ```
+
+When set to `true` [Solver](#Solver) will try to move this joints dofValues towards the target values.
 
 ### .restPoseSet
 
@@ -360,17 +445,23 @@ targetSet : Boolean = false
 restPoseSet : Boolean = false
 ```
 
+When set to `true` [Solver](#Solver) will try to move this joints dofValues towards the rest pose values without compromising the other goals.
+
 ### .setDoF
 
 ```js
 setDoF( ...dof : Array<DOF> ) : void
 ```
 
+Sets the degrees of freedom of the joint. Arguments must be passed in X, Y, Z, EX, EY, EZ order without duplicate values. All relatd degree of freedom values are reset.
+
 ### .clearDoF
 
 ```js
 clearDoF() : void
 ```
+
+Clears all degrees of freedom.
 
 ### .set\[ \* \]Values
 
@@ -381,6 +472,8 @@ setTargetValues( ...values : Array<Number> ) : void;
 setMinLimits( ...values : Array<Number> ) : void;
 setMaxLimits( ...values : Array<Number> ) : void;
 ```
+
+The number of arguments must match the number of degrees of freedom of the joint.
 
 ### .set\[ \* \]Value
 
@@ -408,15 +501,61 @@ getMaxLimit( dof : DOF ) : Number
 makeClosure( child : Link ) : void
 ```
 
+Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
+
 ## Goal
 
 _extends [Joint](#Joint)_
 
-A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal can only be used to make a closure.
+A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal cannot have children and only be used to make a closure.
 
 ## Solver
 
-Class for solving the closure and target joint constraints of a sytem.
+Class for solving the closure and target joint constraints of a sytem. As well as the listed fields a set of "options" are set on the object which are listed here:
+
+```js
+// The max amount of iterations to try to solve for. The solve will terminate
+// with SOLVE_STATUS.TIMEOUT if this limit is exceeded.
+maxIterations = 5;
+
+// The threshold under which a joint is not considered to have really moved. If
+// no joint is moved more than this threshold then the solve will terminate with
+// SOLVE_STATUS.STALLED.
+stallThreshold = 1e-4;
+
+// The threshold for comparing how much error has changed between solve iterations.
+// If the error has grown by more than this threshold then the solve will terminate
+// with SOLVE_STATUS.DIVERGED.
+divergeThreshold = 0.01;
+
+// The fixed damping factor to use in the DLS calculation.
+dampingFactor = 0.001;
+
+// The factor with which to move the joints towards the rest pose if set. 
+restPoseFactor = 0.01;
+
+// The thresholds with which to compute whether or not the translation or rotation
+// goals have been met. If the error between target and goal is under these
+// thresholds then the solve will terminate with SOLVE_STATUS.CONVERGED.
+translationConvergeThreshold = 1e-3;
+rotationConvergeThreshold = 1e-5;
+
+// Factors to apply to the translation and rotation error in the error vector.
+// Useful for weighting rotation higher than translation if they do not seem to
+// be solved "evenly". Values are expected to be in the range [ 0, 1 ].
+translationFactor = 1;
+rotationFactor = 1;
+
+// The amount to move a joint when calculating the change in error a joint has
+// for a jacobian.
+translationStep = 1e-3;
+rotationStep = 1e-3;
+
+// The step to take towards the IK goals when solving. Setting this to a larger value
+// may solve more quickly but may lead also lead to divergence.
+translationErrorClamp = 0.1;
+rotationErrorClamp = 0.1;
+```
 
 ### .roots
 
@@ -424,11 +563,15 @@ Class for solving the closure and target joint constraints of a sytem.
 roots : Array<Frame>
 ```
 
+The list of roots that should be accounted for in a solve. Note that if a closure joint is not traversable from a root then it or one of its parents must be included in the list of roots.
+
 ### .constructor
 
 ```js
 constructor( roots : Array<Frame> )
 ```
+
+Constructor takes a list of roots to solve for.
 
 ### .solve
 
@@ -436,15 +579,29 @@ constructor( roots : Array<Frame> )
 solve() : Array<SOLVE_STATUS>
 ```
 
+Traverses the given set of roots to find joint chains to solve for and attempts to solve for the error in the system goals. A result is returned for each independent chain found in the system.
+
 ### .updateStructure
 
 ```js
 updateStructure() : void
 ```
 
+Must be called whenever parent child relationships and structural changes related to the tree change or `.roots` is modified.
+
 ## WorkerSolver
 
-Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker.
+Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker. Results are automatically copied to the joint system being solved for.
+
+> :warning: `WorkerSolver` relies on [SharedArrayBuffers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) which may not be available on all platforms.
+
+### .results
+
+```js
+results : Array<Solve_STATUS>
+```
+
+The list of the last results from the solve copied over from the WebWorker.
 
 ### .updateSolverSettings
 
@@ -452,11 +609,15 @@ Implements the interface defined by [Solver](#Solver) but runs the solve asynchr
 updateSolverSettings( settings : Object ) : void
 ```
 
+Sets the solver settings in the WebWorker to the values in the given object. Valid "options" values are listed in the [Solver](#Solver) docs.
+
 ### .updateFrameState
 
 ```js
 updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
 ```
+
+Copies the joint settings for the given joints to the WebWorker for a solve. "Joint settings" include everything except for joint values (that the solver would be solving for) and parent child relationships. If joint values or parent child relationhips change then `updateStructure` must be called.
 
 ### .solve
 
@@ -464,11 +625,15 @@ updateFrameState( ...jointsToUpdate : Array<Joint> = [] ) : void
 solve() : void
 ```
 
+Starts a solve in the WebWorker if one is not active. The solve will terminate automatically if none of the results are `SOLVE_STATUS.TIMEOUT`.
+
 ### .stop
 
 ```js
 stop() : void
 ```
+
+Terminate any active solve in the WebWorker.
 
 ### .dispose
 
@@ -476,11 +641,13 @@ stop() : void
 dispose() : void
 ```
 
+Terminates the WebWorker and sets members to null.
+
 ## IKRootsHelper
 
 _extends THREE.Group_
 
-A helper class for rendering the joints and links in a three.js scene.
+A helper class for rendering the joints and links in a three.js scene. Renders frame relationships as lines and joints degrees of freedom with indicators based on the joint type.
 
 ### .roots
 
@@ -488,11 +655,15 @@ A helper class for rendering the joints and links in a three.js scene.
 roots : Array<Frame>
 ```
 
+Set of roots to render in the helper visualization. If this is changed then `.update` must be called.
+
 ### .constructor
 
 ```js
 constructor( roots : Array<Frame> )
 ```
+
+Takes the set of roots to visualize.
 
 ### .setJointScale
 
@@ -500,11 +671,15 @@ constructor( roots : Array<Frame> )
 setJointScale( scale : Number ) : void
 ```
 
+Sets the scale of the joint indicators.
+
 ### .setResolution
 
 ```js
 setResolution( width : Number, height : Number ) : void
 ```
+
+Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
 
 ### .update
 
@@ -512,8 +687,12 @@ setResolution( width : Number, height : Number ) : void
 update() : void
 ```
 
+Must be called if the structure of the IK system being visualized has changed.
+
 ### .dispose
 
 ```js
 dispose() : void
 ```
+
+Calls `dispose` on all created materials and geometry in the tree.

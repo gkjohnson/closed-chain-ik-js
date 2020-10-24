@@ -6,7 +6,10 @@ const tempInverse = new Float64Array( 16 );
 const tempMatrix = new Float64Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempPos = new Float32Array( 3 );
-const traversedChildren = new Set();
+const sharedTraversedChildren = new Set();
+const sharedTraverseArray = [];
+let traverseVariablesInUse = false;
+
 export class Frame {
 
 	constructor() {
@@ -133,9 +136,24 @@ export class Frame {
 
 	traverseParents( cb ) {
 
-		traversedChildren.clear();
-		traversedChildren.add( this );
-		let curr = this;
+		// Use the shared variables if they're not already in use to avoid
+		// memory allocation
+		let traversedChildren;
+		const originalVariablesInUse = traverseVariablesInUse;
+		if ( traverseVariablesInUse ) {
+
+			traversedChildren = new Set();
+
+		} else {
+
+			traversedChildren = sharedTraversedChildren;
+			traversedChildren.clear();
+
+		}
+
+		traverseVariablesInUse = true;
+
+		let curr = this.parent;
 		while ( curr ) {
 
 			if ( traversedChildren.has( curr ) ) {
@@ -156,13 +174,34 @@ export class Frame {
 
 		}
 
+		traverseVariablesInUse = originalVariablesInUse;
+		traversedChildren.clear();
+
 	}
 
 	traverse( cb ) {
 
-		traversedChildren.clear();
-		traversedChildren.add( this );
-		const stack = [ this ];
+		// Use the shared variables if they're not already in use to avoid
+		// memory allocation
+		const originalVariablesInUse = traverseVariablesInUse;
+		let traversedChildren;
+		let stack;
+		if ( traverseVariablesInUse ) {
+
+			traversedChildren = new Set();
+			stack = [ this ];
+
+		} else {
+
+			traversedChildren = sharedTraversedChildren;
+			traversedChildren.clear();
+
+			stack = sharedTraverseArray;
+			stack[ 0 ] = this;
+
+		}
+
+		traverseVariablesInUse = true;
 
 		let i = 0;
 		let tot = 1;
@@ -195,6 +234,31 @@ export class Frame {
 			i ++;
 
 		}
+
+		traverseVariablesInUse = originalVariablesInUse;
+		traversedChildren.clear();
+		stack.fill( null );
+
+	}
+
+	find( cb ) {
+
+		let result = null;
+		this.traverse( c => {
+
+			if ( result ) {
+
+				return true;
+
+			} else if ( cb( c ) ) {
+
+				result = c;
+				return true;
+
+			}
+
+		} );
+		return result;
 
 	}
 

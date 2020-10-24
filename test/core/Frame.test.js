@@ -155,6 +155,79 @@ describe( 'Frame', () => {
 
 	} );
 
+	describe( 'travesreParents', () => {
+
+		it( 'should traverse all parents in order.', () => {
+
+			const f1 = new Frame();
+			f1.name = 'f1';
+
+			const c1 = new Frame();
+			c1.name = 'c1';
+
+			const c2 = new Frame();
+			c2.name = 'c2';
+
+			const c12 = new Frame();
+			c12.name = 'c12';
+
+			f1.addChild( c1 );
+			f1.addChild( c2 );
+			c1.addChild( c12 );
+
+			const results = [];
+			c12.traverseParents( c => {
+
+				results.push( c );
+
+			} );
+
+			expect( results.map( f => f.name ) ).toEqual( [ 'c1', 'f1' ] );
+
+		} );
+
+		it( 'should be able to be called in a tested way.', () => {
+
+			const f1 = new Frame();
+			f1.name = 'f1';
+
+			const c1 = new Frame();
+			c1.name = 'c1';
+
+			const c2 = new Frame();
+			c2.name = 'c2';
+
+			const c12 = new Frame();
+			c12.name = 'c12';
+
+			f1.addChild( c1 );
+			f1.addChild( c2 );
+			c1.addChild( c12 );
+
+			const results = [];
+			c12.traverseParents( c => {
+
+				results.push( c );
+
+				const results2 = [];
+				c12.traverseParents( c2 => {
+
+					results2.push( c2 );
+
+				} );
+
+				expect( results2.map( f => f.name ) ).toEqual( [ 'c1', 'f1' ] );
+
+			} );
+
+			expect( results.map( f => f.name ) ).toEqual( [ 'c1', 'f1' ] );
+
+		} );
+
+
+
+	} );
+
 	describe( 'traverse', () => {
 
 		it( 'should traverse all children in breadth first order.', () => {
@@ -179,6 +252,43 @@ describe( 'Frame', () => {
 			f1.traverse( c => {
 
 				results.push( c );
+
+			} );
+
+			expect( results.map( f => f.name ) ).toEqual( [ 'f1', 'c1', 'c2', 'c12' ] );
+
+		} );
+
+		it( 'should be able to be called in a nested way.', () => {
+
+			const f1 = new Frame();
+			f1.name = 'f1';
+
+			const c1 = new Frame();
+			c1.name = 'c1';
+
+			const c2 = new Frame();
+			c2.name = 'c2';
+
+			const c12 = new Frame();
+			c12.name = 'c12';
+
+			f1.addChild( c1 );
+			f1.addChild( c2 );
+			c1.addChild( c12 );
+
+			const results = [];
+			f1.traverse( c => {
+
+				results.push( c );
+
+				const results2 = [];
+				f1.traverse( c2 => {
+
+					results2.push( c2 );
+
+				} );
+				expect( results2.map( f => f.name ) ).toEqual( [ 'f1', 'c1', 'c2', 'c12' ] );
 
 			} );
 
