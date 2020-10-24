@@ -72,7 +72,7 @@ function updateSolve() {
 	// Copy the new DoF back to the shared buffer
 	applyToBuffer( frames, floatBuffer, byteBuffer, true, false );
 
-	if ( result === SOLVE_STATUS.TIMEOUT ) {
+	if ( result.find( r => r === SOLVE_STATUS.TIMEOUT ) ) {
 
 		// yield so we can react to messages
 		solveHandle = setTimeout( updateSolve );
