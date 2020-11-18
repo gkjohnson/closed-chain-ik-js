@@ -49,8 +49,8 @@ link3.setPosition( 0, 1, 0 );
 
 // Create the goal
 const goal = new Goal();
-link.getWorldPosition( goal.position );
-link.getWorldQuaternion( goal.quaternion );
+link3.getWorldPosition( goal.position );
+link3.getWorldQuaternion( goal.quaternion );
 
 // Create structure
 link1.addChild( joint1 );
