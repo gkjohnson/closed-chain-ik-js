@@ -128,8 +128,12 @@ function init() {
 		camera.aspect = aspect;
 		camera.updateProjectionMatrix();
 
-		ikHelper.setResolution( window.innerWidth, window.innerHeight );
-		drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
+		if ( ikHelper ) {
+
+			ikHelper.setResolution( window.innerWidth, window.innerHeight );
+			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
+
+		}
 
 	} );
 
@@ -308,7 +312,7 @@ function init() {
 
 	window.addEventListener( 'keydown', e => {
 
-		if ( selectedGoalIndex !== - 1 && e.code === 'Delete' ) {
+		if ( selectedGoalIndex !== - 1 && ( e.code === 'Delete' || e.code === 'Backspace' ) ) {
 
 			const goalToRemove = goals[ selectedGoalIndex ];
 			const i = solver.roots.indexOf( goalToRemove );
