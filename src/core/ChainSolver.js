@@ -402,16 +402,19 @@ export class ChainSolver {
 				mat.multiply( jij, pseudoInverse, jacobian );
 
 				// ( I - J^-1 * J )
-				const jiji = matrixPool.get( freeDoF, freeDoF );
-				mat.identity( jiji );
-				mat.subtract( jiji, jiji, jij );
+				const ident = matrixPool.get( freeDoF, freeDoF );
+				mat.identity( ident );
+
+				const nullSpaceProjection = matrixPool.get( freeDoF, freeDoF );
+				mat.subtract( nullSpaceProjection, ident, jij );
 
 				// ( I - J^-1 * J ) * restPose
-				mat.multiply( restPoseResult, jiji, restPose );
+				mat.multiply( restPoseResult, nullSpaceProjection, restPose );
 
 				for ( let r = 0; r < freeDoF; r ++ ) {
 
-					deltaTheta[ r ][ 0 ] += restPose[ r ][ 0 ] * restPoseFactor;
+					const val = restPoseResult[ r ][ 0 ];
+					deltaTheta[ r ][ 0 ] += val * restPoseFactor;
 
 				}
 
