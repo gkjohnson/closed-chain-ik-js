@@ -139,21 +139,33 @@ function solve( outMatrix, matrix, vector ) {
 
 }
 
-function svd( ru, rv, rq, matrix ) {
+function svd( ru, rq, rv, matrix ) {
 
 	const { u, v, q } = SVD( matrix );
 
-	const rows = matrix.length;
-	for ( let r = 0; r < rows; r ++ ) {
+	const urows = u.length;
+	for ( let r = 0; r < urows; r ++ ) {
 
-		rq[ r ].set( q[ r ] );
-		rv[ r ].set( v[ r ] );
 		ru[ r ].set( u[ r ] );
 
 	}
 
-	console.log( svd );
+	const vrows = v.length;
+	for ( let r = 0; r < vrows; r ++ ) {
 
+		rv[ r ].set( v[ r ] );
+
+	}
+
+	const qrows = q.length;
+	for ( let r = 0; r < qrows; r ++ ) {
+
+		const rqrow = rq[ r ];
+		const qval = q[ r ];
+		rqrow.fill( 0 );
+		rqrow[ r ] = qval;
+
+	}
 
 }
 
