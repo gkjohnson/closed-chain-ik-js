@@ -1,6 +1,6 @@
 # Closed Chain Inverse Kinematics
 
-[![travis build](https://img.shields.io/travis/com/gkjohnson/closed-chain-ik-js/main.svg?style=flat-square)](https://travis-ci.com/gkjohnson/closed-chain-ik-js)
+[![build](https://img.shields.io/github/workflow/status/gkjohnson/closed-chain-ik-js/Node.js%20CI?style=flat-square&label=build)](https://github.com/gkjohnson/closed-chain-ik-js/actions)
 [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/closed-chain-ik-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/closed-chain-ik-js/)
 
 A generalized inverse kinematics solver that supports closed chains for parallel kinematics systems, dynamic reconfiguration, and arbitrary joint configuration based on damped least squares error minimization techniques. Supports all variety of joints including combinations of rotation and translation degrees of freedom and is agnostic to visualization framework. Inspired by [Marty Vona's MSim research work](https://www2.ccs.neu.edu/research/gpc/MSim/MSim-info.html) and using techniques outlined in this [2009 paper by Samuel Buss](https://math.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf). Developed with some aid and advice from [Marty Vona](https://www2.ccs.neu.edu/research/gpc/vona.html).
