@@ -611,6 +611,7 @@ export class Joint extends Frame {
 			this.children[ 0 ] = child;
 			this.child = child;
 			this.isClosure = true;
+			child.closureJoints.push( this );
 
 		}
 
@@ -645,6 +646,9 @@ export class Joint extends Frame {
 				this.children.length = 0;
 				this.child = null;
 				this.isClosure = false;
+
+				const index = child.closureJoints.indexOf( this );
+				child.closureJoints.splice( index, 1 );
 
 			}
 
