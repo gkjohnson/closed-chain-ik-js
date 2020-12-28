@@ -1,4 +1,5 @@
 import linearSolve from 'linear-solve';
+import { SVD } from 'svd-js';
 
 function transpose( outMatrix, a ) {
 
@@ -132,7 +133,37 @@ function solve( outMatrix, matrix, vector ) {
 	const res = linearSolve.solve( matrix, vector );
 	for ( let i = 0, l = res.length; i < l; i ++ ) {
 
-		outMatrix[ i ][ 0 ] = res[ i ];
+		outMatrix[ i ].set( res[ i ] );
+
+	}
+
+}
+
+function svd( ru, rq, rv, matrix ) {
+
+	const { u, v, q } = SVD( matrix );
+
+	const urows = u.length;
+	for ( let r = 0; r < urows; r ++ ) {
+
+		ru[ r ].set( u[ r ] );
+
+	}
+
+	const vrows = v.length;
+	for ( let r = 0; r < vrows; r ++ ) {
+
+		rv[ r ].set( v[ r ] );
+
+	}
+
+	const qrows = q.length;
+	for ( let r = 0; r < qrows; r ++ ) {
+
+		const rqrow = rq[ r ];
+		const qval = q[ r ];
+		rqrow.fill( 0 );
+		rqrow[ r ] = qval;
 
 	}
 
@@ -249,6 +280,7 @@ export const mat = {
 	copy,
 	clone,
 	solve,
+	svd,
 	invert,
 	add,
 	subtract,
