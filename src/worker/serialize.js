@@ -71,7 +71,7 @@ export function serialize( frames ) {
 		inf.children = frame.children.map( c => map.get( c ) );
 		if ( frame.isLink ) {
 
-			inf.closureJoints = frame.map( c => map.get( c ) );
+			inf.closureJoints = frame.closureJoints.map( c => map.get( c ) );
 
 		}
 
