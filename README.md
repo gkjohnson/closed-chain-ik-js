@@ -138,10 +138,10 @@ Set of functions for creating an ik system from and working with results from [U
 ### urdfRobotToIKRoot
 
 ```js
-urdfRobotToIKRoot( robot : URDFRobot ) : Joint
+urdfRobotToIKRoot( robot : URDFRobot, trimUnused : Boolean = false ) : Joint
 ```
 
-Generates an IK three based on the provided `URDFRobot` with the root joint having a all 6 degrees of freedom set. Returns the root joint.
+Generates an IK three based on the provided `URDFRobot` with the root joint having a all 6 degrees of freedom set. Returns the root joint. If `trimUnused` is true then any dangling links that do not connect to non-fixed joints will be removed from the system.
 
 ### setUrdfFromIK
 
@@ -514,6 +514,10 @@ A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). 
 Class for solving the closure and target joint constraints of a sytem. As well as the listed fields a set of "options" are set on the object which are listed here:
 
 ```js
+// Whether or not to use the SVD when calculating the pseudo inverse of the jacobian
+// for a solve.
+useSVD = true;
+
 // The max amount of iterations to try to solve for. The solve will terminate
 // with SOLVE_STATUS.TIMEOUT if this limit is exceeded.
 maxIterations = 5;
@@ -531,7 +535,7 @@ divergeThreshold = 0.01;
 // The fixed damping factor to use in the DLS calculation.
 dampingFactor = 0.001;
 
-// The factor with which to move the joints towards the rest pose if set. 
+// The factor with which to move the joints towards the rest pose if set.
 restPoseFactor = 0.01;
 
 // The thresholds with which to compute whether or not the translation or rotation
