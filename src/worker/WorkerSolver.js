@@ -1,6 +1,12 @@
 import { SOLVE_STATUS } from '../core/ChainSolver.js';
 import { serialize } from './serialize.js';
-import { generateSharedBuffer, applyToBuffer, copyFrameToBuffer, copyBufferToFrame, JOINT_STRIDE } from './utils.js';
+import {
+	generateSharedBuffer,
+	applyToBuffer,
+	copyFrameToBuffer,
+	copyBufferToFrame,
+	JOINT_STRIDE,
+} from './utils.js';
 
 export class WorkerSolver {
 
