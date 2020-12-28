@@ -515,7 +515,7 @@ Class for solving the closure and target joint constraints of a sytem. As well a
 
 ```js
 // Whether or not to use the SVD when calculating the pseudo inverse of the jacobian
-// for a solve.
+// which can result in a more numerically stable calculation.
 useSVD = true;
 
 // The max amount of iterations to try to solve for. The solve will terminate
