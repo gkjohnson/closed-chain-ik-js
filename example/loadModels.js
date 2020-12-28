@@ -20,12 +20,12 @@ export function loadATHLETE() {
 
 			// update the robot joints
 			const DEG2RAD = Math.PI / 180;
-			urdf.rotation.set( Math.PI / 2 , 0, 0 );
-			for ( let i = 1; i <= 6 ; i ++ ) {
+			urdf.rotation.set( Math.PI / 2, 0, 0 );
+			for ( let i = 1; i <= 6; i ++ ) {
 
 				urdf.joints[ `HP${ i }` ].setJointValue( 30 * DEG2RAD );
 				urdf.joints[ `KP${ i }` ].setJointValue( 90 * DEG2RAD );
-				urdf.joints[ `AP${ i }` ].setJointValue( -30 * DEG2RAD );
+				urdf.joints[ `AP${ i }` ].setJointValue( - 30 * DEG2RAD );
 
 			}
 

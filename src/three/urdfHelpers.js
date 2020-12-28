@@ -5,7 +5,7 @@ import { Link } from '../core/Link.js';
 const tempVec = new Float64Array( 3 );
 const tempVec2 = new Float64Array( 3 );
 
-export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
+export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
 
 	let rootNode = null;
 	let node;
@@ -135,7 +135,7 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 	const children = urdfNode.children;
 	for ( let i = 0, l = children.length; i < l; i ++ ) {
 
-		const res = urdfRobotToIKRoot( children[ i ], false );
+		const res = urdfRobotToIKRoot( children[ i ], trimUnused, false );
 
 		if ( res ) {
 
@@ -146,7 +146,8 @@ export function urdfRobotToIKRoot( urdfNode, isRoot = true ) {
 
 	}
 
-	return doReturn ? rootNode || node : null;
+
+	return ( ! trimUnused || doReturn ) ? rootNode || node : null;
 
 }
 
