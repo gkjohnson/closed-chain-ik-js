@@ -281,6 +281,8 @@ export class ChainSolver {
 				mat.transpose( vt, v );
 				mat.transpose( ut, u );
 
+				// if the diagonal value is close to 0 when taking the inverse
+				// then set it to zero.
 				for ( let i = 0, l = q.length; i < l; i ++ ) {
 
 					const val = q[ i ][ i ];
