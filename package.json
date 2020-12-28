@@ -6,7 +6,7 @@
     "src/*"
   ],
   "scripts": {
-    "start": "parcel serve ./example/*.html --out-dir local --public-url .",
+    "start": "parcel watch ./example/*.html --out-dir local --public-url .",
     "build": "parcel build --out-dir dist --no-content-hash ./example/*.html --public-url .",
     "lint": "eslint \"./src/**/*.js\" \"./test/**/*.js\"",
     "test": "jest"
