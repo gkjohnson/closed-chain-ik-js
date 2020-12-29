@@ -531,7 +531,7 @@ divergeThreshold = 0.01;
 // The fixed damping factor to use in the DLS calculation.
 dampingFactor = 0.001;
 
-// The factor with which to move the joints towards the rest pose if set. 
+// The factor with which to move the joints towards the rest pose if set.
 restPoseFactor = 0.01;
 
 // The thresholds with which to compute whether or not the translation or rotation
@@ -681,10 +681,10 @@ setResolution( width : Number, height : Number ) : void
 
 Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
 
-### .update
+### .updateStructure
 
 ```js
-update() : void
+updateStructure() : void
 ```
 
 Must be called if the structure of the IK system being visualized has changed.

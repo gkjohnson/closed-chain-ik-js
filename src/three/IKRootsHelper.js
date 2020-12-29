@@ -13,7 +13,7 @@ export class IKRootsHelper extends Group {
 		this.joints = new Map();
 		this.links = new Map();
 		this.resolution = new Vector2( 1000, 1000 );
-		this.update();
+		this.updateStructure();
 
 	}
 
@@ -46,7 +46,7 @@ export class IKRootsHelper extends Group {
 
 	}
 
-	update() {
+	updateStructure() {
 
 		const { roots, joints, links } = this;
 
