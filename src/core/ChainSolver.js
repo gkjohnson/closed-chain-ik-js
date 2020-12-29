@@ -71,6 +71,8 @@ export class ChainSolver {
 		// options -- these are set by the containing Solver.
 		this.maxIterations = - 1;
 
+		this.useSVD = false;
+
 		this.translationConvergeThreshold = - 1;
 		this.rotationConvergeThreshold = - 1;
 
@@ -172,6 +174,7 @@ export class ChainSolver {
 			restPoseFactor,
 			lockedJointDoFCount,
 			prevDoFValues,
+			useSVD,
 		} = this;
 
 		let iterations = 0;
@@ -258,39 +261,85 @@ export class ChainSolver {
 			const jacobian = matrixPool.get( errorRows, freeDoF );
 			this.fillJacobian( targetJoints, freeJoints, jacobian );
 
-			// TODO: try to solve with SVD method -- do we really need to? Why not just always use the transpose method?
-
-			// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
-			// J^T * J * x = J^T * e
-			// x = J^T * ( J * J^T )^-1 * e
-
-			// and with the adding damping
-			// x = J^T * ( J * J^T + l^2 * I )^-1 * e
-
-			// l^2 * I
-			const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
-			mat.identity( jacobianIdentityDamping );
-			mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
-
-			// J^T
-			const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
-			mat.transpose( jacobianTranspose, jacobian );
-
-			// J * J^T
-			const jjt = matrixPool.get( errorRows, errorRows );
-			mat.multiply( jjt, jacobian, jacobianTranspose );
-
-			// J * J^T + l^2 * I
-			const jjti = matrixPool.get( errorRows, errorRows );
-			mat.add( jjti, jjt, jacobianIdentityDamping );
-
-			// ( J * J^T + l^2 * I )^-1
-			const jjtii = matrixPool.get( errorRows, errorRows );
-			mat.invert( jjtii, jjti );
-
-			// J^T * ( J * J^T + l^2 * I )^-1
+			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
-			mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
+			if ( useSVD ) {
+
+				const m = errorRows;
+				const n = freeDoF;
+				const k = Math.min( m, n );
+
+				const u = matrixPool.get( m, k ); // m x k
+				const q = matrixPool.get( k, k ); // k x k
+				const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
+
+				mat.svd( u, q, v, jacobian );
+
+				const vt = matrixPool.get( k, n );
+				const ut = matrixPool.get( k, m );
+				const qinv = matrixPool.get( k, k );
+				mat.transpose( vt, v );
+				mat.transpose( ut, u );
+
+				// if the diagonal value is close to 0 when taking the inverse
+				// then set it to zero.
+				for ( let i = 0, l = q.length; i < l; i ++ ) {
+
+					const val = q[ i ][ i ];
+					let inv;
+					if ( Math.abs( val ) < 0.001 ) {
+
+						inv = 0;
+
+					} else {
+
+						inv = 1 / val;
+
+					}
+
+					qinv[ i ][ i ] = inv;
+
+				}
+
+				// V * Qinv * Ut
+				const vqinv = matrixPool.get( n, k );
+				mat.multiply( vqinv, v, qinv );
+				mat.multiply( pseudoInverse, vqinv, ut );
+
+			} else {
+
+				// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
+				// J^T * J * x = J^T * e
+				// x = J^T * ( J * J^T )^-1 * e
+
+				// and with the adding damping
+				// x = J^T * ( J * J^T + l^2 * I )^-1 * e
+
+				// l^2 * I
+				const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
+				mat.identity( jacobianIdentityDamping );
+				mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
+
+				// J^T
+				const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
+				mat.transpose( jacobianTranspose, jacobian );
+
+				// J * J^T
+				const jjt = matrixPool.get( errorRows, errorRows );
+				mat.multiply( jjt, jacobian, jacobianTranspose );
+
+				// J * J^T + l^2 * I
+				const jjti = matrixPool.get( errorRows, errorRows );
+				mat.add( jjti, jjt, jacobianIdentityDamping );
+
+				// ( J * J^T + l^2 * I )^-1
+				const jjtii = matrixPool.get( errorRows, errorRows );
+				mat.invert( jjtii, jjti );
+
+				// J^T * ( J * J^T + l^2 * I )^-1
+				mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
+
+			}
 
 			// x = deltaTheta = J^T * ( J * J^T + l^2 * I )^-1 * e
 			const deltaTheta = matrixPool.get( freeDoF, 1 );
@@ -353,16 +402,19 @@ export class ChainSolver {
 				mat.multiply( jij, pseudoInverse, jacobian );
 
 				// ( I - J^-1 * J )
-				const jiji = matrixPool.get( freeDoF, freeDoF );
-				mat.identity( jiji );
-				mat.subtract( jiji, jiji, jij );
+				const ident = matrixPool.get( freeDoF, freeDoF );
+				mat.identity( ident );
+
+				const nullSpaceProjection = matrixPool.get( freeDoF, freeDoF );
+				mat.subtract( nullSpaceProjection, ident, jij );
 
 				// ( I - J^-1 * J ) * restPose
-				mat.multiply( restPoseResult, jiji, restPose );
+				mat.multiply( restPoseResult, nullSpaceProjection, restPose );
 
 				for ( let r = 0; r < freeDoF; r ++ ) {
 
-					deltaTheta[ r ][ 0 ] += restPose[ r ][ 0 ] * restPoseFactor;
+					const val = restPoseResult[ r ][ 0 ];
+					deltaTheta[ r ][ 0 ] += val * restPoseFactor;
 
 				}
 

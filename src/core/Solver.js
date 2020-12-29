@@ -5,6 +5,8 @@ export class Solver {
 
 	constructor( roots = [] ) {
 
+		this.useSVD = true;
+
 		this.maxIterations = 5;
 		this.stallThreshold = 1e-4;
 		this.dampingFactor = 0.001;

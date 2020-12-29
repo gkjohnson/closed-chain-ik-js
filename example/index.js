@@ -49,11 +49,14 @@ const params = {
 };
 
 const solverOptions = {
+	useSVD: true,
 	maxIterations: 3,
 	divergeThreshold: 0.05,
 	stallThreshold: 1e-4,
 	translationErrorClamp: 0.25,
 	rotationErrorClamp: 0.25,
+	translationConvergeThreshold: 1e-3,
+	rotationConvergeThreshold: 1e-5,
 	restPoseFactor: 0.01,
 };
 
@@ -418,7 +421,7 @@ function render() {
 
 			} else {
 
-				Object.assign( solverOptions );
+				Object.assign( solver, solverOptions );
 				statuses = solver.solve();
 
 			}
@@ -579,11 +582,15 @@ function rebuildGUI() {
 		}
 
 	} );
+
+	solveFolder.add( solverOptions, 'useSVD' );
 	solveFolder.add( solverOptions, 'maxIterations' ).min( 1 ).max( 10 ).step( 1 ).listen();
 	solveFolder.add( solverOptions, 'divergeThreshold' ).min( 0 ).max( 0.5 ).step( 1e-2 ).listen();
 	solveFolder.add( solverOptions, 'stallThreshold' ).min( 0 ).max( 0.01 ).step( 1e-4 ).listen();
 	solveFolder.add( solverOptions, 'translationErrorClamp' ).min( 1e-2 ).max( 1 ).listen();
 	solveFolder.add( solverOptions, 'rotationErrorClamp' ).min( 1e-2 ).max( 1 ).listen();
+	solveFolder.add( solverOptions, 'translationConvergeThreshold' ).min( 1e-3 ).max( 1e-1 ).listen();
+	solveFolder.add( solverOptions, 'rotationConvergeThreshold' ).min( 1e-5 ).max( 1e-2 ).listen();
 	solveFolder.add( solverOptions, 'restPoseFactor' ).min( 0 ).max( 1e-1 ).step( 1e-4 ).listen();
 	solveFolder.open();
 
