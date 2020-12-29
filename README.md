@@ -60,7 +60,7 @@ joint2.addChild( link3 );
 goal.makeClosure( link3 );
 
 // create solver
-const solver = new Solver( [ link1, goal ] );
+const solver = new Solver( link1 );
 
 // ...
 
@@ -75,7 +75,7 @@ import { WorkerSolve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
 
 // ... instantiate kinematic system...
 
-const solver = new WorkerSolver( [ link1, goal ] );
+const solver = new WorkerSolver( link1 );
 
 // ...
 
