@@ -664,7 +664,7 @@ function loadModel( promise ) {
 			ik.updateMatrixWorld( true );
 
 			// create the helper
-			ikHelper = new IKRootsHelper( [ ik ] );
+			ikHelper = new IKRootsHelper( ik );
 			ikHelper.setJointScale( helperScale );
 			ikHelper.setResolution( window.innerWidth, window.innerHeight );
 			ikHelper.traverse( c => {
@@ -677,7 +677,7 @@ function loadModel( promise ) {
 
 			} );
 
-			drawThroughIkHelper = new IKRootsHelper( [ ik ] );
+			drawThroughIkHelper = new IKRootsHelper( ik );
 			drawThroughIkHelper.setJointScale( helperScale );
 			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
 			drawThroughIkHelper.traverse( c => {
@@ -705,7 +705,7 @@ function loadModel( promise ) {
 
 			} );
 
-			solver = params.webworker ? new WorkerSolver( [ ik, ...loadedGoals ] ) : new Solver( [ ik, ...loadedGoals ] );
+			solver = params.webworker ? new WorkerSolver( ik ) : new Solver( ik );
 			solver.maxIterations = 3;
 			solver.translationErrorClamp = 0.25;
 			solver.rotationErrorClamp = 0.25;

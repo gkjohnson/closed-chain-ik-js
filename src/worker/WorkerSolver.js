@@ -11,7 +11,7 @@ import { findRoots } from '../core/utils/findRoots.js';
 
 export class WorkerSolver {
 
-	constructor( roots ) {
+	constructor( roots = [] ) {
 
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
 		this.status = [];
