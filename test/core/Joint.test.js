@@ -216,6 +216,7 @@ describe( 'Joint', () => {
 
 			expect( joint.isClosure ).toEqual( true );
 			expect( joint.child ).toEqual( child );
+			expect( child.closureJoints ).toEqual( [ joint ] );
 
 		} );
 
@@ -261,6 +262,7 @@ describe( 'Joint', () => {
 
 			}
 
+			expect( child.closureJoints ).toEqual( [] );
 			expect( caught ).toBeTruthy();
 
 		} );
@@ -275,10 +277,13 @@ describe( 'Joint', () => {
 			const child = new Link();
 
 			joint.makeClosure( child );
+			expect( child.closureJoints ).toEqual( [ joint ] );
+
 			joint.removeChild( child );
 
 			expect( joint.isClosure ).toEqual( false );
 			expect( joint.child ).toEqual( null );
+			expect( child.closureJoints ).toEqual( [] );
 
 		} );
 
@@ -301,6 +306,7 @@ describe( 'Joint', () => {
 
 			}
 
+			expect( child.closureJoints ).toEqual( [ joint ] );
 			expect( caught ).toBeTruthy();
 
 		} );
