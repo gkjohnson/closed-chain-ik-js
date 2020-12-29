@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Closure links are no longer added to the Joint children array.
 - All connected roots no longer have to be manually added to the IKRootsHelper or Solvers.
+- Renamed `IKRootsHelper.update` to `IKRootsHelper.updateStructure`.
 
 ## [0.0.1] - 2020-10-17
 
