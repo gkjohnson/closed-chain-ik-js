@@ -7,10 +7,11 @@ import {
 	copyBufferToFrame,
 	JOINT_STRIDE,
 } from './utils.js';
+import { findRoots } from '../core/utils/findRoots.js';
 
 export class WorkerSolver {
 
-	constructor( roots ) {
+	constructor( roots = [] ) {
 
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
 		this.status = [];
@@ -74,7 +75,9 @@ export class WorkerSolver {
 	// changes or a degree of freedom changes. Or if the main thread must change the DoF values.
 	updateStructure() {
 
-		const { roots, worker } = this;
+		const { worker } = this;
+
+		const roots = findRoots( this.roots );
 
 		// Get all frames in the graph
 		const framesSet = new Set();

@@ -6,6 +6,7 @@ export class Link extends Frame {
 
 		super();
 		this.isLink = true;
+		this.closureJoints = [];
 
 	}
 

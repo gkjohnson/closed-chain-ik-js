@@ -133,7 +133,15 @@ An array of strings representing the names of the above solve statuses.
 
 ## Functions
 
-Set of functions for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+Set of utility functions including some for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+
+### findRoots
+
+```js
+findRoots( frames : Array<Frame> ) : Array<Frame>
+```
+
+Takes an array of frames to traverse including the closure joints and links and finds a set of unique nodes to treat as the roots of the connected trees for use in solving.
 
 ### urdfRobotToIKRoot
 
@@ -345,6 +353,14 @@ _extends [Frame](#Frame)_
 
 A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only [Joints](#Joint) may be added as children.
 
+### .closureJoints
+
+```js
+closureJoints : Array<Joint>
+```
+
+The set of joints that are connected to this indirectly via `Joint.makeClosure`.
+
 ## Joint
 
 _extends [Frame](#Frame)_
@@ -503,6 +519,8 @@ makeClosure( child : Link ) : void
 
 Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
 
+Note that when making a closure connection between a Joint and a Link the link will not be added to the Joints `children` array and instead will only be available on the `child` field. The Joint will be appended to the Links `closureJoints` array.
+
 ## Goal
 
 _extends [Joint](#Joint)_
@@ -567,7 +585,7 @@ rotationErrorClamp = 0.1;
 roots : Array<Frame>
 ```
 
-The list of roots that should be accounted for in a solve. Note that if a closure joint is not traversable from a root then it or one of its parents must be included in the list of roots.
+The list of roots that should be accounted for in a solve. When `.updateStructure` is called the series of roots are traversed including closure joints to find all connected link hierarchies to use in the solve.
 
 ### .constructor
 
@@ -659,7 +677,7 @@ A helper class for rendering the joints and links in a three.js scene. Renders f
 roots : Array<Frame>
 ```
 
-Set of roots to render in the helper visualization. If this is changed then `.update` must be called.
+Set of roots to render in the helper visualization. If this is changed then `.updateStructure` must be called.
 
 ### .constructor
 
@@ -685,10 +703,10 @@ setResolution( width : Number, height : Number ) : void
 
 Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
 
-### .update
+### .updateStructure
 
 ```js
-update() : void
+updateStructure() : void
 ```
 
 Must be called if the structure of the IK system being visualized has changed.

@@ -153,7 +153,7 @@ function init() {
 	} );
 	scene.add( ikHelper );
 
-	solver = new Solver( [ ikRoot, goal ] );
+	solver = new Solver( ikRoot );
 	Object.assign( solver, solverOptions );
 
 	function updateGoalDoF() {
