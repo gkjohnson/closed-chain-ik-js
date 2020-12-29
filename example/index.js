@@ -318,8 +318,7 @@ function init() {
 		if ( selectedGoalIndex !== - 1 && ( e.code === 'Delete' || e.code === 'Backspace' ) ) {
 
 			const goalToRemove = goals[ selectedGoalIndex ];
-			const i = solver.roots.indexOf( goalToRemove );
-			solver.roots.splice( i, 1 );
+			goalToRemove.removeChild( goalToRemove.child );
 			solver.updateStructure();
 
 			goals.splice( selectedGoalIndex, 1 );
