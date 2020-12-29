@@ -21,7 +21,6 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [Robonaut](https://github.com/gkjohnson/nasa-urdf-robots)
 
-
 # Use
 
 ## Simple 2 DoF System
@@ -83,6 +82,13 @@ const solver = new WorkerSolver( [ link1, goal ] );
 // move the goal around and solve asynchronously
 solver.solve();
 ```
+
+# Caveats
+
+- The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
+
+- Smoothering out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
+
 
 # API
 
