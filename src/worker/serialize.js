@@ -55,6 +55,7 @@ export function serialize( frames ) {
 			quaternion: quaternion.slice(),
 			children: null,
 			closureJoints: null,
+			child: null,
 			type,
 		};
 
@@ -72,6 +73,12 @@ export function serialize( frames ) {
 		if ( frame.isLink ) {
 
 			inf.closureJoints = frame.closureJoints.map( c => map.get( c ) );
+
+		}
+
+		if ( frame.isJoint && frame.child ) {
+
+			inf.child = map.get( info.child );
 
 		}
 
@@ -164,7 +171,7 @@ export function deserialize( data ) {
 
 		if ( frame.isJoint ) {
 
-			frame.child = frame.children[ 0 ] || null;
+			frame.child = info.child !== null ? frames[ info.child ] : null;
 			frame.setMatrixDoFNeedsUpdate();
 
 		}
