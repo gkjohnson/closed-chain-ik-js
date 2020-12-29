@@ -1,6 +1,16 @@
 export function findRoots( frames ) {
 
-	const potentialRoots = [ ...frames ];
+	const potentialRoots = frames.map( f => {
+
+		let lastParent = f;
+		f.traverseParents( p => {
+
+			lastParent = p;
+
+		} );
+		return lastParent;
+
+	} );
 	const roots = [];
 	const set = new Set();
 

@@ -1,4 +1,5 @@
 import { ChainSolver } from './ChainSolver.js';
+import { findRoots } from './utils/findRoots.js';
 
 export class Solver {
 
@@ -32,7 +33,7 @@ export class Solver {
 	// needs to be called whenever tree structure is updated
 	updateStructure() {
 
-		const roots = this.roots;
+		const roots = findRoots( this.roots );
 		const chains = [];
 		const traversal = new Set();
 		const allChainJoints = new Set();
