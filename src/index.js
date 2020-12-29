@@ -6,6 +6,7 @@ import { SOLVE_STATUS, SOLVE_STATUS_NAMES } from './core/ChainSolver.js';
 import { WorkerSolver } from './worker/WorkerSolver.js';
 import { IKRootsHelper } from './three/IKRootsHelper.js';
 import { setIKFromUrdf, setUrdfFromIK, urdfRobotToIKRoot } from './three/urdfHelpers.js';
+import { findRoots } from './core/utils/findRoots.js';
 
 export {
 	Link,
@@ -22,4 +23,5 @@ export {
 	setIKFromUrdf,
 	setUrdfFromIK,
 	urdfRobotToIKRoot,
+	findRoots,
 };
