@@ -608,7 +608,8 @@ export class Joint extends Frame {
 
 		} else {
 
-			this.children[ 0 ] = child;
+			// don't store the closure child in the children array to avoid
+			// implicit traversal.
 			this.child = child;
 			this.isClosure = true;
 			child.closureJoints.push( this );
@@ -643,7 +644,6 @@ export class Joint extends Frame {
 
 			} else {
 
-				this.children.length = 0;
 				this.child = null;
 				this.isClosure = false;
 

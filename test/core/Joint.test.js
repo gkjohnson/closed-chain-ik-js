@@ -1,5 +1,6 @@
 import { Link } from '../../src/core/Link.js';
 import { Joint, DOF } from '../../src/core/Joint.js';
+import { findRoots } from '../../src/core/utils/findRoots.js';
 
 describe( 'Joint', () => {
 
@@ -308,6 +309,33 @@ describe( 'Joint', () => {
 
 			expect( child.closureJoints ).toEqual( [ joint ] );
 			expect( caught ).toBeTruthy();
+
+		} );
+
+	} );
+
+	describe( 'findRoots', () => {
+
+		it( 'should find roots of connected closure joints.', () => {
+
+			const joint = new Joint();
+			const parent = new Link();
+			const closureChild = new Link();
+
+			const joint2 = new Joint();
+			const closureChild2 = new Link();
+
+			parent.addChild( joint );
+			joint.makeClosure( closureChild );
+
+			closureChild.addChild( joint2 );
+			joint2.makeClosure( closureChild2 );
+
+			const roots = findRoots( [ parent ] );
+			expect( roots ).toEqual( [ parent, closureChild, closureChild2 ] );
+
+			const roots2 = findRoots( [ closureChild ] );
+			expect( roots2 ).toEqual( [ closureChild, parent, closureChild2 ] );
 
 		} );
 
