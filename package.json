@@ -1,6 +1,7 @@
 {
   "name": "closed-chain-ik",
   "version": "0.0.2",
+	"description": "A generalized inverse kinematics solver that supports closed chains for parallel kinematics systems, dynamic reconfiguration, and arbitrary joint configuration based on damped least squares error minimization techniques",
   "keywords": [
     "inverse-kinematics",
     "javascript",
