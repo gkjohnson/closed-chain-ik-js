@@ -78,7 +78,7 @@ export function serialize( frames ) {
 
 		if ( frame.isJoint && frame.child ) {
 
-			inf.child = map.get( info.child );
+			inf.child = map.get( frame.child );
 
 		}
 
