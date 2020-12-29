@@ -345,6 +345,14 @@ _extends [Frame](#Frame)_
 
 A [Frame](#Frame) modeling a fixed connection between two [Joints](#Joint). Only [Joints](#Joint) may be added as children.
 
+### .closureJoints
+
+```js
+closureJoints : Array<Joint>
+```
+
+The set of joints that are connected to this indirectly via `Joint.makeClosure`.
+
 ## Joint
 
 _extends [Frame](#Frame)_
@@ -503,6 +511,8 @@ makeClosure( child : Link ) : void
 
 Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
 
+Note that when making a closure connection between a Joint and a Link the link will not be added to the Joints `children` array and instead will only be available on the `child` field. The Joint will be appended to the Links `closureJoints` array.
+
 ## Goal
 
 _extends [Joint](#Joint)_
@@ -563,7 +573,7 @@ rotationErrorClamp = 0.1;
 roots : Array<Frame>
 ```
 
-The list of roots that should be accounted for in a solve. Note that if a closure joint is not traversable from a root then it or one of its parents must be included in the list of roots.
+The list of roots that should be accounted for in a solve. When `.updateStructure` is called the series of roots are traversed including closure joints to find all connected link hierarchies to use in the solve.
 
 ### .constructor
 
@@ -655,7 +665,7 @@ A helper class for rendering the joints and links in a three.js scene. Renders f
 roots : Array<Frame>
 ```
 
-Set of roots to render in the helper visualization. If this is changed then `.update` must be called.
+Set of roots to render in the helper visualization. If this is changed then `.updateStructure` must be called.
 
 ### .constructor
 
