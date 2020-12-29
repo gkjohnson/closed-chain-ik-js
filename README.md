@@ -133,7 +133,15 @@ An array of strings representing the names of the above solve statuses.
 
 ## Functions
 
-Set of functions for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+Set of utility functions including some for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+
+### findRoots
+
+```js
+findRoots( frames : Array<Frame> ) : Array<Frame>
+```
+
+Takes an array of frames to traverse including the closure joints and links and finds a set of unique nodes to treat as the roots of the connected trees for use in solving.
 
 ### urdfRobotToIKRoot
 
