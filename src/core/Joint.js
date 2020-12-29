@@ -602,7 +602,7 @@ export class Joint extends Frame {
 	// Add child overrides
 	makeClosure( child ) {
 
-		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
+		if ( ! child.isLink || this.child || child.parent === this ) {
 
 			throw new Error();
 
@@ -620,7 +620,7 @@ export class Joint extends Frame {
 
 	addChild( child ) {
 
-		if ( ! child.isLink || this.children.length >= 1 || child.parent === this ) {
+		if ( ! child.isLink || this.child || child.parent === this ) {
 
 			throw new Error();
 
