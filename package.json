@@ -1,6 +1,22 @@
 {
   "name": "closed-chain-ik",
-  "version": "0.0.1",
+  "version": "0.0.2",
+	"keywords" [
+		"inverse-kinematics",
+		"javascript",
+	  "threejs",
+		"three",
+		"graphics",
+		"robotics",
+		"least-squares",
+		"joints",
+		"parallel",
+		"animation",
+		"control",
+		"robots",
+		"urdf",
+		"ik"
+	],
   "type": "module",
   "files": [
     "src/*"
