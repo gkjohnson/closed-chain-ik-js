@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Frame and Joint matrices from using `Float64Array` to using `Float32Array`.
 - Added `matrixPool` onto `Solver` and `ChainSolver` instances so they are not retained globally.
+- WorkerSolver now falls back to clone `ArrayBuffers` when `SharedArrayBuffers` are not available.
 
 ### Fixed
 
