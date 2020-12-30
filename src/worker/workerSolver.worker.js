@@ -3,6 +3,8 @@ import { SOLVE_STATUS } from '../core/ChainSolver.js';
 import { deserialize } from './serialize.js';
 import { applyToBuffer, applyFromBuffer } from './utils.js';
 
+const useSharedArrayBuffers = false;
+
 let solver = new Solver();
 let solveHandle = - 1;
 
@@ -28,6 +30,11 @@ global.onmessage = function ( { data: e } ) {
 			buffer = data.buffer;
 			byteBuffer = new Uint8Array( buffer );
 			floatBuffer = new Float32Array( buffer );
+			break;
+
+		// update the frame state from buffer when not using shared array buffers
+		case 'updateFrameState':
+			byteBuffer.set( new Uint8Array( data.buffer ) );
 			break;
 
 		// Update the settings of the solver
@@ -67,12 +74,12 @@ function updateSolve() {
 	applyFromBuffer( frames, floatBuffer, byteBuffer, false, true );
 
 	// Solve 1 iteration taking the most severe chain result
-	const result = solver.solve();
+	const status = solver.solve();
 
 	// Copy the new DoF back to the shared buffer
 	applyToBuffer( frames, floatBuffer, byteBuffer, true, false );
 
-	if ( result.find( r => r === SOLVE_STATUS.TIMEOUT ) ) {
+	if ( status.find( r => r === SOLVE_STATUS.TIMEOUT ) ) {
 
 		// yield so we can react to messages
 		solveHandle = setTimeout( updateSolve );
@@ -83,11 +90,31 @@ function updateSolve() {
 
 	}
 
-	this.postMessage( {
+	// send a copy of the buffer back if not using shared array buffers
+	if ( useSharedArrayBuffers ) {
 
-		type: 'updateSolve',
-		data: result,
+		this.postMessage( {
 
-	} );
+			type: 'updateSolve',
+			data: {
+				status,
+			},
+
+		} );
+
+	} else {
+
+		const resultsBuffer = buffer.slice();
+		this.postMessage( {
+
+			type: 'updateSolve',
+			data: {
+				status,
+				buffer: resultsBuffer,
+			},
+
+		}, [ resultsBuffer ] );
+
+	}
 
 }

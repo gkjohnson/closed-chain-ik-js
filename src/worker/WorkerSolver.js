@@ -30,8 +30,6 @@ export class WorkerSolver {
 		let scheduled = false;
 		worker.onmessage = ( { data: e } ) => {
 
-			// TODO: Always send the buffer back via the message even if shared array buffer.
-
 			if ( e.type === 'updateSolve' ) {
 
 				// If the solve is completed then schedule a copy onto our joints to avoid
@@ -42,7 +40,20 @@ export class WorkerSolver {
 					Promise.resolve().then( () => {
 
 						// Only copy the DoF values of the joints that are to move.
-						const { byteBuffer, floatBuffer, jointsToIndexMap, jointsToUpdate } = this;
+						let byteBuffer, floatBuffer;
+						if ( useSharedArrayBuffers ) {
+
+							byteBuffer = this.byteBuffer;
+							floatBuffer = this.floatBuffer;
+
+						} else {
+
+							byteBuffer = new Uint8Array( e.data.buffer );
+							floatBuffer = new Float32Array( e.data.buffer );
+
+						}
+
+						const { jointsToIndexMap, jointsToUpdate } = this;
 						for ( let i = 0, l = jointsToUpdate.length; i < l; i ++ ) {
 
 							const joint = jointsToUpdate[ i ];
@@ -54,17 +65,11 @@ export class WorkerSolver {
 
 						scheduled = false;
 
-						if ( ! useSharedArrayBuffers ) {
-
-							// TODO REPLACE BUFFER
-
-						}
-
 					} );
 
 				}
 
-				const status = e.data;
+				const status = e.data.status;
 				this.status = status;
 				if ( status !== SOLVE_STATUS.TIMEOUT ) {
 
@@ -104,8 +109,7 @@ export class WorkerSolver {
 		const frames = Array.from( framesSet );
 		const serialized = serialize( frames );
 
-		// TODO: Generate a buffer of the appropriate type here
-		const buffer = generateSharedBuffer( frames );
+		const buffer = generateSharedBuffer( frames, useSharedArrayBuffers );
 		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
 
@@ -125,20 +129,45 @@ export class WorkerSolver {
 
 		}
 
-		worker.postMessage( {
-			type: 'updateStructure',
-			data: {
-				serialized,
-				buffer,
-			},
-		} );
+		if ( useSharedArrayBuffers ) {
+
+			this.buffer = buffer;
+			this.floatBuffer = floatBuffer;
+			this.byteBuffer = byteBuffer;
+
+		} else {
+
+			this.buffer = buffer.slice();
+			this.floatBuffer = new Float32Array( this.buffer );
+			this.byteBuffer = new Uint8Array( this.buffer );
+
+		}
 
 		this.frames = frames;
-		this.buffer = buffer;
-		this.floatBuffer = floatBuffer;
-		this.byteBuffer = byteBuffer;
 		this.jointsToUpdate = jointsToUpdate;
 		this.jointsToIndexMap = jointsToIndexMap;
+
+		if ( useSharedArrayBuffers ) {
+
+			worker.postMessage( {
+				type: 'updateStructure',
+				data: {
+					serialized,
+					buffer,
+				},
+			} );
+
+		} else {
+
+			worker.postMessage( {
+				type: 'updateStructure',
+				data: {
+					serialized,
+					buffer,
+				},
+			}, [ buffer ] );
+
+		}
 
 	}
 
@@ -155,9 +184,6 @@ export class WorkerSolver {
 	// Copy the non DoF values over to shared buffer for use in the worker
 	updateFrameState( ...updateJoints ) {
 
-		// TODO: if not using shared array buffer then schedule this to happen when
-		// the data returns next
-
 		const { frames, floatBuffer, byteBuffer } = this;
 		if ( updateJoints.length === 0 ) {
 
@@ -173,6 +199,18 @@ export class WorkerSolver {
 				copyFrameToBuffer( frame, floatBuffer, byteBuffer, JOINT_STRIDE * index, false, true );
 
 			}
+
+		}
+
+		if ( ! useSharedArrayBuffers ) {
+
+			const buffer = this.buffer.slice();
+			this.worker.postMessage( {
+				type: 'updateFrameState',
+				data: {
+					buffer,
+				},
+			}, [ buffer ] );
 
 		}
 
