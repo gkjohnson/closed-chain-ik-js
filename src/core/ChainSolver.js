@@ -262,50 +262,59 @@ export class ChainSolver {
 
 			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
+			let failedSVD = false;
 			if ( useSVD ) {
 
-				const m = errorRows;
-				const n = freeDoF;
-				const k = Math.min( m, n );
+				try {
 
-				const u = matrixPool.get( m, k ); // m x k
-				const q = matrixPool.get( k, k ); // k x k
-				const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
+					const m = errorRows;
+					const n = freeDoF;
+					const k = Math.min( m, n );
 
-				mat.svd( u, q, v, jacobian );
+					const u = matrixPool.get( m, k ); // m x k
+					const q = matrixPool.get( k, k ); // k x k
+					const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
 
-				const vt = matrixPool.get( k, n );
-				const ut = matrixPool.get( k, m );
-				const qinv = matrixPool.get( k, k );
-				mat.transpose( vt, v );
-				mat.transpose( ut, u );
+					mat.svd( u, q, v, jacobian );
 
-				// if the diagonal value is close to 0 when taking the inverse
-				// then set it to zero.
-				for ( let i = 0, l = q.length; i < l; i ++ ) {
+					const uTranspose = matrixPool.get( k, m );
+					const qInverse = matrixPool.get( k, k );
+					mat.transpose( uTranspose, u );
 
-					const val = q[ i ][ i ];
-					let inv;
-					if ( Math.abs( val ) < 0.001 ) {
+					// if the diagonal value is close to 0 when taking the inverse
+					// then set it to zero.
+					for ( let i = 0, l = q.length; i < l; i ++ ) {
 
-						inv = 0;
+						const val = q[ i ][ i ];
+						let inv;
+						if ( Math.abs( val ) < 0.001 ) {
 
-					} else {
+							inv = 0;
 
-						inv = 1 / val;
+						} else {
+
+							inv = 1 / val;
+
+						}
+
+						qInverse[ i ][ i ] = inv;
 
 					}
 
-					qinv[ i ][ i ] = inv;
+					// V * Qinv * Ut
+					const vqinv = matrixPool.get( n, k );
+					mat.multiply( vqinv, v, qInverse );
+					mat.multiply( pseudoInverse, vqinv, uTranspose );
+
+				} catch ( err ) {
+
+					failedSVD = true;
 
 				}
 
-				// V * Qinv * Ut
-				const vqinv = matrixPool.get( n, k );
-				mat.multiply( vqinv, v, qinv );
-				mat.multiply( pseudoInverse, vqinv, ut );
+			}
 
-			} else {
+			if ( ! useSVD || failedSVD ) {
 
 				// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
 				// J^T * J * x = J^T * e
