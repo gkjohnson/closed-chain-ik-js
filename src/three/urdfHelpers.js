@@ -157,12 +157,16 @@ export function setIKFromUrdf( ikRoot, urdfRoot ) {
 	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
 	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
 
-	ikRoot.setDoFQuaternion(
-		urdfRoot.quaternion.x,
-		urdfRoot.quaternion.y,
-		urdfRoot.quaternion.z,
-		urdfRoot.quaternion.w,
-	);
+	if ( ikRoot.rotationDoFCount === 3 ) {
+
+		ikRoot.setDoFQuaternion(
+			urdfRoot.quaternion.x,
+			urdfRoot.quaternion.y,
+			urdfRoot.quaternion.z,
+			urdfRoot.quaternion.w,
+		);
+
+	}
 
 	ikRoot.traverse( c => {
 

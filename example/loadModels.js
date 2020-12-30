@@ -6,6 +6,79 @@ import {
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
 import { LoadingManager } from 'three';
+import { XacroLoader } from 'xacro-parser';
+import { quat } from 'gl-matrix';
+
+export function loadStaubli() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		const url = 'https://raw.githubusercontent.com/ros-industrial/staubli_experimental/ce422fe0a54232d73cf44e2571fc7abc2f5ff9f6/staubli_tx2_90_support/urdf/tx2_90.xacro';
+		const xacroLoader = new XacroLoader();
+		xacroLoader.rospackCommands = {
+
+			find( pkg ) {
+
+				switch ( pkg ) {
+
+					case 'staubli_resources':
+						return 'https://raw.githubusercontent.com/ros-industrial/staubli/indigo-devel/staubli_resources/';
+					case 'staubli_tx2_90_support':
+						return 'https://raw.githubusercontent.com/ros-industrial/staubli_experimental/ce422fe0a54232d73cf44e2571fc7abc2f5ff9f6/staubli_tx2_90_support/';
+					default:
+						return pkg;
+
+				}
+
+			}
+
+		};
+
+		xacroLoader.load( url, xacro => {
+
+			const urdfLoader = new URDFLoader();
+			urdfLoader.packages = {
+				'staubli_tx2_90_support': 'https://raw.githubusercontent.com/ros-industrial/staubli_experimental/ce422fe0a54232d73cf44e2571fc7abc2f5ff9f6/staubli_tx2_90_support/'
+			};
+			const urdf = urdfLoader.parse( xacro );
+			const ik = urdfRobotToIKRoot( urdf );
+
+			// make the root fixed
+			ik.clearDoF();
+			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
+			ik.position[ 1 ] -= 0.5;
+			ik.setMatrixNeedsUpdate();
+
+			// start the joints off at reasonable angles
+			urdf.setJointValue( 'joint_2', Math.PI / 4 );
+			urdf.setJointValue( 'joint_3', Math.PI / 2 );
+			urdf.setJointValue( 'joint_5', - Math.PI / 4 );
+			window.urdf = urdf;
+			setIKFromUrdf( ik, urdf );
+
+			const goalMap = new Map();
+			const tool = ik.find( l => l.name === 'tool0' );
+			const link = urdf.links.tool0;
+
+			const ee = new Joint();
+			ee.name = link.name;
+			ee.makeClosure( tool );
+
+			tool.getWorldPosition( ee.position );
+			tool.getWorldQuaternion( ee.quaternion );
+			ee.setMatrixNeedsUpdate();
+			goalMap.set( ee, tool );
+
+			window.ik = ik;
+
+			resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+		}, reject );
+
+	} );
+
+
+}
 
 export function loadATHLETE() {
 
