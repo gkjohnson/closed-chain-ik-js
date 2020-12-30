@@ -621,7 +621,7 @@ Must be called whenever parent child relationships and structural changes relate
 
 Implements the interface defined by [Solver](#Solver) but runs the solve asynchronously on in a WebWorker. Results are automatically copied to the joint system being solved for.
 
-> :warning: `WorkerSolver` relies on [SharedArrayBuffers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) which may not be available on all platforms.
+> :warning: When [SharedArrayBuffers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) are not available new copies of `ArrayBuffer` are created every update and from the worker.
 
 ### .results
 

@@ -2,7 +2,7 @@ export const JOINT_STRIDE = 304;
 
 export const LINK_STRIDE = 56;
 
-export function generateSharedBuffer( frames ) {
+export function generateSharedBuffer( frames, useSharedArrayBuffer = true ) {
 
 	// dofValues 	6 * 4
 	// dofTarget 	6 * 4
@@ -17,7 +17,17 @@ export function generateSharedBuffer( frames ) {
 	// total  		150 bytes per joint
 	// 4 byte aligned: 152
 
-	const arrayBuffer = new SharedArrayBuffer( JOINT_STRIDE * frames.length );
+	let arrayBuffer;
+	if ( useSharedArrayBuffer ) {
+
+		arrayBuffer = new SharedArrayBuffer( JOINT_STRIDE * frames.length );
+
+	} else {
+
+		arrayBuffer = new ArrayBuffer( JOINT_STRIDE * frames.length );
+
+	}
+
 	const float64 = new Float32Array( arrayBuffer );
 	const byte8 = new Uint8Array( arrayBuffer );
 	applyToBuffer( frames, float64, byte8 );
