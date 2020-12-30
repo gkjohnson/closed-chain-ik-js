@@ -25,6 +25,7 @@ export class WorkerSolver {
 		this.byteBuffer = null;
 		this.jointsToUpdate = null;
 		this.jointsToIndexMap = null;
+		this.scheduledStateUpdate = false;
 
 		const worker = new Worker( './workerSolver.worker.js' );
 		let scheduled = false;
@@ -202,15 +203,21 @@ export class WorkerSolver {
 
 		}
 
-		if ( ! useSharedArrayBuffers ) {
+		if ( ! useSharedArrayBuffers && ! this.scheduledStateUpdate ) {
 
-			const buffer = this.buffer.slice();
-			this.worker.postMessage( {
-				type: 'updateFrameState',
-				data: {
-					buffer,
-				},
-			}, [ buffer ] );
+			this.scheduledStateUpdate = true;
+			Promise.resolve().then( () => {
+
+				this.scheduledStateUpdate = false;
+				const buffer = this.buffer.slice();
+				this.worker.postMessage( {
+					type: 'updateFrameState',
+					data: {
+						buffer,
+					},
+				}, [ buffer ] );
+
+			} );
 
 		}
 
