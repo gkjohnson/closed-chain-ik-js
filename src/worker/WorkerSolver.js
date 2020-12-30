@@ -9,6 +9,8 @@ import {
 } from './utils.js';
 import { findRoots } from '../core/utils/findRoots.js';
 
+const useSharedArrayBuffers = ( typeof SharedArrayBuffer ) !== 'undefined';
+
 export class WorkerSolver {
 
 	constructor( roots = [] ) {
@@ -27,6 +29,8 @@ export class WorkerSolver {
 		const worker = new Worker( './workerSolver.worker.js' );
 		let scheduled = false;
 		worker.onmessage = ( { data: e } ) => {
+
+			// TODO: Always send the buffer back via the message even if shared array buffer.
 
 			if ( e.type === 'updateSolve' ) {
 
@@ -49,6 +53,12 @@ export class WorkerSolver {
 						}
 
 						scheduled = false;
+
+						if ( ! useSharedArrayBuffers ) {
+
+							// TODO REPLACE BUFFER
+
+						}
 
 					} );
 
@@ -75,6 +85,9 @@ export class WorkerSolver {
 	// changes or a degree of freedom changes. Or if the main thread must change the DoF values.
 	updateStructure() {
 
+		// TODO: do we need to track versions of the structure now if we use
+		// normal array buffers so we don't respond to an outdated update event?
+
 		const { worker } = this;
 
 		const roots = findRoots( this.roots );
@@ -90,6 +103,8 @@ export class WorkerSolver {
 		// Seralize the frames and generate a buffer
 		const frames = Array.from( framesSet );
 		const serialized = serialize( frames );
+
+		// TODO: Generate a buffer of the appropriate type here
 		const buffer = generateSharedBuffer( frames );
 		const floatBuffer = new Float32Array( buffer );
 		const byteBuffer = new Uint8Array( buffer );
@@ -139,6 +154,9 @@ export class WorkerSolver {
 
 	// Copy the non DoF values over to shared buffer for use in the worker
 	updateFrameState( ...updateJoints ) {
+
+		// TODO: if not using shared array buffer then schedule this to happen when
+		// the data returns next
 
 		const { frames, floatBuffer, byteBuffer } = this;
 		if ( updateJoints.length === 0 ) {
