@@ -75,7 +75,7 @@ describe( 'Frame', () => {
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
 			expect( f.position[ 0 ] ).toBeLessThan( 1e-7 );
 			expect( f.position[ 1 ] ).toBeLessThan( 1e-7 );
-			expect( f.position[ 2 ] ).toEqual( 1 );
+			expect( Math.abs( 1.0 - f.position[ 2 ] ) ).toBeLessThan( 1e-6 );
 
 		} );
 
@@ -454,7 +454,7 @@ describe( 'Frame', () => {
 
 			expect( f.matrixNeedsUpdate ).toBeFalsy();
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
-			expect( f.matrix ).toEqual( new Float64Array( [
+			expect( f.matrix ).toEqual( new Float32Array( [
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
@@ -475,7 +475,7 @@ describe( 'Frame', () => {
 
 			expect( f.matrixNeedsUpdate ).toBeFalsy();
 			expect( f.matrixWorldNeedsUpdate ).toBeFalsy();
-			expect( f.matrixWorld ).toEqual( new Float64Array( [
+			expect( f.matrixWorld ).toEqual( new Float32Array( [
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
@@ -536,14 +536,14 @@ describe( 'Frame', () => {
 			expect( c2.matrixNeedsUpdate ).toBeFalsy();
 			expect( c2.matrixWorldNeedsUpdate ).toBeFalsy();
 
-			expect( c1.matrixWorld ).toEqual( new Float64Array( [
+			expect( c1.matrixWorld ).toEqual( new Float32Array( [
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
 				1, 2, 3, 1,
 			] ) );
 
-			expect( c2.matrixWorld ).toEqual( new Float64Array( [
+			expect( c2.matrixWorld ).toEqual( new Float32Array( [
 				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,

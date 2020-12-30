@@ -2,8 +2,8 @@ import { mat4, quat, vec3 } from 'gl-matrix';
 import { quaternionSquaredDistance } from './utils/quaternion.js';
 import { RAD2DEG } from './utils/constants.js';
 
-const tempInverse = new Float64Array( 16 );
-const tempMatrix = new Float64Array( 16 );
+const tempInverse = new Float32Array( 16 );
+const tempMatrix = new Float32Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempPos = new Float32Array( 3 );
 const sharedTraversedChildren = new Set();
@@ -19,10 +19,10 @@ export class Frame {
 		this.quaternion = new Float32Array( [ 0, 0, 0, 1 ] );
 		this.position = new Float32Array( 3 );
 
-		this.matrix = new Float64Array( 16 );
+		this.matrix = new Float32Array( 16 );
 		mat4.identity( this.matrix );
 
-		this.matrixWorld = new Float64Array( 16 );
+		this.matrixWorld = new Float32Array( 16 );
 		mat4.identity( this.matrixWorld );
 
 		this.matrixNeedsUpdate = false;
