@@ -75,7 +75,7 @@ describe( 'Frame', () => {
 			expect( f.matrixWorldNeedsUpdate ).toBeTruthy();
 			expect( f.position[ 0 ] ).toBeLessThan( 1e-7 );
 			expect( f.position[ 1 ] ).toBeLessThan( 1e-7 );
-			expect( f.position[ 2 ] ).toEqual( 1 );
+			expect( Math.abs( 1.0 - f.position[ 2 ] ) ).toBeLessThan( 1e-6 );
 
 		} );
 
