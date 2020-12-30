@@ -1,9 +1,12 @@
 import { ChainSolver } from './ChainSolver.js';
 import { findRoots } from './utils/findRoots.js';
+import { MatrixPool } from './MatrixPool.js';
 
 export class Solver {
 
 	constructor( roots = [] ) {
+
+		this.matrixPool = new MatrixPool();
 
 		this.useSVD = true;
 
@@ -173,6 +176,10 @@ export class Solver {
 		for ( let i = 0, l = solvers.length; i < l; i ++ ) {
 
 			const s = solvers[ i ];
+			s.matrixPool = this.matrixPool;
+
+			s.useSVD = this.useSVD;
+
 			s.maxIterations = this.maxIterations;
 			s.stallThreshold = this.stallThreshold;
 			s.dampingFactor = this.dampingFactor;

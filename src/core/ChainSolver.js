@@ -1,11 +1,7 @@
 import { vec3, vec4, mat4 } from 'gl-matrix';
-import { MatrixPool } from './MatrixPool.js';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
-
-// global stores
-const matrixPool = new MatrixPool();
 
 // temp reusable variables
 const targetRelativeToJointMatrix = new Float64Array( 16 );
@@ -70,6 +66,8 @@ export class ChainSolver {
 
 		// options -- these are set by the containing Solver.
 		this.maxIterations = - 1;
+
+		this.matrixPool = null;
 
 		this.useSVD = false;
 
@@ -175,6 +173,7 @@ export class ChainSolver {
 			lockedJointDoFCount,
 			prevDoFValues,
 			useSVD,
+			matrixPool,
 		} = this;
 
 		let iterations = 0;
