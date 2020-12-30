@@ -46,7 +46,7 @@ export class ChainSolver {
 		// list of targets we're trying to minimize in the chain
 		this.targets = null;
 
-		// map of joint -> closures that the given jointa affects
+		// map of joint -> closures that the given joint affects
 		this.affectedClosures = null;
 
 		// map of joint -> closure children that the given joint affects

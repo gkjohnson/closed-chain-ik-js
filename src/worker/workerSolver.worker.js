@@ -3,7 +3,7 @@ import { SOLVE_STATUS } from '../core/ChainSolver.js';
 import { deserialize } from './serialize.js';
 import { applyToBuffer, applyFromBuffer } from './utils.js';
 
-const useSharedArrayBuffers = false;
+const useSharedArrayBuffers = ( typeof SharedArrayBuffer ) !== 'undefined';
 
 let solver = new Solver();
 let solveHandle = - 1;
