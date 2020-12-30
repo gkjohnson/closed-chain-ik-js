@@ -445,8 +445,20 @@ function render() {
 		}
 
 		urdfRoot.visible = params.displayMesh;
-		ikHelper.visible = params.displayIk;
-		drawThroughIkHelper.visible = params.displayIk;
+
+		// IKHelpers can have a lot of matrices to update so remove it from
+		// the scene when not in use for performance.
+		if ( ! params.displayIk && ikHelper.parent ) {
+
+			scene.remove( ikHelper );
+			scene.remove( drawThroughIkHelper );
+
+		} else if ( params.displayIk && ! ikHelper.parent ) {
+
+			scene.add( ikHelper );
+			scene.add( drawThroughIkHelper );
+
+		}
 
 	}
 
