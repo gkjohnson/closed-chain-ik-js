@@ -16,8 +16,8 @@ export const DOF = {
 
 export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
 
-const tempInverse = new Float64Array( 16 );
-const tempMatrix = new Float64Array( 16 );
+const tempInverse = new Float32Array( 16 );
+const tempMatrix = new Float32Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempEuler = new Float32Array( 3 );
 const tempValueEuler = new Float32Array( 3 );
@@ -60,10 +60,10 @@ export class Joint extends Frame {
 		this.restPoseSet = false;
 
 		this.matrixDoFNeedsUpdate = false;
-		this.matrixDoF = new Float64Array( 16 );
+		this.matrixDoF = new Float32Array( 16 );
 		mat4.identity( this.matrixDoF );
 
-		this.cachedIdentityDoFMatrixWorld = new Float64Array( 16 );
+		this.cachedIdentityDoFMatrixWorld = new Float32Array( 16 );
 		mat4.identity( this.cachedIdentityDoFMatrixWorld );
 
 		// TODO: Consider affording control over rotation order
