@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - Frame and Joint matrices from using `Float64Array` to using `Float32Array`.
+- Added `matrixPool` onto `Solver` and `ChainSolver` instances so they are not retained globally.
+
+### Fixed
+
+- `useSVD` option not be set onto Solver's ChainSolvers.
 
 ## [0.0.2] - 2020-12-28
 ### Added
