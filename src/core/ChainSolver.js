@@ -353,10 +353,6 @@ export class ChainSolver {
 			const deltaTheta = matrixPool.get( freeDoF, 1 );
 			mat.multiply( deltaTheta, pseudoInverse, errorVector );
 
-			// console.log( 'ERROR VECTOR', errorVector );
-			// console.log( 'JACOBIAN', jacobian );
-			// console.log( 'DELTA_THETA', deltaTheta );
-
 			if ( restPoseFactor !== 0 ) {
 
 				// Nullspace Projection
