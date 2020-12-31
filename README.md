@@ -198,7 +198,7 @@ The orientation of the frame. If this is modified directly `setMatrixNeedsUpdate
 ### .matrix
 
 ```js
-readonly matrix : Float64Array[ 16 ]
+readonly matrix : Float32Array[ 16 ]
 ```
 
 The local transform matrix composed from the position and quaternion.
@@ -206,7 +206,7 @@ The local transform matrix composed from the position and quaternion.
 ### .matrixWorld
 
 ```js
-readonly matrixWorld : Float64Array[ 16 ]
+readonly matrixWorld : Float32Array[ 16 ]
 ```
 
 The world transform matrix computed based on the parent matrixWorld and this local matrix.
@@ -450,7 +450,7 @@ The maximum value limits for each joint degree of freeom.
 ### .matrixDoF
 
 ```js
-readonly matrixDoF : Float64Array[16]
+readonly matrixDoF : Float32Array[16]
 ```
 
 The matrix representing the transformation offset due to the current joint values.
