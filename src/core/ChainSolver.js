@@ -381,13 +381,11 @@ export class ChainSolver {
 						const dofRestPose = joint.dofRestPose;
 						for ( let d = 0; d < colCount; d ++ ) {
 
-							// NOTE: this is reversed because in applyAngles we're having to negate the
-							// delta angles for some reason atm
 							const dof = dofList[ d ];
 
 							if ( isLocked && lockedDoF[ dof ] ) continue;
 
-							restPose[ colIndex ][ 0 ] = dofValues[ dof ] - dofRestPose[ dof ];
+							restPose[ colIndex ][ 0 ] = dofRestPose[ dof ] - dofValues[ dof ];
 							colIndex ++;
 
 						}
@@ -501,9 +499,8 @@ export class ChainSolver {
 
 				}
 
-				// TODO: why are we negating here?
 				const value = joint.getDoFValue( dof );
-				const hitLimit = joint.setDoFValue( dof, value - deltaTheta[ dti ][ 0 ] );
+				const hitLimit = joint.setDoFValue( dof, value + deltaTheta[ dti ][ 0 ] );
 
 				// lock the joint if we hit a limit
 				if ( hitLimit ) {
@@ -635,10 +632,10 @@ export class ChainSolver {
 
 							// Get the amount that the rotation and translation error changed due to the
 							// small DoF adjustment to serve as the derivative.
-							vec3.subtract( tempPos, tempPos2, tempPos );
+							vec3.subtract( tempPos, tempPos, tempPos2 );
 							vec3.scale( tempPos, tempPos, translationFactor / delta );
 
-							vec4.subtract( tempQuat, tempQuat2, tempQuat );
+							vec4.subtract( tempQuat, tempQuat, tempQuat2 );
 							vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
 
 							if ( targetJoint.isGoal ) {
