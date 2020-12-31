@@ -44,7 +44,7 @@ export function loadStaubli() {
 			const ik = urdfRobotToIKRoot( urdf );
 
 			// make the root fixed
-			// ik.clearDoF();
+			ik.clearDoF();
 			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
 			ik.position[ 1 ] -= 0.5;
 			ik.setMatrixNeedsUpdate();
