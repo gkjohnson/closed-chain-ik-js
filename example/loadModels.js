@@ -109,6 +109,7 @@ export function loadATHLETE() {
 			const goalMap = new Map();
 			ik.traverse( c => {
 
+				console.log(c.name);
 				if ( c.isJoint ) {
 
 					c.dofRestPose.set( c.dofValues );

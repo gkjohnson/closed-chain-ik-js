@@ -5,7 +5,7 @@ import { Link } from '../core/Link.js';
 const tempVec = new Float64Array( 3 );
 const tempVec2 = new Float64Array( 3 );
 
-export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
+export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = true ) {
 
 	let rootNode = null;
 	let node;
@@ -26,7 +26,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 		node = new Link();
 		node.name = urdfNode.name;
-		doReturn = false;
+		doReturn = ! trimFixedLinks;
 
 	} else if ( urdfNode.isURDFJoint ) {
 
@@ -91,7 +91,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 			case 'fixed': {
 
 				node = rootNode;
-				doReturn = false;
+				doReturn = ! trimFixedLinks;
 				break;
 
 			}
@@ -101,7 +101,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 			default:
 
 				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
-				doReturn = false;
+				doReturn = ! trimFixedLinks;
 
 		}
 
@@ -135,7 +135,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 	const children = urdfNode.children;
 	for ( let i = 0, l = children.length; i < l; i ++ ) {
 
-		const res = urdfRobotToIKRoot( children[ i ], trimUnused, false );
+		const res = urdfRobotToIKRoot( children[ i ], trimFixedLinks, false );
 
 		if ( res ) {
 
@@ -146,8 +146,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 	}
 
-
-	return ( ! trimUnused || doReturn ) ? rootNode || node : null;
+	return doReturn ? rootNode || node : null;
 
 }
 
@@ -157,16 +156,12 @@ export function setIKFromUrdf( ikRoot, urdfRoot ) {
 	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
 	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
 
-	if ( ikRoot.rotationDoFCount === 3 ) {
-
-		ikRoot.setDoFQuaternion(
-			urdfRoot.quaternion.x,
-			urdfRoot.quaternion.y,
-			urdfRoot.quaternion.z,
-			urdfRoot.quaternion.w,
-		);
-
-	}
+	ikRoot.setDoFQuaternion(
+		urdfRoot.quaternion.x,
+		urdfRoot.quaternion.y,
+		urdfRoot.quaternion.z,
+		urdfRoot.quaternion.w,
+	);
 
 	ikRoot.traverse( c => {
 
