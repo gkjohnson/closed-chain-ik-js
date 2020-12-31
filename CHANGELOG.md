@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - `useSVD` option not be set onto Solver's ChainSolvers.
+- `useSVD` option will fall back to non SVD pseudoinverse if SVD fails to be computed.
 
 ## [0.0.2] - 2020-12-28
 ### Added

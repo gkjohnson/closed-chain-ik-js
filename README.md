@@ -21,6 +21,8 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [Robonaut](https://github.com/gkjohnson/nasa-urdf-robots)
 
+[Staubli](https://github.com/ros-industrial/staubli_experimental)
+
 # Use
 
 ## Simple 2 DoF System
@@ -539,7 +541,8 @@ Class for solving the closure and target joint constraints of a sytem. As well a
 
 ```js
 // Whether or not to use the SVD when calculating the pseudo inverse of the jacobian
-// which can result in a more numerically stable calculation.
+// which can result in a more numerically stable calculation. If the SVD cannot be calculated
+// then the transpose method is used.
 useSVD = true;
 
 // The max amount of iterations to try to solve for. The solve will terminate
