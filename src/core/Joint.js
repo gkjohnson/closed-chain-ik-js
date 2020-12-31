@@ -109,6 +109,12 @@ export class Joint extends Frame {
 
 		}
 
+		if ( ! this.dofFlags[ dof ] ) {
+
+			return false;
+
+		}
+
 		const minVal = this.minDoFLimit[ dof ];
 		const maxVal = this.maxDoFLimit[ dof ];
 

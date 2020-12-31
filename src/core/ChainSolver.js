@@ -835,7 +835,7 @@ export class ChainSolver {
 
 			}
 
-			if ( ! joint.isGoal ) {
+			if ( ! joint.isGoal && dofList.length > 0 ) {
 
 				freeDoF += dofList.length - lockedDoF;
 				freeJoints.push( joint );
