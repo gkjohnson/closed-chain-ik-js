@@ -1,7 +1,7 @@
 import { Frame } from './Frame';
 import { Link } from './Link';
 
-export enum DOF { X, Y, Z, EX, EY, EZ };
+export const enum DOF { X, Y, Z, EX, EY, EZ }
 
 export const DOF_NAMES : Array<String>;
 

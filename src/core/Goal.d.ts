@@ -5,6 +5,6 @@ export class Goal extends Joint {
 	isGoal : Boolean;
 
 	setGoalDoF( ...args : Array<DOF> ) : void;
-	setFreeDoF( ...args : Number<DOF> ) : void;
+	setFreeDoF( ...args : Array<DOF> ) : void;
 
 }

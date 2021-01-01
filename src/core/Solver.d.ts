@@ -1,4 +1,5 @@
 import { Frame } from './Frame';
+import { SOLVE_STATUS } from './ChainSolver';
 
 export class Solver {
 

@@ -17,8 +17,8 @@ export class Frame {
 	setWorldEuler( x : Number, y : Number, z : Number ) : void;
 	setWorldQuaternion( x : Number, y : Number, z : Number ) : void;
 
-	getWorldPosition( array : Float32Array | Float64Array | Array ) : void;
-	getWorldQuaternion( array : Float32Array | Float64Array | Array ) : void;
+	getWorldPosition( array : Array<Number> ) : void;
+	getWorldQuaternion( array : Array<Number> ) : void;
 
 	traverseParents( cb : ( parent : Frame ) => Boolean ) : void;
 	traverse( cb : ( child : Frame ) => Boolean ) : void;
