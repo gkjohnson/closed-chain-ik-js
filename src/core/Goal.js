@@ -20,7 +20,7 @@ export class Goal extends Joint {
 
 		if ( rotCount !== 0 && rotCount !== 3 ) {
 
-			throw new Error();
+			throw new Error( 'Goal: Only full 3 DoF or 0 DoF rotation goals are supported.' );
 
 		}
 
@@ -46,7 +46,7 @@ export class Goal extends Joint {
 
 	addChild() {
 
-		throw new Error();
+		throw new Error( 'Goal: Cannot add children to Goal.' );
 
 	}
 

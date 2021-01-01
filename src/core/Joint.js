@@ -98,14 +98,13 @@ export class Joint extends Frame {
 
 		if ( target === this.minDoFLimit || target == this.maxDoFLimit ) {
 
-			// TODO: add error message
-			throw new Error();
+			throw new Error( 'Joint: Cannot set minDoFLimit or maxDoFLimit with _setValue.' );
 
 		}
 
 		if ( dof < 0 || dof > 6 || typeof dof !== 'number' ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Invalid DoF.' );
 
 		}
 
@@ -164,7 +163,7 @@ export class Joint extends Frame {
 		// zeroing the fixed dimensions it is as close as possible.
 		if ( this.rotationDoFCount !== 3 ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Cannot set full Euler value when not using full rotation DoF.' );
 
 		}
 
@@ -437,7 +436,7 @@ export class Joint extends Frame {
 
 		if ( ! this.isClosure ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Cannot get closure error on non closure Joint.' );
 
 		}
 
@@ -610,7 +609,7 @@ export class Joint extends Frame {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Given child cannot be used to make closure.' );
 
 		} else {
 
@@ -628,7 +627,7 @@ export class Joint extends Frame {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Given child cannot be added to Joint.' );
 
 		} else {
 
@@ -646,7 +645,7 @@ export class Joint extends Frame {
 
 			if ( this.child !== child ) {
 
-				throw new Error();
+				throw new Error( 'Frame: Child to be removed is not a child of this Joint.' );
 
 			} else {
 
