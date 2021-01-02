@@ -5,6 +5,7 @@ import { Link } from '../core/Link.js';
 
 const tempVec = new Float64Array( 3 );
 const tempVec2 = new Float64Array( 3 );
+const tempEuler = new Euler();
 
 export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
 
@@ -152,7 +153,6 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 }
 
-const tempEuler = new Euler();
 export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
 	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x );
