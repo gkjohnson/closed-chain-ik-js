@@ -145,6 +145,7 @@ export class Joint extends Frame {
 
 	}
 
+	// TODO: these functions are unused
 	_setViaFullPosition( target, values ) {
 
 		const dofFlags = this.dofFlags;
@@ -157,15 +158,6 @@ export class Joint extends Frame {
 	}
 
 	_setViaFullEuler( target, values ) {
-
-		// TODO: depending on the representation this could not represent the given
-		// rotation all that well. We need to find the euler representation such that when
-		// zeroing the fixed dimensions it is as close as possible.
-		if ( this.rotationDoFCount !== 3 ) {
-
-			throw new Error( 'Joint: Cannot set full Euler value when not using full rotation DoF.' );
-
-		}
 
 		const dofFlags = this.dofFlags;
 		for ( let i = 3; i < 6; i ++ ) {
@@ -271,13 +263,6 @@ export class Joint extends Frame {
 
 		this.setMatrixDoFNeedsUpdate();
 		return this._setValue( this.dofValues, dof, value );
-
-	}
-
-	setDoFQuaternion( ...values ) {
-
-		this._setViaQuaternion( this.dofValues, values );
-		this.setMatrixDoFNeedsUpdate();
 
 	}
 

@@ -1,3 +1,4 @@
+import { Euler } from 'three';
 import { quat } from 'gl-matrix';
 import { Joint, DOF } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
@@ -151,22 +152,18 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 }
 
+const tempEuler = new Euler();
 export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
 	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x );
 	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
 	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
 
-	if ( ikRoot.rotationDoFCount === 3 ) {
-
-		ikRoot.setDoFQuaternion(
-			urdfRoot.quaternion.x,
-			urdfRoot.quaternion.y,
-			urdfRoot.quaternion.z,
-			urdfRoot.quaternion.w,
-		);
-
-	}
+	tempEuler.copy( urdfRoot.rotation );
+	tempEuler.reorder( 'ZYX' );
+	ikRoot.setDoFValue( DOF.EX, tempEuler.x );
+	ikRoot.setDoFValue( DOF.EY, tempEuler.y );
+	ikRoot.setDoFValue( DOF.EZ, tempEuler.z );
 
 	ikRoot.traverse( c => {
 
