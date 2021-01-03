@@ -91,6 +91,7 @@ solver.solve();
 
 - Smoothing out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
 
+- Enabling SVD on the Solver can cause divergence on solvable systems and stutter. See [#76](https://github.com/gkjohnson/closed-chain-ik-js/issues/76).
 
 # API
 
