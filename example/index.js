@@ -706,32 +706,15 @@ function loadModel( promise ) {
 			ikHelper = new IKRootsHelper( ik );
 			ikHelper.setJointScale( helperScale );
 			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.traverse( c => {
-
-				if ( c.material ) {
-
-					c.material.color.set( 0xe91e63 ).convertSRGBToLinear();
-
-				}
-
-			} );
+			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			ikHelper.setColor( ikHelper.color );
 
 			drawThroughIkHelper = new IKRootsHelper( ik );
 			drawThroughIkHelper.setJointScale( helperScale );
 			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.traverse( c => {
-
-				if ( c.material ) {
-
-					c.material.color.set( 0xe91e63 ).convertSRGBToLinear();
-					c.material.opacity = 0.1;
-					c.material.transparent = true;
-					c.material.depthWrite = false;
-					c.material.depthTest = false;
-
-				}
-
-			} );
+			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
+			drawThroughIkHelper.setDrawThrough( true );
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 
