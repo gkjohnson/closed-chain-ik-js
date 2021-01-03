@@ -8,7 +8,7 @@ export class Solver {
 
 		this.matrixPool = new MatrixPool();
 
-		this.useSVD = true;
+		this.useSVD = false;
 
 		this.maxIterations = 5;
 		this.stallThreshold = 1e-4;
