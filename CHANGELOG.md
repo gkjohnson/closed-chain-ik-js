@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Better error messages.
 - Typescript definition files.
 
+### Fixed
+
+- IKRootsHelper throwing an error when calling `updateStructure`.
+- IKRootsHelper throwing an error when calling `dispose`.
+
 ## [0.0.3] - 2020-12-31
 ### Changed
 
