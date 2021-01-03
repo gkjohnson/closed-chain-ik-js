@@ -244,6 +244,7 @@ function init() {
 
 			// The joint that's positioned at the surface of the mesh
 			const rootGoalJoint = new Joint();
+			rootGoalJoint.name = 'GoalRootJoint-' + ikLink.name;
 			rootGoalJoint.setPosition(
 				result.point.x,
 				result.point.y,
@@ -255,6 +256,7 @@ function init() {
 			rootGoalJoint.addChild( goalLink );
 
 			const goalJoint = new Joint();
+			rootGoalJoint.name = 'GoalJoint-' + ikLink.name;
 			ikLink.getWorldPosition( goalJoint.position );
 			ikLink.getWorldQuaternion( goalJoint.quaternion );
 			goalJoint.setMatrixNeedsUpdate();
