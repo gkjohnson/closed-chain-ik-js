@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - IKRootsHelper throwing an error when calling `updateStructure`.
 - IKRootsHelper throwing an error when calling `dispose`.
 
+### Changed
+
+- Disabled SVD by default on Solver because it was causing solves to diverge.
+
 ## [0.0.3] - 2020-12-31
 ### Changed
 
