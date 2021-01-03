@@ -89,7 +89,7 @@ solver.solve();
 
 - The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
 
-- Smoothering out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
+- Smoothing out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
 
 
 # API
