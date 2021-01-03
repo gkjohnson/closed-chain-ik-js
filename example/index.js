@@ -58,7 +58,7 @@ const solverOptions = {
 	rotationErrorClamp: 0.25,
 	translationConvergeThreshold: 1e-3,
 	rotationConvergeThreshold: 1e-5,
-	restPoseFactor: 0.1,
+	restPoseFactor: 0.025,
 };
 
 const goalToLinkMap = new Map();
@@ -219,15 +219,7 @@ function init() {
 			if ( linkToGoalMap.has( ikLink ) ) {
 
 				const goal = linkToGoalMap.get( ikLink );
-				linkToGoalMap.delete( ikLink );
-				goalToLinkMap.delete( goal );
-
-				const i = goals.indexOf( goal );
-				goals.splice( i, 1 );
-
-				const i2 = solver.roots.indexOf( goal );
-				solver.roots.splice( i2, 1 );
-				solver.updateStructure();
+				deleteGoal( goal );
 
 			}
 
@@ -250,6 +242,7 @@ function init() {
 
 			mat4.targetTo( lookMat, eyeVec, posVec, upVec );
 
+			// The joint that's positioned at the surface of the mesh
 			const rootGoalJoint = new Joint();
 			rootGoalJoint.setPosition(
 				result.point.x,
@@ -259,13 +252,13 @@ function init() {
 			mat4.getRotation( rootGoalJoint.quaternion, lookMat );
 
 			const goalLink = new Link();
+			rootGoalJoint.addChild( goalLink );
 
 			const goalJoint = new Joint();
 			ikLink.getWorldPosition( goalJoint.position );
 			ikLink.getWorldQuaternion( goalJoint.quaternion );
 			goalJoint.setMatrixNeedsUpdate();
 
-			rootGoalJoint.attachChild( goalLink );
 			goalLink.attachChild( goalJoint );
 			goalJoint.makeClosure( ikLink );
 
@@ -276,8 +269,9 @@ function init() {
 			ikLink.detachChild( rootGoalJoint );
 
 			// update the solver
-			solver.roots.push( rootGoalJoint );
 			solver.updateStructure();
+			ikHelper.updateStructure();
+			drawThroughIkHelper.updateStructure();
 
 			targetObject.position.set( ...rootGoalJoint.position );
 			targetObject.quaternion.set( ...rootGoalJoint.quaternion );
@@ -318,20 +312,38 @@ function init() {
 
 		if ( selectedGoalIndex !== - 1 && ( e.code === 'Delete' || e.code === 'Backspace' ) ) {
 
-			const goalToRemove = goals[ selectedGoalIndex ];
-			goalToRemove.removeChild( goalToRemove.child );
-			solver.updateStructure();
-
-			goals.splice( selectedGoalIndex, 1 );
+			deleteGoal( goals[ selectedGoalIndex ] );
 			selectedGoalIndex = - 1;
-
-			const link = goalToLinkMap.get( goalToRemove );
-			goalToLinkMap.delete( goalToRemove );
-			linkToGoalMap.delete( link );
 
 		}
 
 	} );
+
+	function deleteGoal( goal ) {
+
+		const index = goals.indexOf( goal );
+		const goalToRemove = goals[ index ];
+		goalToRemove.traverse( c => {
+
+			if ( c.isClosure ) {
+
+				c.removeChild( c.child );
+
+			}
+
+		} );
+
+		goals.splice( index, 1 );
+
+		const link = goalToLinkMap.get( goalToRemove );
+		goalToLinkMap.delete( goalToRemove );
+		linkToGoalMap.delete( link );
+
+		solver.updateStructure();
+		ikHelper.updateStructure();
+		drawThroughIkHelper.updateStructure();
+
+	}
 
 }
 

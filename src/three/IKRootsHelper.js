@@ -107,15 +107,18 @@ export class IKRootsHelper extends Group {
 
 		}
 
-		currJoints.forEach( ( [ joint, helper ] ) => {
 
+		currJoints.forEach( joint => {
+
+			const helper = joints.get( joint );
 			this.remove( helper );
 			helper.dispose();
 
 		} );
 
-		currLinks.forEach( ( [ link, helper ] ) => {
+		currLinks.forEach( link => {
 
+			const helper = links.get( link );
 			this.remove( helper );
 			helper.dispose();
 

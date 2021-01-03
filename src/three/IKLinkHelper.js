@@ -88,4 +88,24 @@ export class IKLinkHelper extends Group {
 
 	}
 
+	dispose() {
+
+		this.traverse( c => {
+
+			if ( c.material ) {
+
+				c.material.dispose();
+
+			}
+
+			if ( c.geometry ) {
+
+				c.geometry.dispose();
+
+			}
+
+		} );
+
+	}
+
 }
