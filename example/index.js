@@ -50,7 +50,7 @@ const params = {
 };
 
 const solverOptions = {
-	useSVD: true,
+	useSVD: false,
 	maxIterations: 3,
 	divergeThreshold: 0.05,
 	stallThreshold: 1e-4,
