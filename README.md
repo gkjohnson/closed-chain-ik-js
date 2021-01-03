@@ -699,15 +699,32 @@ Takes the set of roots to visualize.
 ### .setJointScale
 
 ```js
-setJointScale( scale : Number ) : void
+setJointScale( scale : Number ) : this
 ```
 
 Sets the scale of the joint indicators.
 
+### .setColor
+
+```js
+setColor( color : Color | String | Number ) : this
+```
+
+Sets the color of the helper.
+
+
+### .setDrawThrough
+
+```js
+setDrawThrough( drawThrough : Boolean ) : this
+```
+
+Sets whether the helper will draw through the environment.
+
 ### .setResolution
 
 ```js
-setResolution( width : Number, height : Number ) : void
+setResolution( width : Number, height : Number ) : this
 ```
 
 Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
