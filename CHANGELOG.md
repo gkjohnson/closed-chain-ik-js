@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Better error messages.
 - Typescript definition files.
+- Functions for setting draw through and color on `IKRootsHelper`.
 
 ### Fixed
 
