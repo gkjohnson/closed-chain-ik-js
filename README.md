@@ -89,8 +89,9 @@ solver.solve();
 
 - The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
 
-- Smoothering out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
+- Smoothing out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
 
+- Enabling SVD on the Solver can cause divergence on solvable systems and stutter. See [#76](https://github.com/gkjohnson/closed-chain-ik-js/issues/76).
 
 # API
 
@@ -198,7 +199,7 @@ The orientation of the frame. If this is modified directly `setMatrixNeedsUpdate
 ### .matrix
 
 ```js
-readonly matrix : Float64Array[ 16 ]
+readonly matrix : Float32Array[ 16 ]
 ```
 
 The local transform matrix composed from the position and quaternion.
@@ -206,7 +207,7 @@ The local transform matrix composed from the position and quaternion.
 ### .matrixWorld
 
 ```js
-readonly matrixWorld : Float64Array[ 16 ]
+readonly matrixWorld : Float32Array[ 16 ]
 ```
 
 The world transform matrix computed based on the parent matrixWorld and this local matrix.
@@ -450,7 +451,7 @@ The maximum value limits for each joint degree of freeom.
 ### .matrixDoF
 
 ```js
-readonly matrixDoF : Float64Array[16]
+readonly matrixDoF : Float32Array[16]
 ```
 
 The matrix representing the transformation offset due to the current joint values.
@@ -699,15 +700,32 @@ Takes the set of roots to visualize.
 ### .setJointScale
 
 ```js
-setJointScale( scale : Number ) : void
+setJointScale( scale : Number ) : this
 ```
 
 Sets the scale of the joint indicators.
 
+### .setColor
+
+```js
+setColor( color : Color | String | Number ) : this
+```
+
+Sets the color of the helper.
+
+
+### .setDrawThrough
+
+```js
+setDrawThrough( drawThrough : Boolean ) : this
+```
+
+Sets whether the helper will draw through the environment.
+
 ### .setResolution
 
 ```js
-setResolution( width : Number, height : Number ) : void
+setResolution( width : Number, height : Number ) : this
 ```
 
 Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.

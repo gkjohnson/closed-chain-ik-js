@@ -1,11 +1,13 @@
+import { Euler } from 'three';
 import { quat } from 'gl-matrix';
 import { Joint, DOF } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
 
 const tempVec = new Float64Array( 3 );
 const tempVec2 = new Float64Array( 3 );
+const tempEuler = new Euler();
 
-export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = true ) {
+export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
 
 	let rootNode = null;
 	let node;
@@ -26,7 +28,7 @@ export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = tr
 
 		node = new Link();
 		node.name = urdfNode.name;
-		doReturn = ! trimFixedLinks;
+		doReturn = false;
 
 	} else if ( urdfNode.isURDFJoint ) {
 
@@ -91,7 +93,7 @@ export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = tr
 			case 'fixed': {
 
 				node = rootNode;
-				doReturn = ! trimFixedLinks;
+				doReturn = false;
 				break;
 
 			}
@@ -101,7 +103,7 @@ export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = tr
 			default:
 
 				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
-				doReturn = ! trimFixedLinks;
+				doReturn = false;
 
 		}
 
@@ -135,7 +137,7 @@ export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = tr
 	const children = urdfNode.children;
 	for ( let i = 0, l = children.length; i < l; i ++ ) {
 
-		const res = urdfRobotToIKRoot( children[ i ], trimFixedLinks, false );
+		const res = urdfRobotToIKRoot( children[ i ], trimUnused, false );
 
 		if ( res ) {
 
@@ -146,7 +148,8 @@ export function urdfRobotToIKRoot( urdfNode, trimFixedLinks = false, isRoot = tr
 
 	}
 
-	return doReturn ? rootNode || node : null;
+
+	return ( ! trimUnused || doReturn ) ? rootNode || node : null;
 
 }
 
@@ -156,12 +159,11 @@ export function setIKFromUrdf( ikRoot, urdfRoot ) {
 	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
 	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
 
-	ikRoot.setDoFQuaternion(
-		urdfRoot.quaternion.x,
-		urdfRoot.quaternion.y,
-		urdfRoot.quaternion.z,
-		urdfRoot.quaternion.w,
-	);
+	tempEuler.copy( urdfRoot.rotation );
+	tempEuler.reorder( 'ZYX' );
+	ikRoot.setDoFValue( DOF.EX, tempEuler.x );
+	ikRoot.setDoFValue( DOF.EY, tempEuler.y );
+	ikRoot.setDoFValue( DOF.EZ, tempEuler.z );
 
 	ikRoot.traverse( c => {
 

@@ -14,7 +14,7 @@ export class Link extends Frame {
 
 		if ( ! child.isJoint ) {
 
-			throw new Error();
+			throw new Error( 'Link: Added child must be a Joint.' );
 
 		} else {
 

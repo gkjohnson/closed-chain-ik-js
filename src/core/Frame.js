@@ -266,13 +266,13 @@ export class Frame {
 
 		if ( child.parent ) {
 
-			throw new Error();
+			throw new Error( 'Frame: Added child must not already have a parent.' );
 
 		}
 
 		if ( child === this ) {
 
-			throw new Error();
+			throw new Error( 'Frame: Frame cannot be added as a child to itself.' );
 
 		}
 
@@ -280,7 +280,7 @@ export class Frame {
 
 			if ( p === child ) {
 
-				throw new Error();
+				throw new Error( 'Frame: Added child is an ancestor of this Frame. Use Joint.makeClosure instead.' );
 
 			}
 
@@ -297,7 +297,7 @@ export class Frame {
 
 		if ( child.parent !== this ) {
 
-			throw new Error();
+			throw new Error( 'Frame: Child to be removed is not a child of this Frame.' );
 
 		}
 

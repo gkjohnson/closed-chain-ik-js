@@ -98,14 +98,19 @@ export class Joint extends Frame {
 
 		if ( target === this.minDoFLimit || target == this.maxDoFLimit ) {
 
-			// TODO: add error message
-			throw new Error();
+			throw new Error( 'Joint: Cannot set minDoFLimit or maxDoFLimit with _setValue.' );
 
 		}
 
 		if ( dof < 0 || dof > 6 || typeof dof !== 'number' ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Invalid DoF.' );
+
+		}
+
+		if ( ! this.dofFlags[ dof ] ) {
+
+			return false;
 
 		}
 
@@ -140,6 +145,7 @@ export class Joint extends Frame {
 
 	}
 
+	// TODO: these functions are unused
 	_setViaFullPosition( target, values ) {
 
 		const dofFlags = this.dofFlags;
@@ -152,15 +158,6 @@ export class Joint extends Frame {
 	}
 
 	_setViaFullEuler( target, values ) {
-
-		// TODO: depending on the representation this could not represent the given
-		// rotation all that well. We need to find the euler representation such that when
-		// zeroing the fixed dimensions it is as close as possible.
-		if ( this.rotationDoFCount !== 3 ) {
-
-			throw new Error();
-
-		}
 
 		const dofFlags = this.dofFlags;
 		for ( let i = 3; i < 6; i ++ ) {
@@ -266,13 +263,6 @@ export class Joint extends Frame {
 
 		this.setMatrixDoFNeedsUpdate();
 		return this._setValue( this.dofValues, dof, value );
-
-	}
-
-	setDoFQuaternion( ...values ) {
-
-		this._setViaQuaternion( this.dofValues, values );
-		this.setMatrixDoFNeedsUpdate();
 
 	}
 
@@ -431,7 +421,7 @@ export class Joint extends Frame {
 
 		if ( ! this.isClosure ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Cannot get closure error on non closure Joint.' );
 
 		}
 
@@ -604,7 +594,7 @@ export class Joint extends Frame {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Given child cannot be used to make closure.' );
 
 		} else {
 
@@ -622,7 +612,7 @@ export class Joint extends Frame {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {
 
-			throw new Error();
+			throw new Error( 'Joint: Given child cannot be added to Joint.' );
 
 		} else {
 
@@ -640,7 +630,7 @@ export class Joint extends Frame {
 
 			if ( this.child !== child ) {
 
-				throw new Error();
+				throw new Error( 'Frame: Child to be removed is not a child of this Joint.' );
 
 			} else {
 

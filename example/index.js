@@ -36,8 +36,8 @@ import {
 } from '../src/index.js';
 import {
 	loadATHLETE,
-	loadAthnaut,
 	loadRobonaut,
+	loadStaubli,
 } from './loadModels.js';
 
 const params = {
@@ -46,16 +46,19 @@ const params = {
 	displayIk: true,
 	displayGoals: true,
 	model: 'ATHLETE',
-	webworker: typeof SharedArrayBuffer !== 'undefined',
+	webworker: true,
 };
 
 const solverOptions = {
+	useSVD: false,
 	maxIterations: 3,
 	divergeThreshold: 0.05,
 	stallThreshold: 1e-4,
 	translationErrorClamp: 0.25,
 	rotationErrorClamp: 0.25,
-	restPoseFactor: 0.01,
+	translationConvergeThreshold: 1e-3,
+	rotationConvergeThreshold: 1e-5,
+	restPoseFactor: 0.025,
 };
 
 const goalToLinkMap = new Map();
@@ -216,15 +219,7 @@ function init() {
 			if ( linkToGoalMap.has( ikLink ) ) {
 
 				const goal = linkToGoalMap.get( ikLink );
-				linkToGoalMap.delete( ikLink );
-				goalToLinkMap.delete( goal );
-
-				const i = goals.indexOf( goal );
-				goals.splice( i, 1 );
-
-				const i2 = solver.roots.indexOf( goal );
-				solver.roots.splice( i2, 1 );
-				solver.updateStructure();
+				deleteGoal( goal );
 
 			}
 
@@ -247,7 +242,9 @@ function init() {
 
 			mat4.targetTo( lookMat, eyeVec, posVec, upVec );
 
+			// The joint that's positioned at the surface of the mesh
 			const rootGoalJoint = new Joint();
+			rootGoalJoint.name = 'GoalRootJoint-' + ikLink.name;
 			rootGoalJoint.setPosition(
 				result.point.x,
 				result.point.y,
@@ -256,13 +253,14 @@ function init() {
 			mat4.getRotation( rootGoalJoint.quaternion, lookMat );
 
 			const goalLink = new Link();
+			rootGoalJoint.addChild( goalLink );
 
 			const goalJoint = new Joint();
+			rootGoalJoint.name = 'GoalJoint-' + ikLink.name;
 			ikLink.getWorldPosition( goalJoint.position );
 			ikLink.getWorldQuaternion( goalJoint.quaternion );
 			goalJoint.setMatrixNeedsUpdate();
 
-			rootGoalJoint.attachChild( goalLink );
 			goalLink.attachChild( goalJoint );
 			goalJoint.makeClosure( ikLink );
 
@@ -273,8 +271,9 @@ function init() {
 			ikLink.detachChild( rootGoalJoint );
 
 			// update the solver
-			solver.roots.push( rootGoalJoint );
 			solver.updateStructure();
+			ikHelper.updateStructure();
+			drawThroughIkHelper.updateStructure();
 
 			targetObject.position.set( ...rootGoalJoint.position );
 			targetObject.quaternion.set( ...rootGoalJoint.quaternion );
@@ -315,21 +314,38 @@ function init() {
 
 		if ( selectedGoalIndex !== - 1 && ( e.code === 'Delete' || e.code === 'Backspace' ) ) {
 
-			const goalToRemove = goals[ selectedGoalIndex ];
-			const i = solver.roots.indexOf( goalToRemove );
-			solver.roots.splice( i, 1 );
-			solver.updateStructure();
-
-			goals.splice( selectedGoalIndex, 1 );
+			deleteGoal( goals[ selectedGoalIndex ] );
 			selectedGoalIndex = - 1;
-
-			const link = goalToLinkMap.get( goalToRemove );
-			goalToLinkMap.delete( goalToRemove );
-			linkToGoalMap.delete( link );
 
 		}
 
 	} );
+
+	function deleteGoal( goal ) {
+
+		const index = goals.indexOf( goal );
+		const goalToRemove = goals[ index ];
+		goalToRemove.traverse( c => {
+
+			if ( c.isClosure ) {
+
+				c.removeChild( c.child );
+
+			}
+
+		} );
+
+		goals.splice( index, 1 );
+
+		const link = goalToLinkMap.get( goalToRemove );
+		goalToLinkMap.delete( goalToRemove );
+		linkToGoalMap.delete( link );
+
+		solver.updateStructure();
+		ikHelper.updateStructure();
+		drawThroughIkHelper.updateStructure();
+
+	}
 
 }
 
@@ -419,7 +435,7 @@ function render() {
 
 			} else {
 
-				Object.assign( solverOptions );
+				Object.assign( solver, solverOptions );
 				statuses = solver.solve();
 
 			}
@@ -444,8 +460,20 @@ function render() {
 		}
 
 		urdfRoot.visible = params.displayMesh;
-		ikHelper.visible = params.displayIk;
-		drawThroughIkHelper.visible = params.displayIk;
+
+		// IKHelpers can have a lot of matrices to update so remove it from
+		// the scene when not in use for performance.
+		if ( ! params.displayIk && ikHelper.parent ) {
+
+			scene.remove( ikHelper );
+			scene.remove( drawThroughIkHelper );
+
+		} else if ( params.displayIk && ! ikHelper.parent ) {
+
+			scene.add( ikHelper );
+			scene.add( drawThroughIkHelper );
+
+		}
 
 	}
 
@@ -516,7 +544,7 @@ function rebuildGUI() {
 	gui = new GUI();
 	gui.width = 350;
 
-	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Athnaut' ] ).onChange( value => {
+	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Staubli' ] ).onChange( value => {
 
 		let promise = null;
 		switch ( value ) {
@@ -529,8 +557,8 @@ function rebuildGUI() {
 				promise = loadRobonaut();
 				break;
 
-			case 'Athnaut':
-				promise = loadAthnaut();
+			case 'Staubli':
+				promise = loadStaubli();
 				break;
 
 		}
@@ -568,8 +596,8 @@ function rebuildGUI() {
 				promise = loadRobonaut();
 				break;
 
-			case 'Athnaut':
-				promise = loadAthnaut();
+			case 'Staubli':
+				promise = loadStaubli();
 				break;
 
 		}
@@ -588,12 +616,16 @@ function rebuildGUI() {
 		}
 
 	} );
+
+	solveFolder.add( solverOptions, 'useSVD' );
 	solveFolder.add( solverOptions, 'maxIterations' ).min( 1 ).max( 10 ).step( 1 ).listen();
 	solveFolder.add( solverOptions, 'divergeThreshold' ).min( 0 ).max( 0.5 ).step( 1e-2 ).listen();
 	solveFolder.add( solverOptions, 'stallThreshold' ).min( 0 ).max( 0.01 ).step( 1e-4 ).listen();
 	solveFolder.add( solverOptions, 'translationErrorClamp' ).min( 1e-2 ).max( 1 ).listen();
 	solveFolder.add( solverOptions, 'rotationErrorClamp' ).min( 1e-2 ).max( 1 ).listen();
-	solveFolder.add( solverOptions, 'restPoseFactor' ).min( 0 ).max( 1e-1 ).step( 1e-4 ).listen();
+	solveFolder.add( solverOptions, 'translationConvergeThreshold' ).min( 1e-3 ).max( 1e-1 ).listen();
+	solveFolder.add( solverOptions, 'rotationConvergeThreshold' ).min( 1e-5 ).max( 1e-2 ).listen();
+	solveFolder.add( solverOptions, 'restPoseFactor' ).min( 0 ).max( 0.25 ).step( 1e-2 ).listen();
 	solveFolder.open();
 
 }
@@ -673,41 +705,22 @@ function loadModel( promise ) {
 			ik.updateMatrixWorld( true );
 
 			// create the helper
-			ikHelper = new IKRootsHelper( [ ik ] );
+			ikHelper = new IKRootsHelper( ik );
 			ikHelper.setJointScale( helperScale );
 			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.traverse( c => {
+			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			ikHelper.setColor( ikHelper.color );
 
-				if ( c.material ) {
-
-					c.material.color.set( 0xe91e63 ).convertSRGBToLinear();
-
-				}
-
-			} );
-
-			drawThroughIkHelper = new IKRootsHelper( [ ik ] );
+			drawThroughIkHelper = new IKRootsHelper( ik );
 			drawThroughIkHelper.setJointScale( helperScale );
 			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.traverse( c => {
-
-				if ( c.material ) {
-
-					c.material.color.set( 0xe91e63 ).convertSRGBToLinear();
-					c.material.opacity = 0.1;
-					c.material.transparent = true;
-					c.material.depthWrite = false;
-					c.material.depthTest = false;
-
-				}
-
-			} );
+			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
+			drawThroughIkHelper.setDrawThrough( true );
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 
 			const loadedGoals = [];
-			console.log(goalMap);
-			console.log('HERE');
 			goalMap.forEach( ( link, goal ) => {
 
 				loadedGoals.push( goal );
@@ -716,7 +729,7 @@ function loadModel( promise ) {
 
 			} );
 
-			solver = params.webworker ? new WorkerSolver( [ ik, ...loadedGoals ] ) : new Solver( [ ik, ...loadedGoals ] );
+			solver = params.webworker ? new WorkerSolver( ik ) : new Solver( ik );
 			solver.maxIterations = 3;
 			solver.translationErrorClamp = 0.25;
 			solver.rotationErrorClamp = 0.25;

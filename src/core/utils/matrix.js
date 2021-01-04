@@ -48,9 +48,9 @@ function scale( outMatrix, matrix, scalar ) {
 
 function multiply( outMatrix, a, b ) {
 
-	if ( a === b ) {
+	if ( a === outMatrix || b === outMatrix ) {
 
-		throw new Error();
+		throw new Error( 'Matrix: Cannot multiply to a matrix in place.' );
 
 	}
 

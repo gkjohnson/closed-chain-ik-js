@@ -5,6 +5,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+
+- Better error messages.
+- Typescript definition files.
+- Functions for setting draw through and color on `IKRootsHelper`.
+
+### Fixed
+
+- IKRootsHelper throwing an error when calling `updateStructure`.
+- IKRootsHelper throwing an error when calling `dispose`.
+
+### Changed
+
+- Disabled SVD by default on Solver because it was causing solves to diverge.
+
+## [0.0.3] - 2020-12-31
 ### Changed
 
 - Frame and Joint matrices from using `Float64Array` to using `Float32Array`.
@@ -15,6 +31,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `useSVD` option not be set onto Solver's ChainSolvers.
 - `useSVD` option will fall back to non SVD pseudoinverse if SVD fails to be computed.
+- Removed ability to set unmoveable DoF on Joints.
+- Removed unmoveable joints from solve.
 
 ## [0.0.2] - 2020-12-28
 ### Added
