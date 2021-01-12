@@ -47,6 +47,9 @@ import {
 	loadStaubli,
 } from './loadModels.js';
 
+// TODO:
+// - Raycast performance
+
 const params = {
 	scale: 1,
 	solve: true,
@@ -223,7 +226,13 @@ function init() {
 		startPos.setScalar( Infinity );
 		if ( ikLink === null ) {
 
-			const goalIndex = result && goalIcons.indexOf( result.object.parent ) || - 1;
+			let goalIndex = - 1;
+			if ( result ) {
+
+				goalIndex = goalIcons.indexOf( result.object.parent );
+
+			}
+
 			selectedGoalIndex = goalIndex;
 
 			if ( goalIndex !== - 1 ) {
@@ -486,7 +495,7 @@ function render() {
 
 			} else {
 
-				controller.scale.setScalar( result.distance );
+				controller.scale.setScalar( result.distance / params.scale );
 				hitSphere.position.copy( result.point );
 				hitSphere.visible = true;
 
@@ -510,6 +519,7 @@ function render() {
 			} else {
 
 				Object.assign( solver, solverOptions );
+				solver.solve();
 
 			}
 
@@ -567,6 +577,8 @@ function render() {
 
 	} );
 
+	intersectRing.scale.setScalar( 1 / params.scale );
+	hitSphere.scale.setScalar( 1 / params.scale );
 	workspace.scale.setScalar( 1 / params.scale );
 	renderer.render( scene, camera );
 
