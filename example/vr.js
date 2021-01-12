@@ -31,6 +31,7 @@ import {
 	GUI,
 } from 'three/examples/jsm/libs/dat.gui.module.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { mat4 } from 'gl-matrix';
 import {
 	Solver,
@@ -47,6 +48,7 @@ import {
 } from './loadModels.js';
 
 const params = {
+	scale: 1,
 	solve: true,
 	displayIk: false,
 	displayGoals: true,
@@ -74,7 +76,7 @@ let selectedGoalIndex = - 1;
 
 let loadId = 0;
 let gui;
-let renderer, scene, camera, workspace, controller, ground;
+let renderer, scene, camera, workspace, controller, controllerGrip, ground;
 let intersectRing, hitSphere, targetObject;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
 const tempPos = new Vector3();
@@ -102,6 +104,8 @@ function init() {
 	workspace = new Group();
 	workspace.position.z = 3;
 	scene.add( workspace );
+
+	window.workspace = workspace;
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
 	workspace.add( camera );
@@ -173,6 +177,9 @@ function init() {
 	} );
 	workspace.add( controller );
 
+	const startPos = new Vector3();
+	const endPos = new Vector3();
+	let startTime = - 1;
 	controller.addEventListener( 'selectend', () => {
 
 		if ( selectedGoalIndex !== - 1 ) {
@@ -193,6 +200,13 @@ function init() {
 
 			}
 
+			endPos.set( ...goal.position );
+			if ( startPos.distanceTo( endPos ) < 1e-3 && window.performance.now() - startTime < 500.0 ) {
+
+				deleteGoal( goal );
+
+			}
+
 			controller.remove( targetObject );
 			selectedGoalIndex = - 1;
 
@@ -206,17 +220,23 @@ function init() {
 
 		const { ikLink, result } = raycast();
 
-		console.log( ikLink, result );
+		startPos.setScalar( Infinity );
 		if ( ikLink === null ) {
 
-			selectedGoalIndex = - 1;
-
 			const goalIndex = result && goalIcons.indexOf( result.object.parent ) || - 1;
+			selectedGoalIndex = goalIndex;
+
 			if ( goalIndex !== - 1 ) {
 
-				deleteGoal( goals[ goalIndex ] );
+				const goal = goals[ goalIndex ];
+				targetObject.position.set( ...goal.position );
+				targetObject.quaternion.set( ...goal.quaternion );
+				controller.attach( targetObject );
 
-			} else if ( intersectRing.visible ) {
+				startPos.set( ...goal.position );
+				startTime = window.performance.now();
+
+			} else if ( goalIndex === - 1 && intersectRing.visible ) {
 
 				workspace.position.copy( intersectRing.position );
 
@@ -296,31 +316,36 @@ function init() {
 
 	} );
 
-	function deleteGoal( goal ) {
+	const controllerModelFactory = new XRControllerModelFactory();
+	controllerGrip = renderer.xr.getControllerGrip( 0 );
+	controllerGrip.add( controllerModelFactory.createControllerModel( controllerGrip ) );
+	workspace.add( controllerGrip );
 
-		const index = goals.indexOf( goal );
-		const goalToRemove = goals[ index ];
-		goalToRemove.traverse( c => {
+}
 
-			if ( c.isClosure ) {
+function deleteGoal( goal ) {
 
-				c.removeChild( c.child );
+	const index = goals.indexOf( goal );
+	const goalToRemove = goals[ index ];
+	goalToRemove.traverse( c => {
 
-			}
+		if ( c.isClosure ) {
 
-		} );
+			c.removeChild( c.child );
 
-		goals.splice( index, 1 );
+		}
 
-		const link = goalToLinkMap.get( goalToRemove );
-		goalToLinkMap.delete( goalToRemove );
-		linkToGoalMap.delete( link );
+	} );
 
-		solver.updateStructure();
-		ikHelper.updateStructure();
-		drawThroughIkHelper.updateStructure();
+	goals.splice( index, 1 );
 
-	}
+	const link = goalToLinkMap.get( goalToRemove );
+	goalToLinkMap.delete( goalToRemove );
+	linkToGoalMap.delete( link );
+
+	solver.updateStructure();
+	ikHelper.updateStructure();
+	drawThroughIkHelper.updateStructure();
 
 }
 
@@ -383,7 +408,8 @@ function raycast() {
 
 	let results;
 	const intersectGoals = [ ...goalIcons ];
-	intersectGoals.length = goals.length;
+	intersectGoals.length = intersectGoals.length < goals.length ? intersectGoals.length : goals.length;
+
 	results = raycaster.intersectObjects( intersectGoals, true );
 	if ( results.length !== 0 ) {
 
@@ -392,7 +418,6 @@ function raycast() {
 	}
 
 	results = raycaster.intersectObjects( [ urdfRoot ], true );
-	console.log( results );
 	if ( results.length === 0 ) {
 
 		return { ikLink: null, result: null };
@@ -432,6 +457,8 @@ function render() {
 	const selectedGoal = allGoals[ selectedGoalIndex ];
 	if ( ikRoot ) {
 
+		intersectRing.visible = false;
+		hitSphere.visible = false;
 		if ( selectedGoal ) {
 
 			targetObject.getWorldPosition( tempPos );
@@ -439,21 +466,29 @@ function render() {
 
 			selectedGoal.setPosition( tempPos.x, tempPos.y, tempPos.z );
 			selectedGoal.setQuaternion( tempQuat.x, tempQuat.y, tempQuat.z, tempQuat.w );
-			intersectRing.visible = false;
 
 		} else {
 
-			raycaster.ray.origin.set( 0, 0, 0 ).applyMatrix4( controller.matrixWorld );
-			raycaster.ray.direction.set( 0, 0, - 1 ).transformDirection( controller.matrixWorld );
-			const hit = raycaster.intersectObject( ground )[ 0 ];
-			if ( hit ) {
+			const { result } = raycast();
+			controller.scale.setScalar( 1, 1, 1 );
 
-				intersectRing.visible = true;
-				intersectRing.position.copy( hit.point );
+			if ( result === null ) {
+
+				raycaster.ray.origin.set( 0, 0, 0 ).applyMatrix4( controller.matrixWorld );
+				raycaster.ray.direction.set( 0, 0, - 1 ).transformDirection( controller.matrixWorld );
+				const hit = raycaster.intersectObject( ground )[ 0 ];
+				if ( hit ) {
+
+					intersectRing.visible = true;
+					intersectRing.position.copy( hit.point );
+
+				}
 
 			} else {
 
-				intersectRing.visible = false;
+				controller.scale.setScalar( result.distance );
+				hitSphere.position.copy( result.point );
+				hitSphere.visible = true;
 
 			}
 
@@ -532,6 +567,7 @@ function render() {
 
 	} );
 
+	workspace.scale.setScalar( 1 / params.scale );
 	renderer.render( scene, camera );
 
 }
@@ -571,6 +607,7 @@ function rebuildGUI() {
 		loadModel( promise );
 
 	} );
+	gui.add( params, 'scale', 0.1, 4, 0.01 );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
 	gui.add( params, 'displayIk' ).name( 'display ik chains' );
 	gui.add( params, 'webworker' ).onChange( v => {
