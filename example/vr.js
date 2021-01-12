@@ -47,12 +47,8 @@ import {
 	loadStaubli,
 } from './loadModels.js';
 
-// TODO:
-// - Raycast performance (use three-mesh-bvh)
-// - Fix raycast line distance
-// - Make goal icons smaller / scale
-
 const params = {
+	shadows: true,
 	scale: 1,
 	solve: true,
 	displayIk: false,
@@ -81,7 +77,7 @@ let selectedGoalIndex = - 1;
 
 let loadId = 0;
 let gui;
-let renderer, scene, camera, workspace, controller, controllerGrip, ground;
+let renderer, scene, camera, workspace, controller, controllerGrip, ground, directionalLight;
 let intersectRing, hitSphere, targetObject;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
 const tempPos = new Vector3();
@@ -115,7 +111,7 @@ function init() {
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
 	workspace.add( camera );
 
-	const directionalLight = new DirectionalLight();
+	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 5, 30, 15 );
 	directionalLight.castShadow = true;
 	directionalLight.shadow.mapSize.set( 2048, 2048 );
@@ -160,7 +156,7 @@ function init() {
 	intersectRing.visible = false;
 	scene.add( intersectRing );
 
-	hitSphere = new Mesh( new SphereBufferGeometry( 0.01, 50, 50 ), whiteMat );
+	hitSphere = new Mesh( new SphereBufferGeometry( 0.005, 50, 50 ), whiteMat );
 	scene.add( hitSphere );
 
 	// vr
@@ -497,7 +493,7 @@ function render() {
 
 			} else {
 
-				controller.scale.setScalar( result.distance / params.scale );
+				controller.scale.setScalar( result.distance * params.scale );
 				hitSphere.position.copy( result.point );
 				hitSphere.visible = true;
 
@@ -550,11 +546,11 @@ function render() {
 		const color = new Color( 0xffca28 ).convertSRGBToLinear();
 		const group = new Group();
 		const mesh = new Mesh(
-			new SphereBufferGeometry( 0.05, 30, 30 ),
+			new SphereBufferGeometry( 0.01, 30, 30 ),
 			new MeshBasicMaterial( { color } ),
 		);
 		const mesh2 = new Mesh(
-			new SphereBufferGeometry( 0.05, 30, 30 ),
+			new SphereBufferGeometry( 0.01, 30, 30 ),
 			new MeshBasicMaterial( {
 				color,
 				opacity: 0.4,
@@ -570,7 +566,12 @@ function render() {
 
 	}
 
-	goalIcons.forEach( g => g.visible = false );
+	goalIcons.forEach( g => {
+
+		g.visible = false;
+		g.scale.setScalar( 1 / params.scale );
+
+	} );
 	allGoals.forEach( ( g, i ) => {
 
 		goalIcons[ i ].position.set( ...g.position );
@@ -582,6 +583,8 @@ function render() {
 	intersectRing.scale.setScalar( 1 / params.scale );
 	hitSphere.scale.setScalar( 1 / params.scale );
 	workspace.scale.setScalar( 1 / params.scale );
+
+	directionalLight.castShadow = params.shadows;
 	renderer.render( scene, camera );
 
 }
@@ -622,6 +625,7 @@ function rebuildGUI() {
 
 	} );
 	gui.add( params, 'scale', 0.1, 4, 0.01 );
+	gui.add( params, 'shadows' );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
 	gui.add( params, 'displayIk' ).name( 'display ik chains' );
 	gui.add( params, 'webworker' ).onChange( v => {
