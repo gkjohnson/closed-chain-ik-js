@@ -11,6 +11,8 @@ _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>
 
 [ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
 
+[VR demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/vr.html)!
+
 [Partial degrees of freedom Goal demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/goals.html)!
 
 ## Model License Information
