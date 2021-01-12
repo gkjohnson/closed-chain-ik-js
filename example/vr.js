@@ -48,7 +48,9 @@ import {
 } from './loadModels.js';
 
 // TODO:
-// - Raycast performance
+// - Raycast performance (use three-mesh-bvh)
+// - Fix raycast line distance
+// - Make goal icons smaller / scale
 
 const params = {
 	scale: 1,
@@ -204,7 +206,7 @@ function init() {
 			}
 
 			endPos.set( ...goal.position );
-			if ( startPos.distanceTo( endPos ) < 1e-3 && window.performance.now() - startTime < 500.0 ) {
+			if ( startPos.distanceTo( endPos ) < 1e-2 / params.scale && window.performance.now() - startTime < 500.0 ) {
 
 				deleteGoal( goal );
 
