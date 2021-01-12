@@ -47,11 +47,9 @@ import {
 	loadStaubli,
 } from './loadModels.js';
 
-// TODO
-// - More perf improvement for R2
-
 const params = {
 	shadows: true,
+	liveRaycasting: true,
 	scale: 1,
 	solve: true,
 	displayIk: false,
@@ -410,7 +408,7 @@ function buildController( data ) {
 
 }
 
-function raycast() {
+function raycast( justGoals = false ) {
 
 	controller.updateMatrixWorld();
 	raycaster.ray.origin.set( 0, 0, 0 ).applyMatrix4( controller.matrixWorld );
@@ -424,6 +422,12 @@ function raycast() {
 	if ( results.length !== 0 ) {
 
 		return { ikLink: null, result: results[ 0 ] };
+
+	}
+
+	if ( justGoals ) {
+
+		return { ikLink: null, result: null };
 
 	}
 
@@ -479,7 +483,7 @@ function render() {
 
 		} else {
 
-			const { result } = raycast();
+			const { result } = raycast( ! params.liveRaycasting );
 			const lineRay = controller.children[ 0 ];
 			if ( lineRay ) {
 
@@ -639,6 +643,7 @@ function rebuildGUI() {
 	} );
 	gui.add( params, 'scale', 0.1, 4, 0.01 );
 	gui.add( params, 'shadows' );
+	gui.add( params, 'liveRaycasting' );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
 	gui.add( params, 'displayIk' ).name( 'display ik chains' );
 	gui.add( params, 'webworker' ).onChange( v => {
