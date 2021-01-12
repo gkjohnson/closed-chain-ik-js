@@ -47,6 +47,9 @@ import {
 	loadStaubli,
 } from './loadModels.js';
 
+// TODO
+// - More perf improvement for R2
+
 const params = {
 	shadows: true,
 	scale: 1,
@@ -477,7 +480,12 @@ function render() {
 		} else {
 
 			const { result } = raycast();
-			controller.scale.setScalar( 1, 1, 1 );
+			const lineRay = controller.children[ 0 ];
+			if ( lineRay ) {
+
+				lineRay.scale.setScalar( 1, 1, 1 );
+
+			}
 
 			if ( result === null ) {
 
@@ -493,7 +501,12 @@ function render() {
 
 			} else {
 
-				controller.scale.setScalar( result.distance * params.scale );
+				if ( lineRay ) {
+
+					lineRay.scale.setScalar( result.distance * params.scale );
+
+				}
+
 				hitSphere.position.copy( result.point );
 				hitSphere.visible = true;
 
