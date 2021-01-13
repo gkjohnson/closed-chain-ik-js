@@ -26,6 +26,7 @@ import {
 	Box3,
 	PlaneBufferGeometry,
 	ShadowMaterial,
+	MeshPhongMaterial,
 } from 'three';
 import {
 	GUI,
@@ -246,7 +247,9 @@ function init() {
 
 			} else if ( goalIndex === - 1 && intersectRing.visible ) {
 
-				workspace.position.copy( intersectRing.position );
+				workspace.position
+					.copy( intersectRing.position )
+					.addScaledVector( controller.position, - 1.0 / params.scale );
 
 			}
 
@@ -783,6 +786,31 @@ function loadModel( promise ) {
 
 				c.castShadow = true;
 				c.receiveShadow = true;
+
+				if ( c.material ) {
+
+					function matToPhong( m ) {
+
+						return new MeshPhongMaterial( {
+							map: m.map,
+							color: m.color,
+							normalMap: m.normalMap,
+							normalMapType: m.normalMapType,
+						} );
+
+					}
+
+					if ( Array.isArray( c.material ) ) {
+
+						c.material = c.material.map( matToPhong );
+
+					} else {
+
+						c.material = matToPhong( c.material );
+
+					}
+
+				}
 
 			} );
 
