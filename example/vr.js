@@ -250,6 +250,7 @@ function init() {
 				workspace.position
 					.copy( intersectRing.position )
 					.addScaledVector( controller.position, - 1.0 / params.scale );
+				workspace.position.y = 0;
 
 			}
 
