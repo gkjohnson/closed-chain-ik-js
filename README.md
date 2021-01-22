@@ -17,11 +17,13 @@ _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>
 
 ## Model License Information
 
-Robitics models used in the project are for demonstration purposes only and subject to the lincenses of their respective projects.
+Robitics models used in the project are for demonstration purposes only and subject to the licenses of their respective projects.
 
 [ATHLETE](https://github.com/gkjohnson/urdf-loaders/)
 
 [Robonaut](https://github.com/gkjohnson/nasa-urdf-robots)
+
+[Curiosity](https://github.com/gkjohnson/curiosity_mars_rover-mirror)
 
 [Staubli](https://github.com/ros-industrial/staubli_experimental)
 
