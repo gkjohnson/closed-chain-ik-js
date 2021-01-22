@@ -9,6 +9,99 @@ import { LoadingManager } from 'three';
 import { XacroLoader } from 'xacro-parser';
 import { quat } from 'gl-matrix';
 
+export function loadCuriosity() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		const url = 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/urdf/curiosity_mars_rover.xacro';
+		const xacroLoader = new XacroLoader();
+		xacroLoader.rospackCommands = {
+
+			find( pkg ) {
+
+				switch ( pkg ) {
+
+					case 'curiosity_mars_rover_description':
+						return 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/';
+					default:
+						return pkg;
+
+				}
+
+			}
+
+		};
+
+		xacroLoader.load( url, xacro => {
+
+			let ik, urdf, goalMap;
+
+			const manager = new LoadingManager();
+			manager.onLoad = () => {
+
+				const toRemove = [];
+				urdf.traverse( c => {
+
+					if ( c.isLight || c.isLineSegments ) {
+
+						toRemove.push( c );
+
+					}
+
+				} );
+
+				toRemove.forEach( l => {
+
+					l.parent.remove( l );
+
+				} );
+
+				resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+			};
+
+			const urdfLoader = new URDFLoader( manager );
+			urdfLoader.packages = {
+				'curiosity_mars_rover_description': 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/'
+			};
+			urdf = urdfLoader.parse( xacro );
+			urdf.joints.arm_03_joint.limit.upper = Math.PI * 3 / 2;
+			ik = urdfRobotToIKRoot( urdf );
+
+			// make the root fixed
+			ik.clearDoF();
+			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
+			ik.position[ 1 ] -= 0.5;
+			ik.setMatrixNeedsUpdate();
+
+			console.log( Object.keys( urdf.joints ) );
+
+			// start the joints off at reasonable angles
+			urdf.setJointValue( 'arm_02_joint', - Math.PI / 2 );
+			urdf.setJointValue( 'arm_03_joint', Math.PI );
+			urdf.setJointValue( 'arm_04_joint', Math.PI );
+			// urdf.setJointValue( 'joint_5', - Math.PI / 4 );
+			setIKFromUrdf( ik, urdf );
+
+			goalMap = new Map();
+			const tool = ik.find( l => l.name === 'arm_tools' );
+			const link = urdf.links.arm_tools;
+
+			const ee = new Joint();
+			ee.name = link.name;
+			ee.makeClosure( tool );
+
+			tool.getWorldPosition( ee.position );
+			tool.getWorldQuaternion( ee.quaternion );
+			ee.setMatrixNeedsUpdate();
+			goalMap.set( ee, tool );
+
+		}, reject );
+
+	} );
+
+}
+
 export function loadStaubli() {
 
 	return new Promise( ( resolve, reject ) => {
@@ -80,7 +173,6 @@ export function loadStaubli() {
 		}, reject );
 
 	} );
-
 
 }
 
