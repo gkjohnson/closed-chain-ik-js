@@ -27,6 +27,7 @@ import {
 	PlaneBufferGeometry,
 	ShadowMaterial,
 	MeshPhongMaterial,
+	BufferAttribute,
 } from 'three';
 import {
 	GUI,
@@ -89,7 +90,7 @@ let loadId = 0;
 let gui;
 let renderer, scene, camera, workspace, controller, controllerGrip, ground, directionalLight;
 let intersectRing, hitSphere, targetObject;
-let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
+let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot, urdfProxy;
 const tempPos = new Vector3();
 const tempQuat = new Quaternion();
 const raycaster = new Raycaster();
@@ -115,8 +116,6 @@ function init() {
 	workspace = new Group();
 	workspace.position.z = 3;
 	scene.add( workspace );
-
-	window.workspace = workspace;
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
 	workspace.add( camera );
@@ -774,8 +773,9 @@ function loadModel( promise ) {
 		urdfRoot.traverse( dispose );
 		drawThroughIkHelper.traverse( dispose );
 		ikHelper.traverse( dispose );
+		urdfProxy.traverse( dispose );
 
-		scene.remove( urdfRoot, drawThroughIkHelper, ikHelper );
+		scene.remove( urdfRoot, drawThroughIkHelper, ikHelper, urdfProxy );
 
 	}
 
@@ -835,6 +835,45 @@ function loadModel( promise ) {
 			const reducer = new MaterialReducer();
 			reducer.process( urdf );
 
+			urdf.traverse( c => {
+
+				if ( c.isMesh ) {
+
+					c.geometry.deleteAttribute( 'color' );
+					if ( c.geometry.index ) {
+
+						c.geometry.toNonIndexed();
+
+					}
+
+					if ( c.geometry.attributes.uv && ! c.material.map ) {
+
+						c.geometry.deleteAttribute( 'uv' );
+
+					} else if ( ! c.geometry.attributes.uv && c.material.map ) {
+
+						const count = c.geometry.attributes.position.count;
+						c.geometry.setAttribute(
+							'uv',
+							new BufferAttribute(
+								new Float32Array( count * 2 ),
+								2,
+								false,
+							),
+						);
+
+					}
+
+				}
+
+			} );
+			urdfProxy = new ProxyBatchedMesh( urdf );
+			urdfProxy.children.forEach( sm => {
+
+				sm.castShadow = true;
+				sm.receiveShadow = true;
+
+			} );
 			// TODO: make a skinned proxy mesh
 
 			setUrdfFromIK( urdf, ik );
@@ -870,7 +909,7 @@ function loadModel( promise ) {
 			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
 			drawThroughIkHelper.setDrawThrough( true );
 
-			scene.add( urdf, ikHelper, drawThroughIkHelper );
+			scene.add( urdfProxy, ikHelper, drawThroughIkHelper );
 
 			const loadedGoals = [];
 			goalMap.forEach( ( link, goal ) => {
