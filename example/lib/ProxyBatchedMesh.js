@@ -158,8 +158,13 @@ export class ProxyBatchedMesh extends Group {
 						for ( const name in attributes ) {
 
 							const attribute = attributes[ name ];
+							const itemSize = attribute.itemSize;
 							const trimmedAttribute = new BufferAttribute(
-								attribute.array.slice( group.start, group.start + group.count ),
+								attribute.array.slice(
+									itemSize * group.start,
+									itemSize * ( group.start + group.count ),
+								),
+
 								attribute.itemSize,
 								attribute.normalized,
 							);
@@ -212,7 +217,13 @@ export class ProxyBatchedMesh extends Group {
 			const geometries = infoArray.map( ( info, index ) => {
 
 				const originalGeometry = info.geometry;
-				const geometry = originalGeometry.clone();
+				const geometry = new BufferGeometry();
+				for ( const name in originalGeometry.attributes ) {
+
+					geometry.setAttribute( name, originalGeometry.getAttribute( name ) );
+
+				}
+				geometry.setIndex( originalGeometry.getIndex() );
 				const count = geometry.attributes.position.count;
 
 				const weights = new Uint8Array( count * 4 );
@@ -241,7 +252,6 @@ export class ProxyBatchedMesh extends Group {
 
 			} );
 
-			material.skinning = true;
 			const skeleton = new Skeleton( bones );
 			const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries );
 
