@@ -48,6 +48,13 @@ import {
 	loadStaubli,
 	loadCuriosity,
 } from './loadModels.js';
+import {
+	MaterialReducer
+} from './lib/MaterialReducer.js';
+import {
+	ProxyBatchedMesh
+} from './lib/ProxyBatchedMesh.js';
+
 
 const params = {
 	shadows: true,
@@ -823,6 +830,12 @@ function loadModel( promise ) {
 				}
 
 			} );
+
+			// remove redundant materials and textures
+			const reducer = new MaterialReducer();
+			reducer.process( urdf );
+
+			// TODO: make a skinned proxy mesh
 
 			setUrdfFromIK( urdf, ik );
 
