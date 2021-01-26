@@ -874,7 +874,6 @@ function loadModel( promise ) {
 				sm.receiveShadow = true;
 
 			} );
-			// TODO: make a skinned proxy mesh
 
 			setUrdfFromIK( urdf, ik );
 

@@ -211,7 +211,6 @@ export class ProxyBatchedMesh extends Group {
 			const bones = [];
 			const geometries = infoArray.map( ( info, index ) => {
 
-				console.log( info )
 				const originalGeometry = info.geometry;
 				const geometry = originalGeometry.clone();
 				const count = geometry.attributes.position.count;

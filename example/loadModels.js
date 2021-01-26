@@ -74,8 +74,6 @@ export function loadCuriosity() {
 			ik.position[ 1 ] -= 0.5;
 			ik.setMatrixNeedsUpdate();
 
-			console.log( Object.keys( urdf.joints ) );
-
 			// start the joints off at reasonable angles
 			urdf.setJointValue( 'arm_02_joint', - Math.PI / 2 );
 			urdf.setJointValue( 'arm_03_joint', Math.PI );
