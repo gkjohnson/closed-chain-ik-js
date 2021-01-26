@@ -908,7 +908,8 @@ function loadModel( promise ) {
 			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
 			drawThroughIkHelper.setDrawThrough( true );
 
-			scene.add( urdfProxy, ikHelper, drawThroughIkHelper );
+			// scene.add( urdfProxy, ikHelper, drawThroughIkHelper );
+			scene.add( urdfRoot, ikHelper, drawThroughIkHelper );
 
 			const loadedGoals = [];
 			goalMap.forEach( ( link, goal ) => {
