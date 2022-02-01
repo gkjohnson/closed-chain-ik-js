@@ -50,6 +50,7 @@ const params = {
 	displayMesh: true,
 	displayIk: true,
 	displayGoals: true,
+	displayShadows: true,
 	model: 'ATHLETE',
 	webworker: true,
 };
@@ -560,7 +561,7 @@ function render() {
 
 	}
 
-
+	directionalLight.castShadow = params.displayShadows;
 
 	renderer.render( scene, camera );
 	stats.update();
@@ -609,6 +610,7 @@ function rebuildGUI() {
 	gui.add( params, 'displayMesh' ).name( 'display mesh' );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
 	gui.add( params, 'displayIk' ).name( 'display ik chains' );
+	gui.add( params, 'displayShadows' ).name( 'shadows' );
 	gui.add( params, 'webworker' ).onChange( v => {
 
 		if ( v ) {
