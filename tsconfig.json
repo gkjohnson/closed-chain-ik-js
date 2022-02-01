@@ -1,13 +1,16 @@
 {
-    "compilerOptions": {
-        "lib": [
-            "dom",
-            "es2015"
-        ],
-        "moduleResolution": "node",
-        "types": []
-    },
-    "files": [
-        "src/index.d.ts"
-    ]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedParameters": true,
+    "strictNullChecks":true,
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
