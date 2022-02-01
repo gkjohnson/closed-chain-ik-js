@@ -12,9 +12,7 @@ import {
 	Sphere,
 	BufferGeometry,
 } from 'three';
-import {
-	BufferGeometryUtils,
-} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import * as	BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const inverseMatrix = new Matrix4();
 class ProxySkinnedMesh extends SkinnedMesh {
