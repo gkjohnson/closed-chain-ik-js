@@ -26,7 +26,7 @@
     "start": "concurrently \"cd example && parcel watch ./*.html --dist-dir ../local/ --public-url . --no-cache --no-hmr\" \"static-server\"",
     "build": "cd example && parcel build ./*.html --dist-dir ../dist/ --public-url . --no-cache --no-content-hash",
     "lint": "eslint \"./src/**/*.js\" \"./test/**/*.js\" && tsc -p tsconfig.json --noEmit",
-    "test": "jest"
+    "test": "cd test && jest"
   },
   "repository": {
     "type": "git",
