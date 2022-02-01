@@ -539,16 +539,17 @@ function render() {
 	transformControls.enabled = selectedGoalIndex !== - 1;
 	transformControls.visible = selectedGoalIndex !== - 1;
 
-	// update light
+	// update light shadow to tightly encapsulate urdf
 	if ( urdfRoot !== null ) {
 
-		box
-			.setFromObject( urdfRoot )
-			.getBoundingSphere( sphere );
+		// get the bounding sphere
+		box.setFromObject( urdfRoot ).getBoundingSphere( sphere );
 
+		// get light direction and put target at urdf center
 		vector.subVectors( directionalLight.position, sphere.center );
 		directionalLight.target.position.copy( sphere.center );
 
+		// update light bounds
 		const shadowCam = directionalLight.shadow.camera;
 		shadowCam.left = shadowCam.bottom = - sphere.radius;
 		shadowCam.right = shadowCam.top = sphere.radius;
