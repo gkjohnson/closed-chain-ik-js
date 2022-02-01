@@ -1,16 +1,17 @@
 {
 	"root": true,
-	"parserOptions": {
-        "ecmaVersion": 2018
-	},
-	"env": {
-		"jest/globals": true
-	},
-
 	"extends": "./node_modules/eslint-config-mdcs/index.js",
-	"plugins": [ "jest" ],
-
-	"rules": {
-		"no-unused-vars": [ 1, { "args": "none" } ]
-	}
+	"overrides": [
+		{
+			"files": ["*.ts"],
+			"parser": "@typescript-eslint/parser",
+			"plugins": [
+				"@typescript-eslint"
+			],
+			"rules": {
+				"no-unused-vars": ["error", { "args": "none" }],
+				"indent": [2, 2]
+			}
+		}
+	]
 }
