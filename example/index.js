@@ -13,6 +13,10 @@ import {
 	Mesh,
 	SphereBufferGeometry,
 	MeshBasicMaterial,
+	PCFSoftShadowMap,
+	Box3,
+	Sphere,
+	Vector3,
 } from 'three';
 import {
 	OrbitControls,
@@ -72,10 +76,13 @@ let loadId = 0;
 let averageTime = 0;
 let averageCount = 0;
 let gui, stats;
-let outputContainer, renderer, scene, camera;
+let outputContainer, renderer, scene, camera, directionalLight;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
 let controls, transformControls, targetObject;
 let mouse = new Vector2();
+const box = new Box3();
+const sphere = new Sphere();
+const vector = new Vector3();
 
 init();
 rebuildGUI();
@@ -93,6 +100,8 @@ function init() {
 	renderer = new WebGLRenderer( { antialias: true } );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = PCFSoftShadowMap;
 	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
@@ -102,9 +111,11 @@ function init() {
 	scene = new Scene();
 	scene.background = new Color( 0x131619 );
 
-	const directionalLight = new DirectionalLight();
+	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
-	scene.add( directionalLight );
+	directionalLight.castShadow = true;
+	directionalLight.shadow.mapSize.setScalar( 2048 );
+	scene.add( directionalLight, directionalLight.target );
 
 	const ambientLight = new AmbientLight( 0x263238, 1 );
 	scene.add( ambientLight );
@@ -527,6 +538,30 @@ function render() {
 	transformControls.enabled = selectedGoalIndex !== - 1;
 	transformControls.visible = selectedGoalIndex !== - 1;
 
+	// update light
+	if ( urdfRoot !== null ) {
+
+		box
+			.setFromObject( urdfRoot )
+			.getBoundingSphere( sphere );
+
+		vector.subVectors( directionalLight.position, sphere.center );
+		directionalLight.target.position.copy( sphere.center );
+
+		const shadowCam = directionalLight.shadow.camera;
+		shadowCam.left = shadowCam.bottom = - sphere.radius;
+		shadowCam.right = shadowCam.top = sphere.radius;
+		shadowCam.near = 0;
+		shadowCam.far = sphere.radius * 2;
+		shadowCam.updateProjectionMatrix();
+
+		vector.normalize().multiplyScalar( sphere.radius );
+		directionalLight.position.addVectors( sphere.center, vector );
+
+	}
+
+
+
 	renderer.render( scene, camera );
 	stats.update();
 
@@ -726,6 +761,13 @@ function loadModel( promise ) {
 			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
 			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
 			drawThroughIkHelper.setDrawThrough( true );
+
+			urdf.traverse( c => {
+
+				c.castShadow = true;
+				c.receiveShadow = true;
+
+			} );
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 

@@ -23,8 +23,8 @@
     "src/*"
   ],
   "scripts": {
-    "start": "concurrently \"parcel watch ./example/*.html --out-dir local --public-url .\" \"static-server\"",
-    "build": "parcel build --out-dir dist --no-content-hash ./example/*.html --public-url .",
+    "start": "concurrently \"cd example && parcel watch ./*.html --dist-dir ../local/ --public-url . --no-cache --no-hmr\" \"static-server\"",
+    "build": "cd example && parcel build ./*.html --dist-dir ../dist/ --public-url . --no-cache --no-content-hash",
     "lint": "eslint \"./src/**/*.js\" \"./test/**/*.js\" && tsc -p tsconfig.json --noEmit",
     "test": "jest"
   },
@@ -51,7 +51,7 @@
     "eslint-plugin-jest": "^24.1.0",
     "jest": "^26.4.2",
     "jest-cli": "^26.4.2",
-    "parcel-bundler": "^1.12.4",
+    "parcel": "^2.0.0",
     "static-server": "^2.2.1",
     "three": "^0.120.1",
     "typescript": "^4.1.3",
