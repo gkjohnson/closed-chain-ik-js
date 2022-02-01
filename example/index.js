@@ -546,7 +546,7 @@ function render() {
 		box.setFromObject( urdfRoot ).getBoundingSphere( sphere );
 
 		// get light direction and put target at urdf center
-		vector.subVectors( directionalLight.position, sphere.center );
+		vector.subVectors( directionalLight.position, directionalLight.target.position );
 		directionalLight.target.position.copy( sphere.center );
 
 		// update light bounds

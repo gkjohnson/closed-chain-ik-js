@@ -5,9 +5,41 @@ import {
 	setIKFromUrdf,
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
-import { LoadingManager } from 'three';
+import { LoadingManager, sRGBEncoding } from 'three';
 import { XacroLoader } from 'xacro-parser';
 import { quat } from 'gl-matrix';
+
+// convert colors and texture to correct color space. Three.js Collada Loader does not
+// set these correctly.
+function convertColorsAndTextures( root ) {
+
+	function _apply( material ) {
+
+		material.color.convertSRGBToLinear();
+		if ( material.map ) material.map.encoding = sRGBEncoding;
+
+	}
+
+	root.traverse( c => {
+
+		if ( c.material ) {
+
+			const material = c.material;
+			if ( Array.isArray( material ) ) {
+
+				material.forEach( _apply );
+
+			} else {
+
+				_apply( material );
+
+			}
+
+		}
+
+	} );
+
+}
 
 export function loadCuriosity() {
 
@@ -55,6 +87,8 @@ export function loadCuriosity() {
 					l.parent.remove( l );
 
 				} );
+
+				convertColorsAndTextures( urdf );
 
 				resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
 
@@ -247,6 +281,8 @@ export function loadRobonaut() {
 		let urdf, ik, goalMap;
 		const manager = new LoadingManager();
 		manager.onLoad = () => {
+
+			convertColorsAndTextures( urdf );
 
 			resolve( { ik, urdf, goalMap, helperScale: 0.2 } );
 
