@@ -31,7 +31,7 @@ import {
 } from 'three';
 import {
 	GUI,
-} from 'three/examples/jsm/libs/dat.gui.module.js';
+} from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { mat4 } from 'gl-matrix';

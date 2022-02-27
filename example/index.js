@@ -26,7 +26,7 @@ import {
 } from 'three/examples/jsm/controls/TransformControls.js';
 import {
 	GUI,
-} from 'three/examples/jsm/libs/dat.gui.module.js';
+} from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { mat4 } from 'gl-matrix';
 import {
