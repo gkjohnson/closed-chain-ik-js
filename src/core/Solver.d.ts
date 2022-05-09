@@ -25,7 +25,7 @@ export class Solver {
 
 	roots : Array<Frame>;
 
-	constructor( roots : Array<Frame> );
+	constructor( roots : Frame | Array<Frame> );
 	updateStructure() : void;
 	solve() : Array<SOLVE_STATUS>;
 
