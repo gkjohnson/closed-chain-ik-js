@@ -7,7 +7,7 @@ export class Frame {
 	matrix : Float32Array;
 	matrixWorld : Float32Array;
 
-	parent? : Frame;
+	parent : Frame | null;
 	children : Array<Frame>;
 
 	setPosition( x : Number, y : Number, z : Number ) : void;
