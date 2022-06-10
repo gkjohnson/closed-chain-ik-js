@@ -13,6 +13,10 @@ import {
 	Mesh,
 	SphereBufferGeometry,
 	MeshBasicMaterial,
+	PCFSoftShadowMap,
+	Box3,
+	Sphere,
+	Vector3,
 } from 'three';
 import {
 	OrbitControls,
@@ -22,7 +26,7 @@ import {
 } from 'three/examples/jsm/controls/TransformControls.js';
 import {
 	GUI,
-} from 'three/examples/jsm/libs/dat.gui.module.js';
+} from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { mat4 } from 'gl-matrix';
 import {
@@ -38,6 +42,7 @@ import {
 	loadATHLETE,
 	loadRobonaut,
 	loadStaubli,
+	loadCuriosity,
 } from './loadModels.js';
 
 const params = {
@@ -45,6 +50,7 @@ const params = {
 	displayMesh: true,
 	displayIk: true,
 	displayGoals: true,
+	displayShadows: true,
 	model: 'ATHLETE',
 	webworker: true,
 };
@@ -71,10 +77,13 @@ let loadId = 0;
 let averageTime = 0;
 let averageCount = 0;
 let gui, stats;
-let outputContainer, renderer, scene, camera;
+let outputContainer, renderer, scene, camera, directionalLight;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot;
 let controls, transformControls, targetObject;
 let mouse = new Vector2();
+const box = new Box3();
+const sphere = new Sphere();
+const vector = new Vector3();
 
 init();
 rebuildGUI();
@@ -92,6 +101,8 @@ function init() {
 	renderer = new WebGLRenderer( { antialias: true } );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = PCFSoftShadowMap;
 	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
@@ -101,9 +112,11 @@ function init() {
 	scene = new Scene();
 	scene.background = new Color( 0x131619 );
 
-	const directionalLight = new DirectionalLight();
+	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
-	scene.add( directionalLight );
+	directionalLight.castShadow = true;
+	directionalLight.shadow.mapSize.setScalar( 2048 );
+	scene.add( directionalLight, directionalLight.target );
 
 	const ambientLight = new AmbientLight( 0x263238, 1 );
 	scene.add( ambientLight );
@@ -526,6 +539,31 @@ function render() {
 	transformControls.enabled = selectedGoalIndex !== - 1;
 	transformControls.visible = selectedGoalIndex !== - 1;
 
+	// update light shadow to tightly encapsulate urdf
+	if ( urdfRoot !== null ) {
+
+		// get the bounding sphere
+		box.setFromObject( urdfRoot ).getBoundingSphere( sphere );
+
+		// get light direction and put target at urdf center
+		vector.subVectors( directionalLight.position, directionalLight.target.position );
+		directionalLight.target.position.copy( sphere.center );
+
+		// update light bounds
+		const shadowCam = directionalLight.shadow.camera;
+		shadowCam.left = shadowCam.bottom = - sphere.radius;
+		shadowCam.right = shadowCam.top = sphere.radius;
+		shadowCam.near = 0;
+		shadowCam.far = sphere.radius * 2;
+		shadowCam.updateProjectionMatrix();
+
+		vector.normalize().multiplyScalar( sphere.radius );
+		directionalLight.position.addVectors( sphere.center, vector );
+
+	}
+
+	directionalLight.castShadow = params.displayShadows;
+
 	renderer.render( scene, camera );
 	stats.update();
 
@@ -544,7 +582,7 @@ function rebuildGUI() {
 	gui = new GUI();
 	gui.width = 350;
 
-	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Staubli' ] ).onChange( value => {
+	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli' ] ).onChange( value => {
 
 		let promise = null;
 		switch ( value ) {
@@ -555,6 +593,10 @@ function rebuildGUI() {
 
 			case 'Robonaut':
 				promise = loadRobonaut();
+				break;
+
+			case 'Curiosity':
+				promise = loadCuriosity();
 				break;
 
 			case 'Staubli':
@@ -569,6 +611,7 @@ function rebuildGUI() {
 	gui.add( params, 'displayMesh' ).name( 'display mesh' );
 	gui.add( params, 'displayGoals' ).name( 'display goals' );
 	gui.add( params, 'displayIk' ).name( 'display ik chains' );
+	gui.add( params, 'displayShadows' ).name( 'shadows' );
 	gui.add( params, 'webworker' ).onChange( v => {
 
 		if ( v ) {
@@ -594,6 +637,10 @@ function rebuildGUI() {
 
 			case 'Robonaut':
 				promise = loadRobonaut();
+				break;
+
+			case 'Curiosity':
+				promise = loadCuriosity();
 				break;
 
 			case 'Staubli':
@@ -717,6 +764,13 @@ function loadModel( promise ) {
 			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
 			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
 			drawThroughIkHelper.setDrawThrough( true );
+
+			urdf.traverse( c => {
+
+				c.castShadow = true;
+				c.receiveShadow = true;
+
+			} );
 
 			scene.add( urdf, ikHelper, drawThroughIkHelper );
 

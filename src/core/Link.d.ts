@@ -6,6 +6,6 @@ export class Link extends Frame {
 	isLink : Boolean;
 	closureJoints : Array<Joint>;
 
-	addChild( child : Joint );
+	addChild( child : Joint ) : void;
 
 }

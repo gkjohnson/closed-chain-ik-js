@@ -3,7 +3,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 		<meta charset="utf-8"/>
 
-		<title>IK Goal Example</title>
+		<title>VR IK Example</title>
 
         <style>
             * {
@@ -42,11 +42,13 @@
     </head>
     <body>
 		<div id="info">
-			Demonstrates a kinematic system using a goal to solve with options
+			Click and drag to set a goal and move a part of the model.
 			<br/>
-			for constraining the goal to translation or rotation axes.
+			Click a goal a second time to remove it. Goals are rendered as gold balls.
+			<br/>
+			<br/>
+			Disable shadows and live raycasting if performance is low.
 		</div>
-		<div id="output"></div>
-        <script type="module" src="./goals.js"></script>
+        <script type="module" src="./vr.js"></script>
     </body>
 </html>

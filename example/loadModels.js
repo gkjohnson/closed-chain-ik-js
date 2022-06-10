@@ -5,9 +5,134 @@ import {
 	setIKFromUrdf,
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
-import { LoadingManager } from 'three';
+import { LoadingManager, sRGBEncoding } from 'three';
 import { XacroLoader } from 'xacro-parser';
 import { quat } from 'gl-matrix';
+
+// convert colors and texture to correct color space. Three.js Collada Loader does not
+// set these correctly.
+function convertColorsAndTextures( root ) {
+
+	function _apply( material ) {
+
+		material.color.convertSRGBToLinear();
+		if ( material.map ) material.map.encoding = sRGBEncoding;
+
+	}
+
+	root.traverse( c => {
+
+		if ( c.material ) {
+
+			const material = c.material;
+			if ( Array.isArray( material ) ) {
+
+				material.forEach( _apply );
+
+			} else {
+
+				_apply( material );
+
+			}
+
+		}
+
+	} );
+
+}
+
+export function loadCuriosity() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		const url = 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/urdf/curiosity_mars_rover.xacro';
+		const xacroLoader = new XacroLoader();
+		xacroLoader.rospackCommands = {
+
+			find( pkg ) {
+
+				switch ( pkg ) {
+
+					case 'curiosity_mars_rover_description':
+						return 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/';
+					default:
+						return pkg;
+
+				}
+
+			}
+
+		};
+
+		xacroLoader.load( url, xacro => {
+
+			let ik, urdf, goalMap;
+
+			const manager = new LoadingManager();
+			manager.onLoad = () => {
+
+				const toRemove = [];
+				urdf.traverse( c => {
+
+					if ( c.isLight || c.isLineSegments ) {
+
+						toRemove.push( c );
+
+					}
+
+				} );
+
+				toRemove.forEach( l => {
+
+					l.parent.remove( l );
+
+				} );
+
+				convertColorsAndTextures( urdf );
+
+				resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+			};
+
+			const urdfLoader = new URDFLoader( manager );
+			urdfLoader.packages = {
+				'curiosity_mars_rover_description': 'https://raw.githubusercontent.com/gkjohnson/curiosity_mars_rover-mirror/master/curiosity_mars_rover_description/'
+			};
+			urdf = urdfLoader.parse( xacro );
+			urdf.joints.arm_03_joint.limit.upper = Math.PI * 3 / 2;
+			ik = urdfRobotToIKRoot( urdf );
+
+			// make the root fixed
+			ik.clearDoF();
+			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
+			ik.position[ 1 ] -= 0.5;
+			ik.setMatrixNeedsUpdate();
+
+			// start the joints off at reasonable angles
+			urdf.setJointValue( 'arm_02_joint', - Math.PI / 2 );
+			urdf.setJointValue( 'arm_03_joint', Math.PI );
+			urdf.setJointValue( 'arm_04_joint', Math.PI );
+			// urdf.setJointValue( 'joint_5', - Math.PI / 4 );
+			setIKFromUrdf( ik, urdf );
+
+			goalMap = new Map();
+			const tool = ik.find( l => l.name === 'arm_tools' );
+			const link = urdf.links.arm_tools;
+
+			const ee = new Joint();
+			ee.name = link.name;
+			ee.makeClosure( tool );
+
+			tool.getWorldPosition( ee.position );
+			tool.getWorldQuaternion( ee.quaternion );
+			ee.setMatrixNeedsUpdate();
+			goalMap.set( ee, tool );
+
+		}, reject );
+
+	} );
+
+}
 
 export function loadStaubli() {
 
@@ -36,12 +161,21 @@ export function loadStaubli() {
 
 		xacroLoader.load( url, xacro => {
 
-			const urdfLoader = new URDFLoader();
+			let ik, urdf, goalMap;
+
+			const manager = new LoadingManager();
+			manager.onLoad = () => {
+
+				resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+			};
+
+			const urdfLoader = new URDFLoader( manager );
 			urdfLoader.packages = {
 				'staubli_tx2_90_support': 'https://raw.githubusercontent.com/ros-industrial/staubli_experimental/ce422fe0a54232d73cf44e2571fc7abc2f5ff9f6/staubli_tx2_90_support/'
 			};
-			const urdf = urdfLoader.parse( xacro );
-			const ik = urdfRobotToIKRoot( urdf );
+			urdf = urdfLoader.parse( xacro );
+			ik = urdfRobotToIKRoot( urdf );
 
 			// make the root fixed
 			ik.clearDoF();
@@ -53,10 +187,9 @@ export function loadStaubli() {
 			urdf.setJointValue( 'joint_2', Math.PI / 4 );
 			urdf.setJointValue( 'joint_3', Math.PI / 2 );
 			urdf.setJointValue( 'joint_5', - Math.PI / 4 );
-			window.urdf = urdf;
 			setIKFromUrdf( ik, urdf );
 
-			const goalMap = new Map();
+			goalMap = new Map();
 			const tool = ik.find( l => l.name === 'tool0' );
 			const link = urdf.links.tool0;
 
@@ -69,14 +202,9 @@ export function loadStaubli() {
 			ee.setMatrixNeedsUpdate();
 			goalMap.set( ee, tool );
 
-			window.ik = ik;
-
-			resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
-
 		}, reject );
 
 	} );
-
 
 }
 
@@ -84,12 +212,21 @@ export function loadATHLETE() {
 
 	return new Promise( ( resolve, reject ) => {
 
+		let ik, urdf, goalMap;
+		const manager = new LoadingManager();
+		manager.onLoad = () => {
+
+			resolve( { ik, urdf, goalMap } );
+
+		};
+
 		const url = 'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12_flipped.URDF';
 
-		const loader = new URDFLoader();
-		loader.load( url, urdf => {
+		const loader = new URDFLoader( manager );
+		loader.load( url, result => {
 
-			const ik = urdfRobotToIKRoot( urdf );
+			urdf = result;
+			ik = urdfRobotToIKRoot( urdf );
 
 			// update the robot joints
 			const DEG2RAD = Math.PI / 180;
@@ -106,7 +243,7 @@ export function loadATHLETE() {
 			setIKFromUrdf( ik, urdf );
 
 			// store the rest pose
-			const goalMap = new Map();
+			goalMap = new Map();
 			ik.traverse( c => {
 
 				console.log(c.name);
@@ -132,8 +269,6 @@ export function loadATHLETE() {
 
 			} );
 
-			resolve( { ik, urdf, goalMap } );
-
 		}, null, reject );
 
 	} );
@@ -144,16 +279,27 @@ export function loadRobonaut() {
 
 	return new Promise( ( resolve, reject ) => {
 
+		let urdf, ik, goalMap;
+		const manager = new LoadingManager();
+		manager.onLoad = () => {
+
+			convertColorsAndTextures( urdf );
+
+			resolve( { ik, urdf, goalMap, helperScale: 0.2 } );
+
+		};
+
 		const url = 'https://raw.githubusercontent.com/gkjohnson/nasa-urdf-robots/master/r2_description/robots/r2b.urdf';
-		const loader = new URDFLoader();
+		const loader = new URDFLoader( manager );
 		loader.packages = {
 			r2_description: 'https://raw.githubusercontent.com/gkjohnson/nasa-urdf-robots/master/r2_description',
 		};
-		loader.load( url, urdf => {
+		loader.load( url, result => {
 
+			urdf = result;
 			urdf.rotation.set( - Math.PI / 2, 0, 0 );
 
-			const ik = urdfRobotToIKRoot( urdf );
+			ik = urdfRobotToIKRoot( urdf );
 
 			urdf.joints[ 'r2/left_leg/joint3' ].setJointValue( 60 * DEG2RAD );
 			urdf.joints[ 'r2/left_leg/joint5' ].setJointValue( 60 * DEG2RAD );
@@ -171,7 +317,7 @@ export function loadRobonaut() {
 
 			setIKFromUrdf( ik, urdf );
 
-			const goalMap = new Map();
+			goalMap = new Map();
 			ik.traverse( c => {
 
 				if ( c.isJoint ) {
@@ -199,7 +345,6 @@ export function loadRobonaut() {
 
 			} );
 
-			resolve( { ik, urdf, goalMap, helperScale: 0.2 } );
 
 		}, null, reject );
 
@@ -273,12 +418,12 @@ export function loadAthnaut() {
 
 			// update the robot joints
 			const DEG2RAD = Math.PI / 180;
-			athlete.rotation.set( Math.PI / 2 , 0, 0 );
-			for ( let i = 1; i <= 6 ; i ++ ) {
+			athlete.rotation.set( Math.PI / 2, 0, 0 );
+			for ( let i = 1; i <= 6; i ++ ) {
 
 				athlete.joints[ `HP${ i }` ].setJointValue( 30 * DEG2RAD );
 				athlete.joints[ `KP${ i }` ].setJointValue( 90 * DEG2RAD );
-				athlete.joints[ `AP${ i }` ].setJointValue( -30 * DEG2RAD );
+				athlete.joints[ `AP${ i }` ].setJointValue( - 30 * DEG2RAD );
 
 			}
 

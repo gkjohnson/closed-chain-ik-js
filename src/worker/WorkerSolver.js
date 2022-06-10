@@ -27,7 +27,7 @@ export class WorkerSolver {
 		this.jointsToIndexMap = null;
 		this.scheduledStateUpdate = false;
 
-		const worker = new Worker( './workerSolver.worker.js' );
+		const worker = new Worker( new URL( './workerSolver.worker.js', import.meta.url ), { type: 'module' } );
 		let scheduled = false;
 		worker.onmessage = ( { data: e } ) => {
 
