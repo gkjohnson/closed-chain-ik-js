@@ -28,7 +28,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 		node = new Link();
 		node.name = urdfNode.name;
-		doReturn = false;
+		doReturn = ! trimUnused;
 
 	} else if ( urdfNode.isURDFJoint ) {
 
@@ -93,7 +93,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 			case 'fixed': {
 
 				node = rootNode;
-				doReturn = false;
+				doReturn = ! trimUnused;
 				break;
 
 			}
@@ -103,7 +103,7 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 			default:
 
 				console.error( `urdfRobotToIKRoot: Joint type ${jointType} not supported.` );
-				doReturn = false;
+				doReturn = ! trimUnused;
 
 		}
 
