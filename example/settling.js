@@ -72,7 +72,6 @@ const raycaster = new Raycaster();
 const posArr = new Float64Array( 3 );
 
 let urdfRoot, ikRoot, ikHelper, drawThroughIkHelper, solver;
-let helper;
 init();
 render();
 
