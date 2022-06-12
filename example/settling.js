@@ -47,6 +47,8 @@ const params = {
 	solve: true,
 	displayMesh: true,
 	displayIk: false,
+	enableControls: true,
+	terrainHeight: 0.35,
 	settleIterations: 10,
 };
 
@@ -70,7 +72,7 @@ const raycaster = new Raycaster();
 const posArr = new Float64Array( 3 );
 
 let urdfRoot, ikRoot, ikHelper, drawThroughIkHelper, solver;
-
+let helper;
 init();
 render();
 
@@ -147,7 +149,7 @@ function init() {
 			const xv = posAttr.getX( i ) * 1.5;
 			const yv = posAttr.getY( i ) * 1.5;
 
-			posAttr.setZ( i, Math.min( Math.abs( Math.sin( yv ) ), Math.abs( Math.sin( xv ) ) ) * 0.5 );
+			posAttr.setZ( i, Math.min( Math.abs( Math.sin( yv ) ), Math.abs( Math.sin( xv ) ) ) );
 
 		}
 
@@ -161,10 +163,12 @@ function init() {
 
 	// init gui
 	gui = new GUI();
+	gui.add( params, 'enableControls' );
 	gui.add( params, 'solve' );
 	gui.add( params, 'displayMesh' );
 	gui.add( params, 'displayIk' );
 	gui.add( params, 'settleIterations' ).min( 1 ).max( 20 ).step( 1 ).onChange( () => ikNeedsUpdate = true );
+	gui.add( params, 'terrainHeight', 0.05, 0.7 ).onChange( () => ikNeedsUpdate = true );
 
 	// load model
 	const loader = new URDFLoader();
@@ -181,6 +185,11 @@ function init() {
 
 					c.castShadow = true;
 					c.receiveShadow = true;
+					if ( c.geometry && ! c.geometry.attributes.normals ) {
+
+						c.geometry.computeVertexNormals();
+
+					}
 
 				} );
 				done( res.scene );
@@ -488,17 +497,15 @@ function updateIk() {
 			raycaster.ray.direction.set( 0, - 1, 0 );
 			raycaster.firstHitOnly = true;
 
+			let height = 0;
 			const res = raycaster.intersectObject( terrain, true );
 			if ( res.length ) {
 
-				const info = res[ 0 ];
-				goal.setPosition( info.point.x, info.point.y + 0.25, info.point.z );
-
-			} else {
-
-				goal.setPosition( posArr[ 0 ], 0, posArr[ 2 ] );
+				height = res[ 0 ].point.y + 0.25;
 
 			}
+
+			goal.setPosition( posArr[ 0 ], height, posArr[ 2 ] );
 
 		} );
 
@@ -533,6 +540,8 @@ function updateIk() {
 function render() {
 
 	requestAnimationFrame( render );
+
+	terrain.scale.z = params.terrainHeight;
 
 	if ( urdfRoot ) {
 
@@ -582,6 +591,9 @@ function render() {
 		directionalLight.position.copy( urdfRoot.position ).add( tempVec );
 
 	}
+
+	transformControls.visible = params.enableControls;
+	transformControls.enabled = params.enableControls;
 
 	renderer.render( scene, camera );
 	stats.update();
