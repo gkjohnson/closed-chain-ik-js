@@ -9,29 +9,20 @@ import {
 	Group,
 	Raycaster,
 	Vector2,
-	Vector4,
+	Vector3,
 	Mesh,
-	SphereBufferGeometry,
-	MeshBasicMaterial,
 	PlaneBufferGeometry,
 	MeshStandardMaterial,
 	PCFSoftShadowMap,
 	BufferGeometry,
+	MathUtils,
 } from 'three';
-import {
-	OrbitControls,
-} from 'three/examples/jsm/controls/OrbitControls.js';
-import {
-	TransformControls
-} from 'three/examples/jsm/controls/TransformControls.js';
-import {
-	GUI,
-} from 'three/examples/jsm/libs/dat.gui.module.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
-import { mat4 } from 'gl-matrix';
 import {
 	Solver,
-	WorkerSolver,
 	Link,
 	Joint,
 	SOLVE_STATUS_NAMES,
@@ -43,10 +34,6 @@ import {
 	DOF,
 	SOLVE_STATUS,
 } from '../src/index.js';
-import {
-	loadATHLETE,
-	loadRobonaut,
-} from './loadModels.js';
 import URDFLoader from 'urdf-loader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
@@ -59,7 +46,7 @@ BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 const params = {
 	solve: true,
 	displayMesh: true,
-	displayIk: true,
+	displayIk: false,
 	settleIterations: 10,
 };
 
@@ -71,16 +58,16 @@ const solverOptions = {
 	rotationErrorClamp: 0.25,
 };
 
-let loadId = 0;
-let averageTime = 0;
-let averageCount = 0;
 let gui, stats;
 let outputContainer, renderer, scene, camera;
 let driveGoals;
 let controls, transformControls, targetObject;
-let mouse = new Vector2();
-let terrain;
+let terrain, directionalLight;
 let ikNeedsUpdate = true;
+const mouse = new Vector2();
+const tempVec = new Vector3();
+const raycaster = new Raycaster();
+const posArr = new Float64Array( 3 );
 
 let urdfRoot, ikRoot, ikHelper, drawThroughIkHelper, solver;
 
@@ -109,17 +96,24 @@ function init() {
 	scene = new Scene();
 	scene.background = new Color( 0x131619 );
 
-	const directionalLight = new DirectionalLight();
+	// init light / shadow camera
+	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
 	directionalLight.intensity = 0.75;
 	directionalLight.castShadow = true;
 	directionalLight.shadow.normalBias = 1e-4;
-	directionalLight.shadow.mapSize.setScalar( 2048 );
-	scene.add( directionalLight );
+	directionalLight.shadow.mapSize.setScalar( 1024 );
+
+	const shadowCam = directionalLight.shadow.camera;
+	shadowCam.top = shadowCam.right = 2;
+	shadowCam.left = shadowCam.bottom = - 2;
+	shadowCam.updateProjectionMatrix();
+	scene.add( directionalLight, directionalLight.target );
 
 	const ambientLight = new AmbientLight( 0x263238, 1 );
 	scene.add( ambientLight );
 
+	// controls
 	controls = new OrbitControls( camera, renderer.domElement );
 	transformControls = new TransformControls( camera, renderer.domElement );
 	transformControls.setSpace( 'local' );
@@ -128,6 +122,7 @@ function init() {
 	transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
 
+	// urdf target
 	targetObject = new Group();
 	targetObject.position.set( 0, 0, 0 );
 	targetObject.rotation.set( Math.PI / 2, 0, 0 );
@@ -139,13 +134,16 @@ function init() {
 
 	} );
 
-	terrain = new Mesh( new PlaneBufferGeometry( 25, 25, 200, 200 ), new MeshStandardMaterial() );
+	// generate terrain
+	const dimension = 400;
+	terrain = new Mesh( new PlaneBufferGeometry( 25, 25, dimension, dimension ), new MeshStandardMaterial() );
+
 	const posAttr = terrain.geometry.attributes.position;
-	for ( let x = 0; x <= 201; x ++ ) {
+	for ( let x = 0; x <= dimension + 1; x ++ ) {
 
-		for ( let y = 0; y <= 201; y ++ ) {
+		for ( let y = 0; y <= dimension + 1; y ++ ) {
 
-			const i = 200 * x + y;
+			const i = dimension * x + y;
 			const xv = posAttr.getX( i ) * 1.5;
 			const yv = posAttr.getY( i ) * 1.5;
 
@@ -161,20 +159,21 @@ function init() {
 	terrain.geometry.computeBoundsTree();
 	scene.add( terrain );
 
+	// init gui
 	gui = new GUI();
 	gui.add( params, 'solve' );
 	gui.add( params, 'displayMesh' );
 	gui.add( params, 'displayIk' );
 	gui.add( params, 'settleIterations' ).min( 1 ).max( 20 ).step( 1 ).onChange( () => ikNeedsUpdate = true );
 
-
+	// load model
 	const loader = new URDFLoader();
 	loader.fetchOptions = {
 		mode: 'cors',
 	};
 	loader.loadMeshCb = ( path, manager, done ) => {
 
-		if ( /\.glb$/.test( path ) ) {
+		if ( /\.glb$/.test( path ) || /\.gltf$/.test( path ) ) {
 
 			new GLTFLoader( manager ).load( path, res => {
 
@@ -204,10 +203,9 @@ function init() {
 	};
 
 	loader
-		.loadAsync( '//localhost:9080/models/m2020.urdf' )
+		.loadAsync( '../urdf/rover/m2020.urdf' )
 		.then( result => {
 
-			console.log( result );
 			result.children[ 0 ].jointType = 'fixed';
 
 			urdfRoot = result;
@@ -259,8 +257,6 @@ function init() {
 			leftDifferentialConnector.addChild( leftDiffGoal );
 			leftDiffGoal.makeClosure( leftConnector );
 
-
-
 			// right connector
 			const rightDifferential = ikRoot.find( c => c.name === 'RIGHT_DIFFERENTIAL' ).child;
 			const rightJoint = new Joint();
@@ -304,9 +300,7 @@ function init() {
 			rightDifferentialConnector.addChild( rightDiffGoal );
 			rightDiffGoal.makeClosure( rightConnector );
 
-			solver = new Solver( [ ikRoot ] );
-			Object.assign( solver, solverOptions );
-
+			// generate ik visualization
 			ikHelper = new IKRootsHelper( [ ikRoot ] );
 			ikHelper.setResolution( window.innerWidth, window.innerHeight );
 			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
@@ -321,7 +315,7 @@ function init() {
 			urdfRoot.rotation.set( Math.PI / 2, 0, 0 );
 			setIKFromUrdf( ikRoot, urdfRoot );
 
-
+			// initialize wheel goals
 			driveGoals = [
 				'LR_DRIVE',
 				'LM_DRIVE',
@@ -346,6 +340,50 @@ function init() {
 
 				} );
 				return goal;
+
+			} );
+
+			// set the arm angles
+			ikRoot.traverse( c => {
+
+				switch ( c.name ) {
+
+					case 'JOINT1_ENC':
+						c.setTargetValues( 90 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'JOINT2_ENC':
+						c.setTargetValues( - 18 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'JOINT3_ENC':
+						c.setTargetValues( - 160 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'JOINT4_ENC':
+						c.setTargetValues( 178 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'JOINT5_ENC':
+						c.setTargetValues( 90 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'RSM_AZ_ENC':
+						c.setTargetValues( 180 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+					case 'RSM_EL_ENC':
+						c.setTargetValues( 90 * MathUtils.DEG2RAD );
+						c.targetSet = true;
+						break;
+
+				}
 
 			} );
 
@@ -406,10 +444,9 @@ function init() {
 
 }
 
-const raycaster = new Raycaster();
-const posArr = new Float64Array( 3 );
 function updateIk() {
 
+	// update the ik root from the draggable root
 	ikRoot.setPosition(
 		targetObject.position.x,
 		ikRoot.position[ 1 ],
@@ -439,6 +476,7 @@ function updateIk() {
 
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
 
+		// udpate drive goals from the new location
 		ikRoot.updateMatrixWorld( true );
 
 		driveGoals.forEach( ( goal, i ) => {
@@ -464,6 +502,10 @@ function updateIk() {
 
 		} );
 
+		// update options
+		Object.assign( solver, solverOptions );
+
+		// update store results
 		const startTime = window.performance.now();
 		const results = solver.solve();
 		const delta = window.performance.now() - startTime;
@@ -479,6 +521,7 @@ function updateIk() {
 
 	}
 
+	// update output
 	solveOutput = solveOutput + '\n' + 'Total: ' + totalTime.toFixed( 2 ) + 'ms';
 
 	outputContainer.textContent = solveOutput;
@@ -529,6 +572,14 @@ function render() {
 
 		targetObject.position.set( ...ikRoot.position );
 		targetObject.quaternion.set( ...ikRoot.quaternion );
+
+	}
+
+	if ( urdfRoot ) {
+
+		tempVec.subVectors( directionalLight.position, directionalLight.target.position );
+		directionalLight.target.position.copy( urdfRoot.position );
+		directionalLight.position.copy( urdfRoot.position ).add( tempVec );
 
 	}
 

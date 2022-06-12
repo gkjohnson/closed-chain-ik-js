@@ -40,12 +40,13 @@
   "dependencies": {
     "gl-matrix": "^3.3.0",
     "linear-solve": "^1.2.1",
-    "svd-js": "^1.1.1"
+    "svd-js": "^1.1.1",
+    "three-mesh-bvh": "^0.5.11"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
-		"@types/three": "^0.133.0",
+    "@types/three": "^0.133.0",
     "concurrently": "^5.3.0",
     "eslint": "^7.32.0",
     "eslint-config-mdcs": "^5.0.0",
