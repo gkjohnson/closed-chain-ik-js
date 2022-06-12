@@ -214,7 +214,15 @@ function init() {
 		.loadAsync( '../urdf/rover/m2020.urdf' )
 		.then( result => {
 
-			result.children[ 0 ].jointType = 'fixed';
+			result.traverse( c => {
+
+				if ( c.jointType === 'floating') {
+
+					c.jointType = 'fixed';
+
+				}
+
+			} );
 
 			urdfRoot = result;
 			ikRoot = urdfRobotToIKRoot( urdfRoot, true );
