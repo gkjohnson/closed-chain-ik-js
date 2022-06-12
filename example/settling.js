@@ -519,7 +519,9 @@ function updateIk() {
 
 		solveOutput += delta.toFixed( 2 ) + 'ms ' + SOLVE_STATUS_NAMES[ results[ 0 ] ] + '\n';
 
-		if ( ! results.find( r => r !== SOLVE_STATUS.CONVERGED ) ) {
+		const isConverged = results.filter( r => r === SOLVE_STATUS.CONVERGED ).length === results.length;
+		const isAllDiverged = results.filter( r => r === SOLVE_STATUS.DIVERGED ).length === results.length;
+		if ( isConverged || isAllDiverged ) {
 
 			break;
 
