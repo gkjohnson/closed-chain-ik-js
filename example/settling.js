@@ -95,7 +95,7 @@ function init() {
 	camera.position.set( 8, 8, 8 );
 
 	scene = new Scene();
-	scene.background = new Color( 0x131619 );
+	scene.background = new Color( 0x1e161d );
 
 	// init light / shadow camera
 	directionalLight = new DirectionalLight();
@@ -111,7 +111,7 @@ function init() {
 	shadowCam.updateProjectionMatrix();
 	scene.add( directionalLight, directionalLight.target );
 
-	const ambientLight = new AmbientLight( 0x263238, 1 );
+	const ambientLight = new AmbientLight( 0x1f1a1e, 1 );
 	scene.add( ambientLight );
 
 	// controls
