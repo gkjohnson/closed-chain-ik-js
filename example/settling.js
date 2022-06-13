@@ -211,7 +211,7 @@ function init() {
 	};
 
 	loader
-		.loadAsync( '../urdf/rover/m2020.urdf' )
+		.loadAsync( 'https://raw.githubusercontent.com/gkjohnson/m2020-urdf-models/main/rover/m2020.urdf' )
 		.then( result => {
 
 			result.traverse( c => {
