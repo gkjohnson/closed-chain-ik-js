@@ -14,6 +14,8 @@ _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>
 
 [ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
 
+[Rover mobility settling demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/settling.html)!
+
 [VR demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/vr.html)!
 
 [Partial degrees of freedom Goal demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/goals.html)!
@@ -27,6 +29,8 @@ Robitics models used in the project are for demonstration purposes only and subj
 [Robonaut](https://github.com/gkjohnson/nasa-urdf-robots)
 
 [Curiosity](https://github.com/gkjohnson/curiosity_mars_rover-mirror)
+
+[Perseverance](https://github.com/gkjohnson/m2020-urdf-models)
 
 [Staubli](https://github.com/ros-industrial/staubli_experimental)
 
