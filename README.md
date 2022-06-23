@@ -12,6 +12,8 @@ A generalized inverse kinematics solver that supports closed chains for parallel
 
 _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>_
 
+## Examples
+
 [ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
 
 [Rover mobility settling demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/settling.html)!
