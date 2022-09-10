@@ -29,6 +29,7 @@ import {
 	MeshPhongMaterial,
 	BufferAttribute,
 } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
 	GUI,
 } from 'three/examples/jsm/libs/lil-gui.module.min.js';
@@ -56,7 +57,6 @@ import {
 	ProxyBatchedMesh
 } from './lib/ProxyBatchedMesh.js';
 
-
 const params = {
 	shadows: true,
 	liveRaycasting: true,
@@ -64,7 +64,7 @@ const params = {
 	solve: true,
 	displayIk: false,
 	displayGoals: true,
-	model: 'ATHLETE',
+	model: window.location.hash.replace( /^#/, '' ).trim() || 'ATHLETE',
 	webworker: true,
 };
 
@@ -91,13 +91,14 @@ let gui;
 let renderer, scene, camera, workspace, controller, controllerGrip, ground, directionalLight;
 let intersectRing, hitSphere, targetObject;
 let solver, ikHelper, drawThroughIkHelper, ikRoot, urdfRoot, urdfProxy;
+let marsModel;
 const tempPos = new Vector3();
 const tempQuat = new Quaternion();
 const raycaster = new Raycaster();
 
 init();
 rebuildGUI();
-loadModel( loadATHLETE() );
+loadModelByName( params.model );
 
 function init() {
 
@@ -157,6 +158,26 @@ function init() {
 	scene.add( targetObject );
 
 	window.addEventListener( 'resize', onResize );
+
+	marsModel = new Group();
+	marsModel.rotation.set( 0, - Math.PI / 2, 0 );
+	marsModel.position.set( 0, 0, 2 );
+	scene.add( marsModel );
+
+	new GLTFLoader().load( 'https://raw.githubusercontent.com/gkjohnson/3d-demo-data/main/models/mars-site/scene.gltf', gltf => {
+
+		const marsScene = gltf.scene;
+		marsScene.scale.setScalar( 0.01 );
+		marsScene.updateMatrixWorld( true );
+
+		const box = new Box3();
+		box.setFromObject( marsScene );
+
+		marsScene.position.y = - box.min.y;
+
+		marsModel.add( marsScene );
+
+	} );
 
 	// widgets
 	const whiteMat = new MeshBasicMaterial( { color: 0xffffff } );
@@ -617,6 +638,36 @@ function render() {
 
 }
 
+function loadModelByName( name ) {
+
+	let promise = null;
+	marsModel.visible = false;
+	switch ( name ) {
+
+		case 'Robonaut':
+			promise = loadRobonaut();
+			break;
+
+		case 'Curiosity':
+			promise = loadCuriosity();
+			marsModel.visible = true;
+			break;
+
+		case 'Staubli':
+			promise = loadStaubli();
+			break;
+
+		case 'ATHLETE':
+		default:
+			promise = loadATHLETE();
+			break;
+
+	}
+
+	loadModel( promise );
+
+}
+
 function rebuildGUI() {
 
 	if ( gui ) {
@@ -632,28 +683,7 @@ function rebuildGUI() {
 
 	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli' ] ).onChange( value => {
 
-		let promise = null;
-		switch ( value ) {
-
-			case 'ATHLETE':
-				promise = loadATHLETE();
-				break;
-
-			case 'Robonaut':
-				promise = loadRobonaut();
-				break;
-
-			case 'Curiosity':
-				promise = loadCuriosity();
-				break;
-
-			case 'Staubli':
-				promise = loadStaubli();
-				break;
-
-		}
-
-		loadModel( promise );
+		loadModelByName( value );
 
 	} );
 	gui.add( params, 'scale', 0.1, 4, 0.01 );
