@@ -63,8 +63,8 @@ class ProxySkinnedMesh extends SkinnedMesh {
 				box.expandByObject( proxied[ i ] );
 
 			}
-			// inverseMatrix.copy( matrixWorld ).invert();
-			inverseMatrix.getInverse( matrixWorld );
+
+			inverseMatrix.copy( matrixWorld ).invert();
 			box.applyMatrix4( inverseMatrix );
 			box.getBoundingSphere( geometry.boundingSphere );
 
