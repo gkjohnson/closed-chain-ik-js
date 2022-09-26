@@ -161,7 +161,7 @@ function init() {
 
 	marsModel = new Group();
 	marsModel.rotation.set( 0, - Math.PI / 2, 0 );
-	marsModel.position.set( 0, 0, 2 );
+	marsModel.position.set( 0.5, 0, 2.35 );
 	scene.add( marsModel );
 
 	new GLTFLoader().load( 'https://raw.githubusercontent.com/gkjohnson/3d-demo-data/main/models/mars-site/scene.gltf', gltf => {
