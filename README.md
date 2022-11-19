@@ -14,7 +14,7 @@ _<p align="center">Solver being used on JPL's ATHLETE robot for full body IK</p>
 
 ## Examples
 
-[Hexapod demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
+[Hexapod demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/hexapod.html)!
 
 [ATHLETE and Robonaut demo here](https://gkjohnson.github.io/closed-chain-ik-js/dist/index.html)!
 
