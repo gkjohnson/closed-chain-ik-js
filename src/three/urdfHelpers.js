@@ -211,7 +211,15 @@ export function setUrdfFromIK( urdfRoot, ikRoot ) {
 			const urdfJoint = urdfRoot.joints[ c.name ];
 			if ( urdfJoint ) {
 
-				urdfJoint.setJointValue( ikJoint.getDoFValue( DOF.EZ ) );
+				if ( urdfJoint.jointType === 'prismatic' ) {
+
+					urdfJoint.setJointValue( ikJoint.getDoFValue( DOF.Z ) );
+
+				} else {
+
+					urdfJoint.setJointValue( ikJoint.getDoFValue( DOF.EZ ) );
+
+				}
 
 			}
 

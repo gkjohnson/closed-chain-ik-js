@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>M2020 Perseverance Rover Rocker Bogie Settling</title>
+        <title>Hexapod Platform IK</title>
         <style>
             * {
                 margin: 0;
@@ -12,6 +12,10 @@
             html, body {
                 overflow: hidden;
             }
+
+			a {
+				color: white;
+			}
 
             #output {
                 position: absolute;
@@ -41,9 +45,9 @@
     </head>
     <body>
 		<div id="info">
-			Settling the Perseverance rocker-bogie system with parallel kinematics.
+			Hexapod platform inverse kinematics.
 			<br/>
-			Model courtesy of NASA/JPL-Caltech
+			Model courtesy of <a href="https://github.com/PI-PhysikInstrumente/PI_ROS_Driver">Physik Instrumente.</a>
 		</div>
         <div id="output"></div>
         <script src="./hexapod.js" type="module"></script>
