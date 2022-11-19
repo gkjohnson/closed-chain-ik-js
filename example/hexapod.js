@@ -39,7 +39,7 @@ const params = {
 	displayMesh: true,
 	displayIk: false,
 	enableControls: true,
-	settleIterations: 10,
+	settleIterations: 3,
 	displayConvergedOnly: true,
 };
 
