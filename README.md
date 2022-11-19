@@ -348,7 +348,7 @@ Updates the local `.matrix` field if it needs to be updated.
 ### .updateMatrixWorld
 
 ```js
-updateMatrixWorld( includeChildren : Boolean = true ) : void
+updateMatrixWorld( includeChildren : Boolean = false ) : void
 ```
 
 Updates the local `.matrix` and `.worldMatrix` fields if they need to be updated. Ensures parent matrices are up to date.
