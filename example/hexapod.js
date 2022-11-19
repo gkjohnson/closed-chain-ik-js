@@ -40,6 +40,7 @@ const params = {
 	displayIk: false,
 	enableControls: true,
 	settleIterations: 10,
+	displayConvergedOnly: true,
 };
 
 const solverOptions = {
@@ -91,7 +92,7 @@ function init() {
 	directionalLight.position.set( 1, 3, 2 );
 	directionalLight.intensity = 0.75;
 	directionalLight.castShadow = true;
-	directionalLight.shadow.mapSize.setScalar( 1024 );
+	directionalLight.shadow.mapSize.setScalar( 2048 );
 
 	const shadowCam = directionalLight.shadow.camera;
 	shadowCam.top = shadowCam.right = 0.25;
@@ -148,6 +149,7 @@ function init() {
 	gui.add( params, 'solve' );
 	gui.add( params, 'displayMesh' );
 	gui.add( params, 'displayIk' );
+	gui.add( params, 'displayConvergedOnly' );
 	gui.add( params, 'settleIterations', 1, 20, 1 ).onChange( () => ikNeedsUpdate = true );
 
 	// load model
@@ -378,6 +380,7 @@ function updateIk() {
 	let solveOutput = '';
 	let totalTime = 0;
 
+	let isConverged = false;
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
 
 		// update drive goals from the new location
@@ -394,7 +397,7 @@ function updateIk() {
 
 		solveOutput += delta.toFixed( 2 ) + 'ms ' + SOLVE_STATUS_NAMES[ results[ 0 ] ] + '\n';
 
-		const isConverged = results.filter( r => r === SOLVE_STATUS.CONVERGED ).length === results.length;
+		isConverged = results.filter( r => r === SOLVE_STATUS.CONVERGED ).length === results.length;
 		const isAllDiverged = results.filter( r => r === SOLVE_STATUS.DIVERGED ).length === results.length;
 		const isAllStalled = results.filter( r => r === SOLVE_STATUS.STALLED ).length === results.length;
 		if ( isConverged || isAllDiverged || isAllStalled ) {
@@ -410,7 +413,11 @@ function updateIk() {
 
 	outputContainer.textContent = solveOutput;
 
-	setUrdfFromIK( urdfRoot, ikRoot );
+	if ( ! params.displayConvergedOnly || isConverged ) {
+
+		setUrdfFromIK( urdfRoot, ikRoot );
+
+	}
 
 }
 
@@ -455,8 +462,8 @@ function render() {
 		} else if ( params.animate === 'rotate' ) {
 
 			const t = window.performance.now() * 0.004;
-			targetObject.position.set( 0, 0.095 + Math.sin( t ) * 0.01, 0 );
-			targetObject.rotation.set( - Math.PI / 2, 0, Math.cos( t * 1.0 ) );
+			targetObject.position.set( 0, 0.105 + Math.sin( t ) * 0.0075, 0 );
+			targetObject.rotation.set( - Math.PI / 2, 0, Math.cos( t * 1.0 ) * 0.75 );
 
 			ikNeedsUpdate = true;
 
