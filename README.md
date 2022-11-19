@@ -36,6 +36,8 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [Staubli](https://github.com/ros-industrial/staubli_experimental)
 
+[PI Hexapod](https://github.com/PI-PhysikInstrumente/PI_ROS_Driver)
+
 # Use
 
 ## Simple 2 DoF System
