@@ -224,6 +224,7 @@ function init() {
 			const joints = urdfRoot.joints;
 			for ( const key in joints ) {
 
+				// adjust the limits of the joints
 				const joint = joints[ key ];
 				if ( joint.name.includes( 'ang' ) ) {
 
