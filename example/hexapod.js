@@ -97,6 +97,8 @@ function init() {
 	const shadowCam = directionalLight.shadow.camera;
 	shadowCam.top = shadowCam.right = 0.25;
 	shadowCam.left = shadowCam.bottom = - 0.25;
+	shadowCam.near = 0;
+	shadowCam.far = 10;
 	shadowCam.updateProjectionMatrix();
 
 	// add a directional light to illuminate the other side
