@@ -243,24 +243,30 @@ function init() {
 
 			}
 
+			// generate the ik root and set the root to a fixed position
 			ikRoot = urdfRobotToIKRoot( urdfRoot );
 			ikRoot.setDoF();
 
+			// update the root from the URDF so goals can be placed in world space
 			urdfRoot.rotation.set( - Math.PI / 2, 0, 0 );
 			ikRoot.setEuler( - Math.PI / 2, 0, 0 );
 			setIKFromUrdf( ikRoot, urdfRoot );
 
+			// set the goal for the hexapod platform
 			platformLink = ikRoot.find( c => c.name === 'platform_link' );
 			platformGoal = new Goal();
 			platformGoal.setEuler( - Math.PI / 2, 0, 0 );
 			platformGoal.setPosition( 0, 0.095, 0 );
 			platformGoal.makeClosure( platformLink );
 
+			// set the target object position
 			targetObject.quaternion.set( ...platformGoal.quaternion );
 			targetObject.position.set( ...platformGoal.position );
 
+			// set up the hexapod connections
 			for ( let i = 0; i < 6; i ++ ) {
 
+				// set up the base link with a prismatic joint and goal
 				const baseLinkName = `axis${ i }_base_anchor_link_3`;
 				const baseLink = ikRoot.find( c => c.name === baseLinkName );
 
@@ -274,29 +280,16 @@ function init() {
 				prismJoint.addChild( prismLink );
 
 				const goal = new Goal();
-				goal.setPosition( 0, 0, 0.025 );
+				goal.setPosition( 0, 0, 0.05 );
+				goal.setEuler( Math.PI, 0, 0 );
 				prismLink.addChild( goal );
 
+				// connect the goal to the platform link root
 				const platformLinkName = `axis${ i }_platform_anchor_link_3`;
 				const platformLink = ikRoot.find( c => c.name === platformLinkName );
 
-				const platformJointName = `axis${ 0 }_platform_anchor_joint_x`;
-				const platformJoint = ikRoot.find( c => c.name === platformJointName );
-
-				platformJoint.setDoFValues( Math.PI );
-				platformJoint.setRestPoseValues( Math.PI );
-
-				const platformGoalJoint = new Joint();
-				platformLink.setPosition( 0, 0, 0.025 );
-				platformLink.addChild( platformGoalJoint );
-
-				const platformGoalLink = new Link();
-				platformGoalLink.setEuler( Math.PI, 0, 0 );
-				platformGoalJoint.addChild( platformGoalLink );
-
-				goal.makeClosure( platformGoalLink );
-
-				ikRoot.updateMatrixWorld( true );
+				// set up the goal
+				goal.makeClosure( platformLink );
 
 			}
 
