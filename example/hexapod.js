@@ -206,7 +206,7 @@ function init() {
 	};
 
 	loader
-		.loadAsync( '../example/PI_HEXAPOD.urdf' )
+		.loadAsync( 'https://raw.githubusercontent.com/gkjohnson/PI_ROS_Driver/master/pi_hexapod_driver/pi_hexapod_description/urdf/pi_hexapod.urdf' )
 		.then( result => {
 
 			urdfRoot = result;
