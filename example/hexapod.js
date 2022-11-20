@@ -129,6 +129,9 @@ function init() {
 
 		controls.enabled = true;
 		ikNeedsUpdate = true;
+		setIKFromUrdf( ikRoot, urdfRoot );
+
+		ikRoot.updateMatrixWorld( true );
 
 	} );
 
@@ -147,7 +150,7 @@ function init() {
 	gui = new GUI();
 	gui.add( params, 'enableControls' );
 	gui.add( params, 'animate', [ 'none', 'gyrate', 'rotate' ] ).listen();
-	gui.add( params, 'baseTilt', - 0.3, 0.3, 1e-4 );
+	gui.add( params, 'baseTilt', - 0.3, 0.3, 1e-4 ).onChange( () => ikNeedsUpdate = true );
 	gui.add( params, 'solve' );
 	gui.add( params, 'displayMesh' );
 	gui.add( params, 'displayIk' );
@@ -255,6 +258,15 @@ function init() {
 			// update the root from the URDF so goals can be placed in world space
 			urdfRoot.rotation.set( - Math.PI / 2, 0, 0 );
 			ikRoot.setEuler( - Math.PI / 2, 0, 0 );
+
+			for ( let i = 0; i < 6; i ++ ) {
+
+				const key = `axis${ i }_platform_anchor_joint_x`;
+				const joint = urdfRoot.joints[ key ];
+				joint.setJointValue( Math.PI );
+
+			}
+
 			setIKFromUrdf( ikRoot, urdfRoot );
 
 			// set the goal for the hexapod platform
@@ -381,6 +393,8 @@ function updateIk() {
 
 	let solveOutput = '';
 	let totalTime = 0;
+
+	setIKFromUrdf( ikRoot, urdfRoot );
 
 	let isConverged = false;
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
