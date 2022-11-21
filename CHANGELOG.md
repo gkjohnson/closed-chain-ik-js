@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - IKRootsHelper throwing an error when calling `updateStructure`.
 - IKRootsHelper throwing an error when calling `dispose`.
+- Support for prismatic joints when assigning the ik state to URDF joints.
 
 ### Changed
 
