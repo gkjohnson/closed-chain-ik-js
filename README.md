@@ -1,6 +1,6 @@
 # Closed Chain Inverse Kinematics
 
-[![build](https://img.shields.io/github/workflow/status/gkjohnson/closed-chain-ik-js/Node.js%20CI?style=flat-square&label=build)](https://github.com/gkjohnson/closed-chain-ik-js/actions)
+[![build](https://img.shields.io/github/actions/workflow/status/gkjohnson/closed-chain-ik-js/node.js.yml?style=flat-square&label=build&branch=main)](https://github.com/gkjohnson/closed-chain-ik-js/actions)
 [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/closed-chain-ik-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/closed-chain-ik-js/)
 [![github](https://flat.badgen.net/badge/icon/github?icon=github&label)](https://github.com/gkjohnson/closed-chain-ik-js/)
 [![twitter](https://flat.badgen.net/twitter/follow/garrettkjohnson)](https://twitter.com/garrettkjohnson)
