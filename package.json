@@ -19,6 +19,8 @@
     "ik"
   ],
   "type": "module",
+  "module": "src/index.js",
+  "types": "src/index.d.ts",
   "files": [
     "src/*"
   ],
@@ -61,8 +63,8 @@
     "xacro-parser": "^0.2.3"
   },
   "peerDependencies": {
-    "three": "^0.120.1",
-    "urdf-loader": "^0.9.2"
+    "three": ">=0.120.1",
+    "urdf-loader": ">=0.9.2"
   },
   "license": "Apache-2.0"
 }
