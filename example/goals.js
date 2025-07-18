@@ -5,7 +5,6 @@ import {
 	Scene,
 	DirectionalLight,
 	AmbientLight,
-	sRGBEncoding,
 	Group,
 } from 'three';
 import {
@@ -66,7 +65,6 @@ function init() {
 	renderer = new WebGLRenderer( { antialias: true } );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
@@ -85,7 +83,7 @@ function init() {
 	controls = new OrbitControls( camera, renderer.domElement );
 	transformControls = new TransformControls( camera, renderer.domElement );
 	transformControls.setSpace( 'local' );
-	scene.add( transformControls );
+	scene.add( transformControls.getHelper() );
 
 	transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
@@ -141,16 +139,7 @@ function init() {
 	goal.makeClosure( finalLink );
 
 	ikHelper = new IKRootsHelper( ikRoot );
-	ikHelper.setResolution( window.innerWidth, window.innerHeight );
-	ikHelper.traverse( c => {
-
-		if ( c.material ) {
-
-			c.material.color.set( 0xe91e63 ).convertSRGBToLinear();
-
-		}
-
-	} );
+	ikHelper.setColor( 0xe91e63 );
 	scene.add( ikHelper );
 
 	solver = new Solver( ikRoot );
@@ -207,8 +196,6 @@ function init() {
 
 		camera.aspect = aspect;
 		camera.updateProjectionMatrix();
-
-		ikHelper.setResolution( window.innerWidth, window.innerHeight );
 
 	} );
 

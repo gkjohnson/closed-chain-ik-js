@@ -5,26 +5,25 @@ import {
 	Scene,
 	DirectionalLight,
 	AmbientLight,
-	sRGBEncoding,
 	Group,
 	Raycaster,
 	Vector4,
 	Mesh,
-	SphereBufferGeometry,
+	SphereGeometry,
 	MeshBasicMaterial,
-	TorusBufferGeometry,
+	TorusGeometry,
 	BufferGeometry,
 	Float32BufferAttribute,
 	LineBasicMaterial,
 	AdditiveBlending,
 	Line,
-	RingBufferGeometry,
+	RingGeometry,
 	PCFSoftShadowMap,
 	Vector3,
 	Quaternion,
 	GridHelper,
 	Box3,
-	PlaneBufferGeometry,
+	PlaneGeometry,
 	ShadowMaterial,
 	MeshPhongMaterial,
 	BufferAttribute,
@@ -108,7 +107,6 @@ function init() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = PCFSoftShadowMap;
-	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
 	scene = new Scene();
@@ -121,13 +119,13 @@ function init() {
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
 	workspace.add( camera );
 
-	directionalLight = new DirectionalLight();
+	directionalLight = new DirectionalLight( 0xffffff, 3 );
 	directionalLight.position.set( 5, 30, 15 );
 	directionalLight.castShadow = true;
 	directionalLight.shadow.mapSize.set( 2048, 2048 );
 	scene.add( directionalLight );
 
-	const ambientLight = new AmbientLight( 0x263238, 1 );
+	const ambientLight = new AmbientLight( 0x263238, 3 );
 	scene.add( ambientLight );
 
 	const grid = new GridHelper( 10, 10, 0xffffff, 0xffffff );
@@ -137,7 +135,7 @@ function init() {
 	scene.add( grid );
 
 	ground = new Mesh(
-		new PlaneBufferGeometry(),
+		new PlaneGeometry(),
 		new ShadowMaterial( {
 
 			color: 0,
@@ -181,12 +179,12 @@ function init() {
 
 	// widgets
 	const whiteMat = new MeshBasicMaterial( { color: 0xffffff } );
-	intersectRing = new Mesh( new TorusBufferGeometry( 0.25, 0.02, 16, 100 ), whiteMat );
+	intersectRing = new Mesh( new TorusGeometry( 0.25, 0.02, 16, 100 ), whiteMat );
 	intersectRing.rotation.x = Math.PI / 2;
 	intersectRing.visible = false;
 	scene.add( intersectRing );
 
-	hitSphere = new Mesh( new SphereBufferGeometry( 0.005, 50, 50 ), whiteMat );
+	hitSphere = new Mesh( new SphereGeometry( 0.005, 50, 50 ), whiteMat );
 	scene.add( hitSphere );
 
 	// vr
@@ -400,13 +398,6 @@ function onResize() {
 	camera.aspect = aspect;
 	camera.updateProjectionMatrix();
 
-	if ( ikHelper ) {
-
-		ikHelper.setResolution( window.innerWidth, window.innerHeight );
-		drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-
-	}
-
 }
 
 function buildController( data ) {
@@ -432,7 +423,7 @@ function buildController( data ) {
 
 		case 'gaze':
 
-			geometry = new RingBufferGeometry( 0.02, 0.04, 32 ).translate( 0, 0, - 1 );
+			geometry = new RingGeometry( 0.02, 0.04, 32 ).translate( 0, 0, - 1 );
 			material = new MeshBasicMaterial( { opacity: 0.5, transparent: true } );
 			return new Mesh( geometry, material );
 
@@ -592,14 +583,14 @@ function render() {
 
 	while ( goalIcons.length < allGoals.length ) {
 
-		const color = new Color( 0xffca28 ).convertSRGBToLinear();
+		const color = new Color( 0xffca28 );
 		const group = new Group();
 		const mesh = new Mesh(
-			new SphereBufferGeometry( 0.01, 30, 30 ),
+			new SphereGeometry( 0.01, 30, 30 ),
 			new MeshBasicMaterial( { color } ),
 		);
 		const mesh2 = new Mesh(
-			new SphereBufferGeometry( 0.01, 30, 30 ),
+			new SphereGeometry( 0.01, 30, 30 ),
 			new MeshBasicMaterial( {
 				color,
 				opacity: 0.4,
@@ -928,15 +919,11 @@ function loadModel( promise ) {
 			// create the helper
 			ikHelper = new IKRootsHelper( ik );
 			ikHelper.setJointScale( helperScale );
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			ikHelper.setColor( ikHelper.color );
+			ikHelper.setColor( 0xe91e63 );
 
 			drawThroughIkHelper = new IKRootsHelper( ik );
 			drawThroughIkHelper.setJointScale( helperScale );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
+			drawThroughIkHelper.setColor( 0xe91e63 );
 			drawThroughIkHelper.setDrawThrough( true );
 
 			scene.add( urdfProxy, ikHelper, drawThroughIkHelper );

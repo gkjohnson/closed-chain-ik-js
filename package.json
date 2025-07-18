@@ -25,8 +25,8 @@
     "src/*"
   ],
   "scripts": {
-    "start": "concurrently \"cd example && parcel watch ./*.html --dist-dir ../local/ --public-url . --no-cache --no-hmr\" \"static-server\"",
-    "build": "cd example && parcel build ./*.html --dist-dir ../dist/ --public-url . --no-cache --no-content-hash",
+    "start": "vite --config ./vite.config.js",
+    "build": "vite build --config ./vite.config.js",
     "lint": "eslint \"./src/**/*.js\" \"./test/**/*.js\" && tsc -p tsconfig.json --noEmit",
     "test": "cd test && jest"
   },
@@ -43,27 +43,25 @@
     "gl-matrix": "^3.3.0",
     "linear-solve": "^1.2.1",
     "svd-js": "^1.1.1",
-    "three-mesh-bvh": "^0.5.11"
+    "three-mesh-bvh": "^0.9.1",
+    "vite": "^7.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
-    "@types/three": "^0.133.0",
-    "concurrently": "^5.3.0",
+    "@types/three": "^0.178.0",
     "eslint": "^7.32.0",
     "eslint-config-mdcs": "^5.0.0",
     "eslint-plugin-jest": "^24.1.0",
     "jest": "^26.4.2",
     "jest-cli": "^26.4.2",
-    "parcel": "^2.0.0",
-    "static-server": "^2.2.1",
-    "three": "^0.138.0",
+    "three": "^0.178.0",
     "typescript": "^4.4.3",
-    "urdf-loader": "^0.9.2",
+    "urdf-loader": "^0.12.4",
     "xacro-parser": "^0.2.3"
   },
   "peerDependencies": {
-    "three": ">=0.120.1",
+    "three": ">=0.159.0",
     "urdf-loader": ">=0.9.2"
   },
   "license": "Apache-2.0"

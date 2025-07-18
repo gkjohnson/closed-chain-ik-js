@@ -102,15 +102,6 @@ export class IKRootsHelper extends Group {
 
 	}
 
-	setResolution( width, height ) {
-
-		this.resolution.set( width, height );
-		this._updateHelpers();
-
-		return this;
-
-	}
-
 	updateStructure() {
 
 		const { joints, links } = this;

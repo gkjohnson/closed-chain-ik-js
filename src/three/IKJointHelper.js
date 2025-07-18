@@ -1,4 +1,4 @@
-import { BoxBufferGeometry, Vector3, CylinderBufferGeometry, SphereBufferGeometry, Mesh, MeshStandardMaterial } from 'three';
+import { BoxGeometry, Vector3, CylinderGeometry, SphereGeometry, Mesh, MeshStandardMaterial } from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { IKLinkHelper } from './IKLinkHelper.js';
 import { DOF } from '../core/Joint.js';
@@ -45,7 +45,7 @@ class RotationLimitHelper extends Mesh {
 		}
 
 		const dof = this._dof;
-		const geometry = new CylinderBufferGeometry( 0.075, 0.075, 1e-7, 100, 1, false, min, delta );
+		const geometry = new CylinderGeometry( 0.075, 0.075, 1e-7, 100, 1, false, min, delta );
 
 		if ( dof === DOF.EX ) {
 
@@ -72,7 +72,7 @@ export class IKJointHelper extends IKLinkHelper {
 		super( joint );
 
 		const xRotationMesh = new Mesh(
-			new CylinderBufferGeometry( 0.05, 0.05, 0.25, 30, 1 ).rotateZ( HALF_PI ),
+			new CylinderGeometry( 0.05, 0.05, 0.25, 30, 1 ).rotateZ( HALF_PI ),
 			new MeshStandardMaterial(),
 		);
 
@@ -82,7 +82,7 @@ export class IKJointHelper extends IKLinkHelper {
 		);
 
 		const yRotationMesh = new Mesh(
-			new CylinderBufferGeometry( 0.05, 0.05, 0.25, 30, 1 ),
+			new CylinderGeometry( 0.05, 0.05, 0.25, 30, 1 ),
 			new MeshStandardMaterial(),
 		);
 
@@ -92,7 +92,7 @@ export class IKJointHelper extends IKLinkHelper {
 		);
 
 		const zRotationMesh = new Mesh(
-			new CylinderBufferGeometry( 0.05, 0.05, 0.25, 30, 1 ).rotateX( HALF_PI ),
+			new CylinderGeometry( 0.05, 0.05, 0.25, 30, 1 ).rotateX( HALF_PI ),
 			new MeshStandardMaterial(),
 		);
 
@@ -103,12 +103,12 @@ export class IKJointHelper extends IKLinkHelper {
 		zRotationLimits.rotation.set( HALF_PI, 0, 0 );
 
 		const freeRotationMesh = new Mesh(
-			new SphereBufferGeometry( 0.05, 30, 30 ),
+			new SphereGeometry( 0.05, 30, 30 ),
 			new MeshStandardMaterial(),
 		);
 
 		const fixedMesh = new Mesh(
-			new BoxBufferGeometry( 0.05, 0.05, 0.05 ),
+			new BoxGeometry( 0.05, 0.05, 0.05 ),
 			new MeshStandardMaterial(),
 		);
 

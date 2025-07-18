@@ -5,7 +5,6 @@ import {
 	Scene,
 	DirectionalLight,
 	AmbientLight,
-	sRGBEncoding,
 	Group,
 	Vector3,
 	Mesh,
@@ -78,7 +77,6 @@ function init() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = PCFSoftShadowMap;
-	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.01, 100 );
@@ -90,7 +88,7 @@ function init() {
 	// init light / shadow camera
 	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
-	directionalLight.intensity = 0.75;
+	directionalLight.intensity = 3 * 0.75;
 	directionalLight.castShadow = true;
 	directionalLight.shadow.mapSize.setScalar( 2048 );
 
@@ -103,10 +101,10 @@ function init() {
 
 	// add a directional light to illuminate the other side
 	const otherDirectionalLight = new DirectionalLight();
-	otherDirectionalLight.intensity = 0.25;
+	otherDirectionalLight.intensity = 3 * 0.25;
 	otherDirectionalLight.position.set( - 1, - 3, - 2 );
 
-	const ambientLight = new AmbientLight( 0x1f1a1e, 1 );
+	const ambientLight = new AmbientLight( 0x1f1a1e, 3 );
 	scene.add( directionalLight, directionalLight.target, otherDirectionalLight, ambientLight );
 
 	// controls
@@ -116,7 +114,7 @@ function init() {
 
 	transformControls = new TransformControls( camera, renderer.domElement );
 	transformControls.setSpace( 'local' );
-	scene.add( transformControls );
+	scene.add( transformControls.getHelper() );
 
 	transformControls.addEventListener( 'mouseDown', () => {
 
@@ -312,15 +310,11 @@ function init() {
 
 			// generate ik visualization
 			ikHelper = new IKRootsHelper( [ ikRoot, platformGoal ] );
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			ikHelper.setColor( ikHelper.color );
+			ikHelper.setColor( 0xe91e63 );
 			ikHelper.setJointScale( 0.05 );
 
 			drawThroughIkHelper = new IKRootsHelper( [ ikRoot, platformGoal ] );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
+			drawThroughIkHelper.setColor( 0xe91e63 );
 			drawThroughIkHelper.setDrawThrough( true );
 			drawThroughIkHelper.setJointScale( 0.05 );
 
@@ -341,13 +335,6 @@ function init() {
 
 		camera.aspect = aspect;
 		camera.updateProjectionMatrix();
-
-		if ( ikHelper ) {
-
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-
-		}
 
 	} );
 

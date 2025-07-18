@@ -12,7 +12,7 @@ import {
 	Sphere,
 	BufferGeometry,
 } from 'three';
-import * as	BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const inverseMatrix = new Matrix4();
 class ProxySkinnedMesh extends SkinnedMesh {
@@ -251,7 +251,7 @@ export class ProxyBatchedMesh extends Group {
 			} );
 
 			const skeleton = new Skeleton( bones );
-			const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries );
+			const mergedGeometry = mergeGeometries( geometries );
 
 			const meshSet = new Set( infoArray.map( c => c.mesh ) );
 			const skinnedMesh = new ProxySkinnedMesh( mergedGeometry, material, Array.from( meshSet ) );

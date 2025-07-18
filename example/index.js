@@ -5,13 +5,12 @@ import {
 	Scene,
 	DirectionalLight,
 	AmbientLight,
-	sRGBEncoding,
 	Group,
 	Raycaster,
 	Vector2,
 	Vector4,
 	Mesh,
-	SphereBufferGeometry,
+	SphereGeometry,
 	MeshBasicMaterial,
 	PCFSoftShadowMap,
 	Box3,
@@ -103,7 +102,6 @@ function init() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = PCFSoftShadowMap;
-	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
@@ -112,19 +110,19 @@ function init() {
 	scene = new Scene();
 	scene.background = new Color( 0x131619 );
 
-	directionalLight = new DirectionalLight();
+	directionalLight = new DirectionalLight( 0xffffff, 3 );
 	directionalLight.position.set( 1, 3, 2 );
 	directionalLight.castShadow = true;
 	directionalLight.shadow.mapSize.setScalar( 2048 );
 	scene.add( directionalLight, directionalLight.target );
 
-	const ambientLight = new AmbientLight( 0x263238, 1 );
+	const ambientLight = new AmbientLight( 0x263238, 3 );
 	scene.add( ambientLight );
 
 	controls = new OrbitControls( camera, renderer.domElement );
 	transformControls = new TransformControls( camera, renderer.domElement );
 	transformControls.setSpace( 'local' );
-	scene.add( transformControls );
+	scene.add( transformControls.getHelper() );
 
 	transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
@@ -144,13 +142,6 @@ function init() {
 
 		camera.aspect = aspect;
 		camera.updateProjectionMatrix();
-
-		if ( ikHelper ) {
-
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-
-		}
 
 	} );
 
@@ -492,14 +483,14 @@ function render() {
 
 	while ( goalIcons.length < allGoals.length ) {
 
-		const color = new Color( 0xffca28 ).convertSRGBToLinear();
+		const color = new Color( 0xffca28 );
 		const group = new Group();
 		const mesh = new Mesh(
-			new SphereBufferGeometry( 0.05, 30, 30 ),
+			new SphereGeometry( 0.05, 30, 30 ),
 			new MeshBasicMaterial( { color } ),
 		);
 		const mesh2 = new Mesh(
-			new SphereBufferGeometry( 0.05, 30, 30 ),
+			new SphereGeometry( 0.05, 30, 30 ),
 			new MeshBasicMaterial( {
 				color,
 				opacity: 0.4,
@@ -754,14 +745,12 @@ function loadModel( promise ) {
 			// create the helper
 			ikHelper = new IKRootsHelper( ik );
 			ikHelper.setJointScale( helperScale );
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			ikHelper.color.set( 0xe91e63 );
 			ikHelper.setColor( ikHelper.color );
 
 			drawThroughIkHelper = new IKRootsHelper( ik );
 			drawThroughIkHelper.setJointScale( helperScale );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
+			drawThroughIkHelper.color.set( 0xe91e63 );
 			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
 			drawThroughIkHelper.setDrawThrough( true );
 

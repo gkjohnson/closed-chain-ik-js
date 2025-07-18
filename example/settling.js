@@ -5,13 +5,12 @@ import {
 	Scene,
 	DirectionalLight,
 	AmbientLight,
-	sRGBEncoding,
 	Group,
 	Raycaster,
 	Vector2,
 	Vector3,
 	Mesh,
-	PlaneBufferGeometry,
+	PlaneGeometry,
 	MeshStandardMaterial,
 	PCFSoftShadowMap,
 	BufferGeometry,
@@ -88,7 +87,6 @@ function init() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = PCFSoftShadowMap;
-	renderer.outputEncoding = sRGBEncoding;
 	document.body.appendChild( renderer.domElement );
 
 	camera = new PerspectiveCamera( 50, window.innerWidth / window.innerHeight );
@@ -100,7 +98,7 @@ function init() {
 	// init light / shadow camera
 	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
-	directionalLight.intensity = 0.75;
+	directionalLight.intensity = 3 * 0.75;
 	directionalLight.castShadow = true;
 	directionalLight.shadow.normalBias = 1e-4;
 	directionalLight.shadow.mapSize.setScalar( 1024 );
@@ -111,14 +109,14 @@ function init() {
 	shadowCam.updateProjectionMatrix();
 	scene.add( directionalLight, directionalLight.target );
 
-	const ambientLight = new AmbientLight( 0x1f1a1e, 1 );
+	const ambientLight = new AmbientLight( 0x1f1a1e, 3 );
 	scene.add( ambientLight );
 
 	// controls
 	controls = new OrbitControls( camera, renderer.domElement );
 	transformControls = new TransformControls( camera, renderer.domElement );
 	transformControls.setSpace( 'local' );
-	scene.add( transformControls );
+	scene.add( transformControls.getHelper() );
 
 	transformControls.addEventListener( 'mouseDown', () => controls.enabled = false );
 	transformControls.addEventListener( 'mouseUp', () => controls.enabled = true );
@@ -137,7 +135,7 @@ function init() {
 
 	// generate terrain
 	const dimension = 400;
-	terrain = new Mesh( new PlaneBufferGeometry( 25, 25, dimension, dimension ), new MeshStandardMaterial() );
+	terrain = new Mesh( new PlaneGeometry( 25, 25, dimension, dimension ), new MeshStandardMaterial() );
 
 	const posAttr = terrain.geometry.attributes.position;
 	for ( let x = 0; x <= dimension + 1; x ++ ) {
@@ -216,7 +214,7 @@ function init() {
 
 			result.traverse( c => {
 
-				if ( c.jointType === 'floating') {
+				if ( c.jointType === 'floating' ) {
 
 					c.jointType = 'fixed';
 
@@ -318,14 +316,10 @@ function init() {
 
 			// generate ik visualization
 			ikHelper = new IKRootsHelper( [ ikRoot ] );
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			ikHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			ikHelper.setColor( ikHelper.color );
+			ikHelper.setColor( 0xe91e63 );
 
 			drawThroughIkHelper = new IKRootsHelper( [ ikRoot ] );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.color.set( 0xe91e63 ).convertSRGBToLinear();
-			drawThroughIkHelper.setColor( drawThroughIkHelper.color );
+			drawThroughIkHelper.setColor( 0xe91e63 );
 			drawThroughIkHelper.setDrawThrough( true );
 
 			urdfRoot.rotation.set( Math.PI / 2, 0, 0 );
@@ -419,13 +413,6 @@ function init() {
 
 		camera.aspect = aspect;
 		camera.updateProjectionMatrix();
-
-		if ( ikHelper ) {
-
-			ikHelper.setResolution( window.innerWidth, window.innerHeight );
-			drawThroughIkHelper.setResolution( window.innerWidth, window.innerHeight );
-
-		}
 
 	} );
 

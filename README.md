@@ -83,6 +83,7 @@ const solver = new Solver( link1 );
 // ...
 
 // move the goal around and solve
+goal.setPosition( 1, 2, 3 );
 solver.solve();
 ```
 
@@ -737,14 +738,6 @@ setDrawThrough( drawThrough : Boolean ) : this
 ```
 
 Sets whether the helper will draw through the environment.
-
-### .setResolution
-
-```js
-setResolution( width : Number, height : Number ) : this
-```
-
-Sets the resolution of the renderer so the 2d lines can be rendered at the appropriate thickness.
 
 ### .updateStructure
 

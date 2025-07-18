@@ -16,7 +16,7 @@ let buffer = null;
 let floatBuffer = null;
 let byteBuffer = null;
 
-global.onmessage = function ( { data: e } ) {
+self.onmessage = function ( { data: e } ) {
 
 	const { type, data } = e;
 	switch ( type ) {
@@ -93,7 +93,7 @@ function updateSolve() {
 	// send a copy of the buffer back if not using shared array buffers
 	if ( useSharedArrayBuffers ) {
 
-		this.postMessage( {
+		self.postMessage( {
 
 			type: 'updateSolve',
 			data: {
@@ -105,7 +105,7 @@ function updateSolve() {
 	} else {
 
 		const resultsBuffer = buffer.slice();
-		this.postMessage( {
+		self.postMessage( {
 
 			type: 'updateSolve',
 			data: {
