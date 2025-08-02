@@ -248,8 +248,6 @@ export function loadRobonaut() {
 		const manager = new LoadingManager();
 		manager.onLoad = () => {
 
-			convertColorsAndTextures( urdf );
-
 			resolve( { ik, urdf, goalMap, helperScale: 0.2 } );
 
 		};
