@@ -39,6 +39,12 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [PI Hexapod](https://github.com/PI-PhysikInstrumente/PI_ROS_Driver)
 
+# Installation
+
+```
+npm install github:@gkjohnson/closed-chain-ik-js
+```
+
 # Use
 
 ## Simple 2 DoF System
