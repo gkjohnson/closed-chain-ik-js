@@ -179,13 +179,11 @@ function svd( ru, rq, rv, matrix ) {
 
 	}
 
-	const qrows = q.length;
-	for ( let r = 0; r < qrows; r ++ ) {
+	// Matrix pool already zeros rq, just set diagonal
+	const qlen = q.length;
+	for ( let r = 0; r < qlen; r ++ ) {
 
-		const rqrow = rq[ r ];
-		const qval = q[ r ];
-		rqrow.fill( 0 );
-		rqrow[ r ] = qval;
+		rq[ r ][ r ] = q[ r ];
 
 	}
 
@@ -309,6 +307,7 @@ function set( matrix, r, c, value ) {
 export const mat = {
 	transpose,
 	identity,
+	zero,
 	scale,
 	multiply,
 	create,
