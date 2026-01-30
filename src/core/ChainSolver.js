@@ -174,6 +174,7 @@ export class ChainSolver {
 			prevDoFValues,
 			useSVD,
 			matrixPool,
+			dampingFactor,
 		} = this;
 
 		let iterations = 0;
@@ -281,22 +282,13 @@ export class ChainSolver {
 					const qInverse = matrixPool.get( k, k );
 					mat.transpose( uTranspose, u );
 
-					// if the diagonal value is close to 0 when taking the inverse
-					// then set it to zero.
+					// Damped pseudo-inverse: σ / (σ² + λ²)
+					// This gives smooth behavior near singularities instead of hard truncation
+					const lambda2 = dampingFactor ** 2;
 					for ( let i = 0, l = q.length; i < l; i ++ ) {
 
-						const val = mat.get( q, i, i );
-						let inv;
-						if ( Math.abs( val ) < 0.001 ) {
-
-							inv = 0;
-
-						} else {
-
-							inv = 1 / val;
-
-						}
-
+						const sigma = mat.get( q, i, i );
+						const inv = sigma / ( sigma * sigma + lambda2 );
 						mat.set( qInverse, i, i, inv );
 
 					}
