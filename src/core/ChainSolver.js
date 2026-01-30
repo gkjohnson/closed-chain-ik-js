@@ -285,7 +285,7 @@ export class ChainSolver {
 					// then set it to zero.
 					for ( let i = 0, l = q.length; i < l; i ++ ) {
 
-						const val = q[ i ][ i ];
+						const val = mat.get( q, i, i );
 						let inv;
 						if ( Math.abs( val ) < 0.001 ) {
 
@@ -297,7 +297,7 @@ export class ChainSolver {
 
 						}
 
-						qInverse[ i ][ i ] = inv;
+						mat.set( qInverse, i, i, inv );
 
 					}
 
@@ -381,7 +381,7 @@ export class ChainSolver {
 
 							if ( isLocked && lockedDoF[ dof ] ) continue;
 
-							restPose[ colIndex ][ 0 ] = dofRestPose[ dof ] - dofValues[ dof ];
+							mat.set( restPose, colIndex, 0, dofRestPose[ dof ] - dofValues[ dof ] );
 							colIndex ++;
 
 						}
@@ -390,7 +390,7 @@ export class ChainSolver {
 
 						for ( let d = 0; d < colCount; d ++ ) {
 
-							restPose[ colIndex ][ 0 ] = 0;
+							mat.set( restPose, colIndex, 0, 0 );
 							colIndex ++;
 
 						}
@@ -415,8 +415,8 @@ export class ChainSolver {
 
 				for ( let r = 0; r < freeDoF; r ++ ) {
 
-					const val = restPoseResult[ r ][ 0 ];
-					deltaTheta[ r ][ 0 ] += val * restPoseFactor;
+					const val = mat.get( restPoseResult, r, 0 );
+					mat.set( deltaTheta, r, 0, mat.get( deltaTheta, r, 0 ) + val * restPoseFactor );
 
 				}
 
@@ -428,7 +428,7 @@ export class ChainSolver {
 				let stalled = true;
 				for ( let i = 0, l = deltaTheta.length; i < l; i ++ ) {
 
-					const delta = deltaTheta[ i ][ 0 ];
+					const delta = mat.get( deltaTheta, i, 0 );
 					if ( Math.abs( delta ) > stallThreshold ) {
 
 						stalled = false;
@@ -496,7 +496,7 @@ export class ChainSolver {
 				}
 
 				const value = joint.getDoFValue( dof );
-				const hitLimit = joint.setDoFValue( dof, value + deltaTheta[ dti ][ 0 ] );
+				const hitLimit = joint.setDoFValue( dof, value + mat.get( deltaTheta, dti, 0 ) );
 
 				// lock the joint if we hit a limit
 				if ( hitLimit ) {
@@ -640,16 +640,16 @@ export class ChainSolver {
 								for ( let i = 0; i < translationDoFCount; i ++ ) {
 
 									const d = dof[ i ];
-									outJacobian[ rowIndex + i ][ colIndex ] = tempPos[ d ];
+									mat.set( outJacobian, rowIndex + i, colIndex, tempPos[ d ] );
 
 								}
 
 								if ( rotationDoFCount === 3 ) {
 
-									outJacobian[ rowIndex + translationDoFCount + 0 ][ colIndex ] = tempQuat[ 0 ];
-									outJacobian[ rowIndex + translationDoFCount + 1 ][ colIndex ] = tempQuat[ 1 ];
-									outJacobian[ rowIndex + translationDoFCount + 2 ][ colIndex ] = tempQuat[ 2 ];
-									outJacobian[ rowIndex + translationDoFCount + 3 ][ colIndex ] = tempQuat[ 3 ];
+									mat.set( outJacobian, rowIndex + translationDoFCount + 0, colIndex, tempQuat[ 0 ] );
+									mat.set( outJacobian, rowIndex + translationDoFCount + 1, colIndex, tempQuat[ 1 ] );
+									mat.set( outJacobian, rowIndex + translationDoFCount + 2, colIndex, tempQuat[ 2 ] );
+									mat.set( outJacobian, rowIndex + translationDoFCount + 3, colIndex, tempQuat[ 3 ] );
 									rowIndex += 4;
 
 								}
@@ -659,15 +659,15 @@ export class ChainSolver {
 							} else {
 
 								// set translation
-								outJacobian[ rowIndex + 0 ][ colIndex ] = tempPos[ 0 ];
-								outJacobian[ rowIndex + 1 ][ colIndex ] = tempPos[ 1 ];
-								outJacobian[ rowIndex + 2 ][ colIndex ] = tempPos[ 2 ];
+								mat.set( outJacobian, rowIndex + 0, colIndex, tempPos[ 0 ] );
+								mat.set( outJacobian, rowIndex + 1, colIndex, tempPos[ 1 ] );
+								mat.set( outJacobian, rowIndex + 2, colIndex, tempPos[ 2 ] );
 
 								// set rotation
-								outJacobian[ rowIndex + 3 ][ colIndex ] = tempQuat[ 0 ];
-								outJacobian[ rowIndex + 4 ][ colIndex ] = tempQuat[ 1 ];
-								outJacobian[ rowIndex + 5 ][ colIndex ] = tempQuat[ 2 ];
-								outJacobian[ rowIndex + 6 ][ colIndex ] = tempQuat[ 3 ];
+								mat.set( outJacobian, rowIndex + 3, colIndex, tempQuat[ 0 ] );
+								mat.set( outJacobian, rowIndex + 4, colIndex, tempQuat[ 1 ] );
+								mat.set( outJacobian, rowIndex + 5, colIndex, tempQuat[ 2 ] );
+								mat.set( outJacobian, rowIndex + 6, colIndex, tempQuat[ 3 ] );
 								rowIndex += 7;
 
 							}
@@ -689,7 +689,7 @@ export class ChainSolver {
 
 							for ( let i = 0; i < totalRows; i ++ ) {
 
-								outJacobian[ rowIndex + i ][ colIndex ] = 0;
+								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
 
 							}
 
@@ -716,7 +716,7 @@ export class ChainSolver {
 							// use the euler angles.
 							for ( let i = 0; i < rowCount; i ++ ) {
 
-								outJacobian[ rowIndex + colIndex ][ colIndex ] = - 1;
+								mat.set( outJacobian, rowIndex + colIndex, colIndex, - 1 );
 
 							}
 
@@ -724,7 +724,7 @@ export class ChainSolver {
 
 							for ( let i = 0; i < rowCount; i ++ ) {
 
-								outJacobian[ rowIndex + i ][ colIndex ] = 0;
+								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
 
 							}
 

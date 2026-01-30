@@ -271,6 +271,19 @@ function log( matrix, dec ) {
 
 }
 
+// accessors
+function get( matrix, r, c ) {
+
+	return matrix[ r ][ c ];
+
+}
+
+function set( matrix, r, c, value ) {
+
+	matrix[ r ][ c ] = value;
+
+}
+
 export const mat = {
 	transpose,
 	identity,
@@ -288,4 +301,6 @@ export const mat = {
 	magnitude,
 	toString,
 	log,
+	get,
+	set,
 };
