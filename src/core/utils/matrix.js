@@ -9,9 +9,12 @@ export class Matrix extends Array {
 		this.rows = rows;
 		this.cols = cols;
 
+		const raw = new Float64Array( rows * cols );
+		this.raw = raw;
+
 		for ( let i = 0; i < rows; i ++ ) {
 
-			this[ i ] = new Float64Array( cols );
+			this[ i ] = new Float64Array( raw.buffer, i * cols * 8, cols );
 
 		}
 
