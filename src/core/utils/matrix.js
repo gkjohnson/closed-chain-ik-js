@@ -179,7 +179,7 @@ function svd( ru, rq, rv, matrix ) {
 
 	}
 
-	// Matrix pool already zeros rq, just set diagonal
+	// Set singular values on diagonal (assumes rq is zeroed)
 	const qlen = q.length;
 	for ( let r = 0; r < qlen; r ++ ) {
 
