@@ -51,6 +51,16 @@ function identity( outMatrix ) {
 
 }
 
+function zero( outMatrix ) {
+
+	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
+
+		outMatrix[ r ].fill( 0 );
+
+	}
+
+}
+
 function scale( outMatrix, matrix, scalar ) {
 
 	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
