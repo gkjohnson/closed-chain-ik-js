@@ -9,6 +9,7 @@ export class Solver {
 		this.matrixPool = new MatrixPool();
 
 		this.useSVD = false;
+		this.useAnalyticalJacobian = false;
 
 		this.maxIterations = 5;
 		this.stallThreshold = 1e-4;
@@ -179,6 +180,7 @@ export class Solver {
 			s.matrixPool = this.matrixPool;
 
 			s.useSVD = this.useSVD;
+			s.useAnalyticalJacobian = this.useAnalyticalJacobian;
 
 			s.maxIterations = this.maxIterations;
 			s.stallThreshold = this.stallThreshold;

@@ -13,6 +13,86 @@ const tempPos = new Float64Array( 3 );
 const tempQuat2 = new Float64Array( 4 );
 const tempPos2 = new Float64Array( 3 );
 
+// temp variables for analytical Jacobian
+const jointWorldPos = new Float64Array( 3 );
+const targetWorldPos = new Float64Array( 3 );
+const axisWorld = new Float64Array( 3 );
+const toTarget = new Float64Array( 3 );
+const crossResult = new Float64Array( 3 );
+
+// Local axis vectors for each DOF
+const LOCAL_AXES = [
+	new Float64Array( [ 1, 0, 0 ] ), // X
+	new Float64Array( [ 0, 1, 0 ] ), // Y
+	new Float64Array( [ 0, 0, 1 ] ), // Z
+	new Float64Array( [ 1, 0, 0 ] ), // EX (rotation around X)
+	new Float64Array( [ 0, 1, 0 ] ), // EY (rotation around Y)
+	new Float64Array( [ 0, 0, 1 ] ), // EZ (rotation around Z)
+];
+
+// Temp quaternion for axis transformation
+const tempAxisQuat = new Float64Array( 4 );
+
+// Compute analytical Jacobian column for a single DOF's effect on a target position/orientation
+// dof: the degree of freedom index (0-5)
+// jointMatrix: the joint's identity DoF world matrix (4x4) - frame before DoF rotation
+// targetPos: the target position in world space (vec3)
+// outPosJacobian: output position jacobian (vec3) - how target position changes
+// outQuatJacobian: output quaternion jacobian (vec4) - how target orientation changes
+// translationFactor/rotationFactor: scaling factors
+function computeAnalyticalJacobianColumn(
+	dof,
+	jointMatrix,
+	targetPos,
+	outPosJacobian,
+	outQuatJacobian,
+	translationFactor,
+	rotationFactor
+) {
+
+	// Get joint position from its world matrix
+	mat4.getTranslation( jointWorldPos, jointMatrix );
+
+	// Transform local axis to world space using the rotation part of the matrix
+	// Extract rotation as quaternion and use it to rotate the axis
+	mat4.getRotation( tempAxisQuat, jointMatrix );
+	const localAxis = LOCAL_AXES[ dof ];
+	vec3.transformQuat( axisWorld, localAxis, tempAxisQuat );
+
+	if ( dof < 3 ) {
+
+		// Translational DOF: position change is just the axis direction
+		outPosJacobian[ 0 ] = axisWorld[ 0 ] * translationFactor;
+		outPosJacobian[ 1 ] = axisWorld[ 1 ] * translationFactor;
+		outPosJacobian[ 2 ] = axisWorld[ 2 ] * translationFactor;
+
+		// Translation doesn't affect orientation
+		outQuatJacobian[ 0 ] = 0;
+		outQuatJacobian[ 1 ] = 0;
+		outQuatJacobian[ 2 ] = 0;
+		outQuatJacobian[ 3 ] = 0;
+
+	} else {
+
+		// Rotational DOF: position change is axis × (target - joint)
+		vec3.subtract( toTarget, targetPos, jointWorldPos );
+		vec3.cross( crossResult, axisWorld, toTarget );
+
+		outPosJacobian[ 0 ] = crossResult[ 0 ] * translationFactor;
+		outPosJacobian[ 1 ] = crossResult[ 1 ] * translationFactor;
+		outPosJacobian[ 2 ] = crossResult[ 2 ] * translationFactor;
+
+		// Quaternion derivative for small rotation: ~0.5 * axis
+		// This is an approximation for the derivative of quaternion error
+		outQuatJacobian[ 0 ] = 0.5 * axisWorld[ 0 ] * rotationFactor;
+		outQuatJacobian[ 1 ] = 0.5 * axisWorld[ 1 ] * rotationFactor;
+		outQuatJacobian[ 2 ] = 0.5 * axisWorld[ 2 ] * rotationFactor;
+		outQuatJacobian[ 3 ] = 0;
+
+	}
+
+}
+
 const targetJoints = [];
 const freeJoints = [];
 const errorResultInfo = {
@@ -70,6 +150,7 @@ export class ChainSolver {
 		this.matrixPool = null;
 
 		this.useSVD = false;
+		this.useAnalyticalJacobian = false;
 
 		this.translationConvergeThreshold = - 1;
 		this.rotationConvergeThreshold = - 1;
@@ -544,6 +625,7 @@ export class ChainSolver {
 			lockedJointDoFCount,
 			translationFactor,
 			rotationFactor,
+			useAnalyticalJacobian,
 		} = this;
 
 		// TODO: abstract this
@@ -598,41 +680,81 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set. Quat is only
-							// needed if 3 eulers are used.
-							// TODO: these could be cached per target joint get the current error within the closure joint
+							if ( useAnalyticalJacobian ) {
 
-							// Get the error from child towards the closure target
-							targetJoint.getClosureError( tempPos, tempQuat );
-							if ( relevantConnectedClosures.has( targetJoint ) ) {
+								// Analytical Jacobian computation
+								// Determine which position we're affecting and the sign
+								const isConnected = relevantConnectedClosures.has( targetJoint );
+								const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
 
-								// If this is affecting a link connected to a closure joint then adjust that child link by
-								// the delta rotation.
-								mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.child.matrixWorld );
-								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+								// Get the target position
+								mat4.getTranslation( targetWorldPos, affectedMatrix );
 
-								// Get the new error
-								getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempQuat2 );
+								// Compute analytical Jacobian column
+								// Use cachedIdentityDoFMatrixWorld - the axis is defined in the frame BEFORE
+								// the DoF rotation is applied (the axis doesn't rotate with the joint)
+								computeAnalyticalJacobianColumn(
+									dof,
+									freeJoint.cachedIdentityDoFMatrixWorld,
+									targetWorldPos,
+									tempPos,
+									tempQuat,
+									translationFactor,
+									rotationFactor
+								);
+
+								// The numerical Jacobian computes (old_error - new_error)/delta = -d(error)/d(theta)
+								// Our analytical gives +d(position)/d(theta), so we need to negate
+								// Additionally, for connected closures (error = closure - child), moving child
+								// means the derivative has opposite sign, so those cancel out to positive
+								if ( ! isConnected ) {
+
+									tempPos[ 0 ] = - tempPos[ 0 ];
+									tempPos[ 1 ] = - tempPos[ 1 ];
+									tempPos[ 2 ] = - tempPos[ 2 ];
+									tempQuat[ 0 ] = - tempQuat[ 0 ];
+									tempQuat[ 1 ] = - tempQuat[ 1 ];
+									tempQuat[ 2 ] = - tempQuat[ 2 ];
+									tempQuat[ 3 ] = - tempQuat[ 3 ];
+
+								}
 
 							} else {
 
-								// If this is directly affecting a closure joint then adjust that child link by the delta
-								// rotation.
-								mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.matrixWorld );
-								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+								// Numerical Jacobian computation (original code)
+								// Get the error from child towards the closure target
+								targetJoint.getClosureError( tempPos, tempQuat );
+								if ( relevantConnectedClosures.has( targetJoint ) ) {
 
-								// Get the new error
-								getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempQuat2 );
+									// If this is affecting a link connected to a closure joint then adjust that child link by
+									// the delta rotation.
+									mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.child.matrixWorld );
+									mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+
+									// Get the new error
+									getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempQuat2 );
+
+								} else {
+
+									// If this is directly affecting a closure joint then adjust that child link by the delta
+									// rotation.
+									mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.matrixWorld );
+									mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+
+									// Get the new error
+									getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempQuat2 );
+
+								}
+
+								// Get the amount that the rotation and translation error changed due to the
+								// small DoF adjustment to serve as the derivative.
+								vec3.subtract( tempPos, tempPos, tempPos2 );
+								vec3.scale( tempPos, tempPos, translationFactor / delta );
+
+								vec4.subtract( tempQuat, tempQuat, tempQuat2 );
+								vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
 
 							}
-
-							// Get the amount that the rotation and translation error changed due to the
-							// small DoF adjustment to serve as the derivative.
-							vec3.subtract( tempPos, tempPos, tempPos2 );
-							vec3.scale( tempPos, tempPos, translationFactor / delta );
-
-							vec4.subtract( tempQuat, tempQuat, tempQuat2 );
-							vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
 
 							if ( targetJoint.isGoal ) {
 
