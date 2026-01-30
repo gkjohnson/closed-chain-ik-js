@@ -388,12 +388,8 @@ export class ChainSolver {
 
 					} else {
 
-						for ( let d = 0; d < colCount; d ++ ) {
-
-							mat.set( restPose, colIndex, 0, 0 );
-							colIndex ++;
-
-						}
+						// No rest pose set, values already zeroed
+						colIndex += colCount;
 
 					}
 
@@ -674,7 +670,7 @@ export class ChainSolver {
 
 						} else {
 
-							// if the target isn't relevant then there's no delta
+							// Target isn't relevant, values already zeroed
 							let totalRows = 7;
 							if ( targetJoint.isGoal ) {
 
@@ -684,12 +680,6 @@ export class ChainSolver {
 									totalRows += 4;
 
 								}
-
-							}
-
-							for ( let i = 0; i < totalRows; i ++ ) {
-
-								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
 
 							}
 
@@ -720,16 +710,9 @@ export class ChainSolver {
 
 							}
 
-						} else {
-
-							for ( let i = 0; i < rowCount; i ++ ) {
-
-								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
-
-							}
-
 						}
 
+						// else: values already zeroed
 						rowIndex += rowCount;
 
 					}
