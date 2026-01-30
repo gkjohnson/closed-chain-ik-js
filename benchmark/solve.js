@@ -1,0 +1,164 @@
+import { Link } from '../src/core/Link.js';
+import { Joint, DOF } from '../src/core/Joint.js';
+import { Goal } from '../src/core/Goal.js';
+import { Solver } from '../src/core/Solver.js';
+import { SOLVE_STATUS_NAMES } from '../src/core/ChainSolver.js';
+
+// Build a serial arm with N joints and a goal at the end
+function buildArm( numJoints = 6 ) {
+
+	const root = new Link();
+	root.name = 'root';
+
+	let current = root;
+	const joints = [];
+
+	for ( let i = 0; i < numJoints; i ++ ) {
+
+		const joint = new Joint();
+		joint.name = `joint_${ i }`;
+		// Alternate rotation axes for more complex motion
+		joint.setDoF( i % 2 === 0 ? DOF.EZ : DOF.EX );
+		joint.position[ 1 ] = 1; // 1 unit offset along Y
+		joint.setMatrixNeedsUpdate();
+		joints.push( joint );
+
+		current.addChild( joint );
+
+		const link = new Link();
+		link.name = `link_${ i }`;
+		joint.addChild( link );
+
+		current = link;
+
+	}
+
+	// Initialize joints with slight bends to avoid singularities
+	for ( let i = 0, l = joints.length; i < l; i ++ ) {
+
+		// Alternate small positive/negative angles
+		const angle = ( i % 2 === 0 ? 0.1 : - 0.1 );
+		joints[ i ].setDoFValues( angle );
+		joints[ i ].setMatrixDoFNeedsUpdate();
+
+	}
+
+	// Create end effector goal using Goal class (like the examples do)
+	const endEffector = current;
+	const goal = new Goal();
+	goal.name = 'goal';
+	goal.makeClosure( endEffector );
+
+	// Position goal at end effector's initial world position
+	root.updateMatrixWorld( true );
+	endEffector.getWorldPosition( goal.position );
+	endEffector.getWorldQuaternion( goal.quaternion );
+	goal.setMatrixNeedsUpdate();
+
+	return { root, goal, joints, endEffector };
+
+}
+
+// Set goal to a fixed reachable position
+// Arm has numJoints segments of 1 unit each, pointing up from origin
+// So end effector starts at (0, numJoints, 0)
+function setGoalPosition( goal, numJoints, iteration ) {
+
+	// Fixed positions that are reachable - arm can bend to reach these
+	// Cycle through a few different targets
+	const targets = [
+		[ 1, numJoints - 1, 0 ],
+		[ - 1, numJoints - 1, 0 ],
+		[ 0, numJoints - 1, 1 ],
+		[ 0, numJoints - 1, - 1 ],
+		[ 0.5, numJoints - 0.5, 0.5 ],
+	];
+
+	const target = targets[ iteration % targets.length ];
+	goal.position[ 0 ] = target[ 0 ];
+	goal.position[ 1 ] = target[ 1 ];
+	goal.position[ 2 ] = target[ 2 ];
+	goal.setMatrixNeedsUpdate();
+
+}
+
+// Run benchmark
+function runBenchmark( numJoints = 10, iterations = 100 ) {
+
+	const { root, goal } = buildArm( numJoints );
+
+	// Goal must be passed as a root so solver finds the closure chain
+	const solver = new Solver( [ root, goal ] );
+	solver.maxIterations = 10;
+	solver.restPoseFactor = 0.001;
+	solver.dampingFactor = 0.01; // Higher damping for stability
+
+	// Debug: Check if solver found any chains
+	if ( solver.solvers.length === 0 ) {
+
+		console.error( 'ERROR: No chains found by solver!' );
+		return null;
+
+	}
+
+	console.log( `  Chains found: ${ solver.solvers.length }` );
+	console.log( `  Joints in chain: ${ solver.solvers[ 0 ].chain.length }` );
+
+	// Warm up
+	for ( let i = 0; i < 10; i ++ ) {
+
+		setGoalPosition( goal, numJoints, i );
+		solver.solve();
+
+	}
+
+	// Benchmark
+	const times = [];
+	const statusCounts = {};
+
+	for ( let i = 0; i < iterations; i ++ ) {
+
+		setGoalPosition( goal, numJoints, i );
+
+		const start = performance.now();
+		const results = solver.solve();
+		const end = performance.now();
+
+		times.push( end - start );
+
+		// Track status - result is just the status number, not an object
+		for ( let j = 0, l = results.length; j < l; j ++ ) {
+
+			const status = results[ j ];
+			const statusName = SOLVE_STATUS_NAMES[ status ] ?? `unknown(${ status })`;
+			statusCounts[ statusName ] = ( statusCounts[ statusName ] || 0 ) + 1;
+
+		}
+
+	}
+
+	const avg = times.reduce( ( a, b ) => a + b, 0 ) / times.length;
+	const min = Math.min( ...times );
+	const max = Math.max( ...times );
+
+	return { avg, min, max, statusCounts };
+
+}
+
+// Main
+const NUM_JOINTS = 100;
+const ITERATIONS = 100;
+
+console.log( 'IK Solver Benchmark' );
+console.log( '===================' );
+console.log( `${ NUM_JOINTS }-DOF serial arm, ${ ITERATIONS } solves\n` );
+
+const result = runBenchmark( NUM_JOINTS, ITERATIONS );
+if ( result ) {
+
+	console.log( `  Avg: ${ result.avg.toFixed( 3 ) }ms` );
+	console.log( `  Min: ${ result.min.toFixed( 3 ) }ms` );
+	console.log( `  Max: ${ result.max.toFixed( 3 ) }ms` );
+	console.log( `  Status: ${ JSON.stringify( result.statusCounts ) }` );
+
+}
