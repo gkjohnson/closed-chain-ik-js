@@ -1,6 +1,24 @@
 import linearSolve from 'linear-solve';
 import { SVD } from 'svd-js';
 
+export class Matrix extends Array {
+
+	constructor( rows, cols ) {
+
+		super( rows );
+		this.rows = rows;
+		this.cols = cols;
+
+		for ( let i = 0; i < rows; i ++ ) {
+
+			this[ i ] = new Float64Array( cols );
+
+		}
+
+	}
+
+}
+
 function transpose( outMatrix, a ) {
 
 	const tr = a.length;
@@ -89,16 +107,9 @@ function multiply( outMatrix, a, b ) {
 
 }
 
-function create( row, col ) {
+function create( rows, cols ) {
 
-	const result = new Array( row );
-	for ( let i = 0; i < row; i ++ ) {
-
-		result[ i ] = new Float64Array( col );
-
-	}
-
-	return result;
+	return new Matrix( rows, cols );
 
 }
 
