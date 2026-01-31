@@ -1,7 +1,7 @@
 // https://github.com/toji/gl-matrix/issues/329
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { RAD2DEG } from './constants.js';
-import { smallestDifferenceQuaternion, rotationVectorFromQuaternions } from './quaternion.js';
+import { smallestDifferenceQuaternion, rotationVectorFromQuaternions, quaternionDelta, rotationVectorFromQuaternion } from './quaternion.js';
 
 const tempPos = new Float64Array( 3 );
 const tempQuat = new Float64Array( 4 );
@@ -65,7 +65,9 @@ export function getMatrixDifferenceRotVec( a, b, outPos, outRotVec ) {
 	mat4.getRotation( tempQuat2, b );
 
 	vec3.subtract( outPos, tempPos, tempPos2 );
-	rotationVectorFromQuaternions( outRotVec, tempQuat, tempQuat2 );
+
+	quaternionDelta( tempQuat, tempQuat, tempQuat2 );
+	rotationVectorFromQuaternion( outRotVec, tempQuat );
 
 	// error of A - B (rotation from B to A as rotation vector)
 
