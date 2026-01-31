@@ -608,7 +608,7 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: If this is a Goal it only adds 1 or 2 fields if only two axes are set.
+							// TODO: If this is a Goal it should only adds 1 or 2 fields if only two axes are set.
 							// TODO: these could be cached per target joint get the current error within the closure joint
 
 							// Get the error from child towards the closure target as rotation vector

@@ -23,7 +23,7 @@ export function smallestDifferenceQuaternion( output, a, b ) {
 // Convert a quaternion to a "rotation vector" - a 3-element array where the direction
 // is the rotation axis and the magnitude is the rotation angle in radians. Also known as
 // "Exponential coordinates".
-// This representation has no gimbal lock and a unique representation for rotations [-π, π].
+// This representation has no gimbal lock and a unique representation for rotations [- PI, PI].
 export function rotationVectorFromQuaternion( output, q ) {
 
 	// ensure the quaternion is normalized otherwise the axis angle function can fail
@@ -44,6 +44,7 @@ export function rotationVectorFromQuaternion( output, q ) {
 // Compute the quaternion that rotates from b to a: q_delta = a * conjugate(b)
 export function quaternionDelta( output, a, b ) {
 
+	// conjugate is the same as inverse for normalized quaternions
 	quat.conjugate( tempQuat2, b );
 	quat.multiply( output, a, tempQuat2 );
 
