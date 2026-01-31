@@ -19,29 +19,20 @@ export function smallestDifferenceQuaternion( output, a, b ) {
 
 }
 
-// Compute the rotation from quaternion b to quaternion a as a "rotation vector".
-//
-// A rotation vector is a 3-element array where the direction is the rotation axis
-// and the magnitude is the rotation angle (in radians). This representation is also
-// known as:
-//   - Exponential coordinates (Lie group theory, Modern Robotics textbook)
-//   - Rodrigues vector (computer vision, though technically that's tan(θ/2)*axis)
-//   - Axis-angle compact form (when axis and angle are combined into one vector)
-//   - so(3) element (the Lie algebra of SO(3))
-//
-// This representation has no gimbal lock and a unique representation for small
-// rotations, making it ideal for IK error computation.
-const tempErrorQuat = new Float64Array( 4 );
+// Convert a quaternion to a "rotation vector" - a 3-element array where the direction
+// is the rotation axis and the magnitude is the rotation angle in radians. Also known as
+// "Exponential coordinates".
+// This representation has no gimbal lock and a unique representation for rotations [ - PI, PI].
 export function rotationVectorFromQuaternions( output, a, b ) {
 
 	// q_error = a * conjugate(b) - rotation from b to a
-	quat.conjugate( tempErrorQuat, b );
-	quat.multiply( tempErrorQuat, a, tempErrorQuat );
+	quat.conjugate( tempQuat, b );
+	quat.multiply( tempQuat, a, tempQuat );
 
-	quat.normalize( tempErrorQuat, tempErrorQuat );
+	quat.normalize( tempQuat, tempQuat );
 
 	// Extract axis and angle, then ensure we take the short path (angle <= π)
-	let angle = quat.getAxisAngle( output, tempErrorQuat );
+	let angle = quat.getAxisAngle( output, tempQuat );
 	if ( angle > Math.PI ) {
 
 		angle -= 2 * Math.PI;
