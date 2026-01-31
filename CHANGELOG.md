@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Basic benchmark for solve.
 - Used damped pseudo inverse for SVD case.
+- Make progressively smaller step sizes towards goals if an IK chain is diverging.
 
 ### Changed
 - Simplified internal Matrix initialization.
