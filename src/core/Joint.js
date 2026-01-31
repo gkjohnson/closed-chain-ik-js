@@ -1,7 +1,7 @@
 import { mat4, quat } from 'gl-matrix';
 import { Frame } from './Frame.js';
 import { getClosestEulerRepresentation, toSmallestEulerValueDistance } from './utils/euler.js';
-import { getEuler, getMatrixDifference } from './utils/glmatrix.js';
+import { getEuler, getMatrixDifference, getMatrixDifferenceRotVec } from './utils/glmatrix.js';
 import { RAD2DEG, DEG2RAD } from './utils/constants.js';
 
 // degrees of freedom axes
@@ -430,6 +430,23 @@ export class Joint extends Frame {
 
 		// error from this position to child
 		getMatrixDifference( this.matrixWorld, this.child.matrixWorld, outPos, outQuat );
+
+	}
+
+	// Returns the error as position (3) and rotation vector (3) instead of quaternion (4)
+	getClosureErrorRotVec( outPos, outRotVec ) {
+
+		if ( ! this.isClosure ) {
+
+			throw new Error( 'Joint: Cannot get closure error on non closure Joint.' );
+
+		}
+
+		this.updateMatrixWorld();
+		this.child.updateMatrixWorld();
+
+		// error from this position to child as rotation vector
+		getMatrixDifferenceRotVec( this.matrixWorld, this.child.matrixWorld, outPos, outRotVec );
 
 	}
 

@@ -1,16 +1,16 @@
-import { vec3, vec4, mat4 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
-import { getMatrixDifference } from './utils/glmatrix.js';
+import { getMatrixDifferenceRotVec } from './utils/glmatrix.js';
 
 // temp reusable variables
 const targetRelativeToJointMatrix = new Float64Array( 16 );
 const targetDeltaWorldMatrix = new Float64Array( 16 );
 const tempDeltaWorldMatrix = new Float64Array( 16 );
 const tempInverseMatrixWorld = new Float64Array( 16 );
-const tempQuat = new Float64Array( 4 );
+const tempRotVec = new Float64Array( 3 );
 const tempPos = new Float64Array( 3 );
-const tempQuat2 = new Float64Array( 4 );
+const tempRotVec2 = new Float64Array( 3 );
 const tempPos2 = new Float64Array( 3 );
 
 const targetJoints = [];
@@ -608,12 +608,11 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set. Quat is only
-							// needed if 3 eulers are used.
+							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set.
 							// TODO: these could be cached per target joint get the current error within the closure joint
 
-							// Get the error from child towards the closure target
-							targetJoint.getClosureError( tempPos, tempQuat );
+							// Get the error from child towards the closure target as rotation vector
+							targetJoint.getClosureErrorRotVec( tempPos, tempRotVec );
 							if ( relevantConnectedClosures.has( targetJoint ) ) {
 
 								// If this is affecting a link connected to a closure joint then adjust that child link by
@@ -622,7 +621,7 @@ export class ChainSolver {
 								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 								// Get the new error
-								getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempQuat2 );
+								getMatrixDifferenceRotVec( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempRotVec2 );
 
 							} else {
 
@@ -632,7 +631,7 @@ export class ChainSolver {
 								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 								// Get the new error
-								getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempQuat2 );
+								getMatrixDifferenceRotVec( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempRotVec2 );
 
 							}
 
@@ -641,8 +640,8 @@ export class ChainSolver {
 							vec3.subtract( tempPos, tempPos, tempPos2 );
 							vec3.scale( tempPos, tempPos, translationFactor / delta );
 
-							vec4.subtract( tempQuat, tempQuat, tempQuat2 );
-							vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
+							vec3.subtract( tempRotVec, tempRotVec, tempRotVec2 );
+							vec3.scale( tempRotVec, tempRotVec, rotationFactor / delta );
 
 							if ( targetJoint.isGoal ) {
 
@@ -656,11 +655,10 @@ export class ChainSolver {
 
 								if ( rotationDoFCount === 3 ) {
 
-									mat.set( outJacobian, rowIndex + translationDoFCount + 0, colIndex, tempQuat[ 0 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 1, colIndex, tempQuat[ 1 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 2, colIndex, tempQuat[ 2 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 3, colIndex, tempQuat[ 3 ] );
-									rowIndex += 4;
+									mat.set( outJacobian, rowIndex + translationDoFCount + 0, colIndex, tempRotVec[ 0 ] );
+									mat.set( outJacobian, rowIndex + translationDoFCount + 1, colIndex, tempRotVec[ 1 ] );
+									mat.set( outJacobian, rowIndex + translationDoFCount + 2, colIndex, tempRotVec[ 2 ] );
+									rowIndex += 3;
 
 								}
 
@@ -673,25 +671,24 @@ export class ChainSolver {
 								mat.set( outJacobian, rowIndex + 1, colIndex, tempPos[ 1 ] );
 								mat.set( outJacobian, rowIndex + 2, colIndex, tempPos[ 2 ] );
 
-								// set rotation
-								mat.set( outJacobian, rowIndex + 3, colIndex, tempQuat[ 0 ] );
-								mat.set( outJacobian, rowIndex + 4, colIndex, tempQuat[ 1 ] );
-								mat.set( outJacobian, rowIndex + 5, colIndex, tempQuat[ 2 ] );
-								mat.set( outJacobian, rowIndex + 6, colIndex, tempQuat[ 3 ] );
-								rowIndex += 7;
+								// set rotation (3-value rotation vector)
+								mat.set( outJacobian, rowIndex + 3, colIndex, tempRotVec[ 0 ] );
+								mat.set( outJacobian, rowIndex + 4, colIndex, tempRotVec[ 1 ] );
+								mat.set( outJacobian, rowIndex + 5, colIndex, tempRotVec[ 2 ] );
+								rowIndex += 6;
 
 							}
 
 						} else {
 
 							// Target isn't relevant, values already zeroed
-							let totalRows = 7;
+							let totalRows = 6;
 							if ( targetJoint.isGoal ) {
 
 								totalRows = targetJoint.translationDoFCount;
 								if ( targetJoint.rotationDoFCount === 3 ) {
 
-									totalRows += 4;
+									totalRows += 3;
 
 								}
 
