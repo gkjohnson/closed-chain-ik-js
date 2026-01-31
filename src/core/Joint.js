@@ -415,8 +415,8 @@ export class Joint extends Frame {
 
 	}
 
-	// Returns the error between this joint and the next link if this is a closure
-	// as position (3) and rotation vector (3).
+	// Returns the error between this joint and the next link if this is a closure.
+	// TODO: remove this and put it in solver
 	getClosureError( outPos, outRotVec ) {
 
 		if ( ! this.isClosure ) {
@@ -428,7 +428,7 @@ export class Joint extends Frame {
 		this.updateMatrixWorld();
 		this.child.updateMatrixWorld();
 
-		// error from this position to child as rotation vector
+		// error from this position to child
 		getMatrixDifference( this.matrixWorld, this.child.matrixWorld, outPos, outRotVec );
 
 	}

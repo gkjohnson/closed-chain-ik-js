@@ -608,7 +608,7 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: If this is a Goal it only add 1 or 2 fields if only two axes are set.
+							// TODO: If this is a Goal it only adds 1 or 2 fields if only two axes are set.
 							// TODO: these could be cached per target joint get the current error within the closure joint
 
 							// Get the error from child towards the closure target as rotation vector
@@ -671,7 +671,7 @@ export class ChainSolver {
 								mat.set( outJacobian, rowIndex + 1, colIndex, tempPos[ 1 ] );
 								mat.set( outJacobian, rowIndex + 2, colIndex, tempPos[ 2 ] );
 
-								// set rotation (3-value rotation vector)
+								// set rotation vector
 								mat.set( outJacobian, rowIndex + 3, colIndex, tempRotVec[ 0 ] );
 								mat.set( outJacobian, rowIndex + 4, colIndex, tempRotVec[ 1 ] );
 								mat.set( outJacobian, rowIndex + 5, colIndex, tempRotVec[ 2 ] );

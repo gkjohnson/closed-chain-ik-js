@@ -52,9 +52,8 @@ export function getMatrixDifference( a, b, outPos, outRotVec ) {
 
 	vec3.subtract( outPos, tempPos, tempPos2 );
 
+	// error of A - B as a rotation vector
 	quaternionDelta( tempQuat, tempQuat, tempQuat2 );
 	rotationVectorFromQuaternion( outRotVec, tempQuat );
-
-	// error of A - B (rotation from B to A as rotation vector)
 
 }
