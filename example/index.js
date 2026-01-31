@@ -56,7 +56,7 @@ const params = {
 
 const solverOptions = {
 	useSVD: false,
-	maxIterations: 3,
+	maxIterations: 6,
 	divergeThreshold: 0.05,
 	stallThreshold: 1e-4,
 	translationErrorClamp: 0.25,
@@ -656,7 +656,7 @@ function rebuildGUI() {
 	} );
 
 	solveFolder.add( solverOptions, 'useSVD' );
-	solveFolder.add( solverOptions, 'maxIterations' ).min( 1 ).max( 10 ).step( 1 ).listen();
+	solveFolder.add( solverOptions, 'maxIterations' ).min( 1 ).max( 15 ).step( 1 ).listen();
 	solveFolder.add( solverOptions, 'divergeThreshold' ).min( 0 ).max( 0.5 ).step( 1e-2 ).listen();
 	solveFolder.add( solverOptions, 'stallThreshold' ).min( 0 ).max( 0.01 ).step( 1e-4 ).listen();
 	solveFolder.add( solverOptions, 'translationErrorClamp' ).min( 1e-2 ).max( 1 ).listen();
@@ -773,11 +773,6 @@ function loadModel( promise ) {
 			} );
 
 			solver = params.webworker ? new WorkerSolver( ik ) : new Solver( ik );
-			solver.maxIterations = 3;
-			solver.translationErrorClamp = 0.25;
-			solver.rotationErrorClamp = 0.25;
-			solver.restPoseFactor = 0.01;
-			solver.divergeThreshold = 0.05;
 
 			if ( loadedGoals.length ) {
 

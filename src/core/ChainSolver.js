@@ -175,7 +175,13 @@ export class ChainSolver {
 			useSVD,
 			matrixPool,
 			dampingFactor,
+			maxIterations,
 		} = this;
+
+		// Store original error clamps for backtracking
+		const originalTranslationErrorClamp = this.translationErrorClamp;
+		const originalRotationErrorClamp = this.rotationErrorClamp;
+		let errorClampFactor = 1;
 
 		let iterations = 0;
 		let prevErrorMagnitude = Infinity;
@@ -224,27 +230,46 @@ export class ChainSolver {
 
 			}
 
-			// Check if we've diverged
+			// Check if we've diverged - backtrack with smaller step
 			if ( totalError > prevErrorMagnitude + divergeThreshold ) {
 
+				// Revert joint values and update matrices
 				prevDoFValues.forEach( ( dofValues, joint ) => {
 
 					joint.dofValues.set( dofValues );
 					joint.setMatrixDoFNeedsUpdate();
+					joint.updateMatrixWorld();
 
 				} );
 
+				// Halve error clamps to take smaller steps
+				errorClampFactor *= 0.5;
+				this.translationErrorClamp = originalTranslationErrorClamp * errorClampFactor;
+				this.rotationErrorClamp = originalRotationErrorClamp * errorClampFactor;
 
-				status = SOLVE_STATUS.DIVERGED;
-				break;
+				// If we've taken a max number of steps or too many iterations then give up
+				if ( errorClampFactor < 0.5 ** 6 || iterations > maxIterations ) {
+
+					status = SOLVE_STATUS.DIVERGED;
+					break;
+
+				}
+
+			} else {
+
+				// Update the previous error and cache joint state for divergence check next frame
+				// Because we haven't diverged these values are in a known good state
+				prevErrorMagnitude = totalError;
+				prevDoFValues.forEach( ( dofValues, joint ) => {
+
+					dofValues.set( joint.dofValues );
+
+				} );
 
 			}
 
-			prevErrorMagnitude = totalError;
-
 			// Check if we've hit max iterations
-			iterations ++;
-			if ( iterations > this.maxIterations ) {
+			if ( iterations > maxIterations ) {
 
 				status = SOLVE_STATUS.TIMEOUT;
 				break;
@@ -435,20 +460,17 @@ export class ChainSolver {
 
 			}
 
-			// Prep for a divergence check
-			prevDoFValues.forEach( ( dofValues, joint ) => {
-
-				dofValues.set( joint.dofValues );
-
-			} );
-
-			// apply the latest joint angles and lock and joints that have
-			// hit their joint limits.
+			// Apply joint angles
 			this.applyJointAngles( freeJoints, deltaTheta );
 
 			// there's still error and we're under the max iterations
+			iterations ++;
 
 		} while ( true );
+
+		// Restore original error clamps in case it was modified during divergence checks
+		this.translationErrorClamp = originalTranslationErrorClamp;
+		this.rotationErrorClamp = originalRotationErrorClamp;
 
 		targetJoints.length = 0;
 		freeJoints.length = 0;
