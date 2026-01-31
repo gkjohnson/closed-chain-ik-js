@@ -30,7 +30,7 @@ export function accumulateClosureError(
 	} = joint;
 
 	// Get the error from child towards the closure target as rotation vector (3 values)
-	joint.getClosureErrorRotVec( tempPos, tempRotVec );
+	joint.getClosureError( tempPos, tempRotVec );
 
 	let rowCount = 6;
 	if ( joint.isGoal ) {

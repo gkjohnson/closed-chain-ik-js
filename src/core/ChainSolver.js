@@ -1,7 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
-import { getMatrixDifferenceRotVec } from './utils/glmatrix.js';
+import { getMatrixDifference } from './utils/glmatrix.js';
 
 // temp reusable variables
 const targetRelativeToJointMatrix = new Float64Array( 16 );
@@ -612,7 +612,7 @@ export class ChainSolver {
 							// TODO: these could be cached per target joint get the current error within the closure joint
 
 							// Get the error from child towards the closure target as rotation vector
-							targetJoint.getClosureErrorRotVec( tempPos, tempRotVec );
+							targetJoint.getClosureError( tempPos, tempRotVec );
 							if ( relevantConnectedClosures.has( targetJoint ) ) {
 
 								// If this is affecting a link connected to a closure joint then adjust that child link by
@@ -621,7 +621,7 @@ export class ChainSolver {
 								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 								// Get the new error
-								getMatrixDifferenceRotVec( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempRotVec2 );
+								getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempRotVec2 );
 
 							} else {
 
@@ -631,7 +631,7 @@ export class ChainSolver {
 								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 								// Get the new error
-								getMatrixDifferenceRotVec( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempRotVec2 );
+								getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempRotVec2 );
 
 							}
 
