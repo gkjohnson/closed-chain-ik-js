@@ -92,20 +92,24 @@ describe( 'diffEulerDistance', () => {
 
 describe( 'getRedundantEulerRepresentation', () => {
 
-	for ( let i = 0; i < 100; i ++ ) {
+	it( 'should convert the euler angles to a minimal representation.', () => {
 
-		const euler = [
-			( Math.random() - 0.5 ) * 360 * 2,
-			( Math.random() - 0.5 ) * 360 * 2,
-			( Math.random() - 0.5 ) * 360 * 2,
-		];
+		for ( let i = 0; i < 100; i ++ ) {
 
-		const redundant = new Array( 3 );
-		getRedundantEulerRepresentation( redundant, euler );
+			const euler = [
+				( Math.random() - 0.5 ) * 360 * 2,
+				( Math.random() - 0.5 ) * 360 * 2,
+				( Math.random() - 0.5 ) * 360 * 2,
+			];
 
-		compare( euler, redundant );
+			const redundant = new Array( 3 );
+			getRedundantEulerRepresentation( redundant, euler );
 
-	}
+			compare( euler, redundant );
+
+		}
+
+	} );
 
 } );
 
