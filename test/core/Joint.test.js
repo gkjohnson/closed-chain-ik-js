@@ -341,13 +341,6 @@ describe( 'Joint', () => {
 
 	} );
 
-	describe( 'getDeltaWorldMatrix', () => {
-
-		it.todo( 'should describe an offset world matrix based on the give DoF.' );
-		it.todo( 'should return true if the delta was inverted due to a joint limit.' );
-
-	} );
-
 	describe( 'getClosureError', () => {
 
 		it.todo( 'should throw if not a closure.' );

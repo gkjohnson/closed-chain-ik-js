@@ -492,52 +492,6 @@ export class Joint extends Frame {
 
 	}
 
-	getDeltaWorldMatrix( dof, delta, outMatrix ) {
-
-		const {
-			dofValues,
-			minDoFLimit,
-			maxDoFLimit,
-			cachedIdentityDoFMatrixWorld,
-		} = this;
-
-		this.updateMatrixWorld();
-
-		// copy out set of dof values
-		tempDoFValues.set( dofValues );
-
-		// get the state
-		const min = minDoFLimit[ dof ];
-		const max = maxDoFLimit[ dof ];
-		const currVal = tempDoFValues[ dof ];
-
-		// check what our slack is
-		const minSlack = currVal - min;
-		const maxSlack = max - currVal;
-
-		// If we're constrained by either limit then move in the other direction then
-		// use the direction with the most slack.
-		let newVal = currVal + delta;
-		const isMaxConstrained = delta > 0 && newVal > max;
-		const isMinConstrained = delta < 0 && newVal < min;
-		const doInvert = ( isMaxConstrained && minSlack > maxSlack ) || ( isMinConstrained && maxSlack > minSlack );
-		if ( doInvert ) {
-
-			newVal = currVal - delta;
-
-		}
-
-		// update our dof array and compute the matrix
-		tempDoFValues[ dof ] = newVal;
-
-		dofToMatrix( tempMatrix, tempDoFValues );
-
-		mat4.multiply( outMatrix, cachedIdentityDoFMatrixWorld, tempMatrix );
-
-		return doInvert;
-
-	}
-
 	// matrix updates
 	setMatrixDoFNeedsUpdate() {
 
