@@ -346,6 +346,12 @@ function equal( a, b ) {
 
 function copySubMatrix( outMatrix, sourceMatrix, rows, cols ) {
 
+	if ( outMatrix.rows < rows || outMatrix.cols < cols || sourceMatrix.rows < rows || sourceMatrix.cols < cols ) {
+
+		throw new Error( 'copySubMatrix: matrix dimensions insufficient' );
+
+	}
+
 	for ( let r = 0; r < rows; r ++ ) {
 
 		for ( let c = 0; c < cols; c ++ ) {
@@ -359,6 +365,12 @@ function copySubMatrix( outMatrix, sourceMatrix, rows, cols ) {
 }
 
 function equalSubMatrix( a, b, rows, cols ) {
+
+	if ( a.rows < rows || a.cols < cols || b.rows < rows || b.cols < cols ) {
+
+		return false;
+
+	}
 
 	for ( let r = 0; r < rows; r ++ ) {
 

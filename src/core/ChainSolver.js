@@ -869,9 +869,9 @@ export class ChainSolver {
 	}
 
 	// Check if the cached jacobian equals the given jacobian
-	jacobianCacheEquals( target ) {
+	jacobianCacheEquals( matrix ) {
 
-		return mat.equalSubMatrix( this.prevJacobian, target, target.rows, target.cols );
+		return mat.equalSubMatrix( this.prevJacobian, matrix, matrix.rows, matrix.cols );
 
 	}
 
