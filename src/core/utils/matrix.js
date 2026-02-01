@@ -53,9 +53,15 @@ function identity( outMatrix ) {
 
 function zero( outMatrix ) {
 
+	fill( outMatrix, 0 );
+
+}
+
+function fill( outMatrix, value ) {
+
 	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
 
-		outMatrix[ r ].fill( 0 );
+		outMatrix[ r ].fill( value );
 
 	}
 
@@ -338,12 +344,49 @@ function equal( a, b ) {
 
 }
 
+function copySubMatrix( outMatrix, sourceMatrix, rows, cols ) {
+
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			outMatrix[ r ][ c ] = sourceMatrix[ r ][ c ];
+
+		}
+
+	}
+
+}
+
+function equalSubMatrix( a, b, rows, cols ) {
+
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			if ( a[ r ][ c ] !== b[ r ][ c ] ) {
+
+				return false;
+
+			}
+
+		}
+
+	}
+
+	return true;
+
+}
+
 export const mat = {
+	copySubMatrix,
+	equalSubMatrix,
 	equal,
 	sameDimensions,
 	transpose,
 	identity,
 	zero,
+	fill,
 	scale,
 	multiply,
 	create,

@@ -88,6 +88,7 @@ export class ChainSolver {
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
 
+		// Cached jacobian and pseudo-inverse for warm start
 		this.prevJacobian = mat.create( 0, 0 );
 		this.prevPseudoInverse = mat.create( 0, 0 );
 
@@ -291,9 +292,9 @@ export class ChainSolver {
 
 			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
-			if ( mat.equal( this.prevJacobian, jacobian ) ) {
+			if ( this.jacobianCacheEquals( jacobian ) ) {
 
-				mat.copy( pseudoInverse, this.prevPseudoInverse );
+				this.restorePseudoInverse( pseudoInverse );
 
 			} else {
 
@@ -375,19 +376,8 @@ export class ChainSolver {
 
 				}
 
-				// save the results for pre warming
-				if ( mat.sameDimensions( this.prevJacobian, jacobian ) ) {
-
-					mat.copy( this.prevJacobian, jacobian );
-					mat.copy( this.prevPseudoInverse, pseudoInverse );
-
-				} else {
-
-					// TODO: it would be best to avoid memory allocation here
-					this.prevJacobian = mat.clone( jacobian );
-					this.prevPseudoInverse = mat.clone( pseudoInverse );
-
-				}
+				// save the results for warm start
+				this.cacheJacobianResult( jacobian, pseudoInverse );
 
 			}
 
@@ -875,6 +865,46 @@ export class ChainSolver {
 		dofResultInfo.errorRows = errorRows;
 		dofResultInfo.freeDoF = freeDoF;
 		dofResultInfo.totalError = totalError;
+
+	}
+
+	// Check if the cached jacobian equals the given jacobian
+	jacobianCacheEquals( target ) {
+
+		return mat.equalSubMatrix( this.prevJacobian, target, target.rows, target.cols );
+
+	}
+
+	// Copy cached pseudo-inverse to the output matrix
+	restorePseudoInverse( target ) {
+
+		mat.copySubMatrix( target, this.prevPseudoInverse, target.rows, target.cols );
+
+	}
+
+	cacheJacobianResult( jacobian, pseudoInverse ) {
+
+		// grow the cached matrices if needed
+		const { rows, cols } = jacobian;
+		if ( this.prevJacobian.rows < rows || this.prevJacobian.cols < cols ) {
+
+			this.prevJacobian = mat.create( rows, cols );
+
+		}
+
+		if ( this.prevPseudoInverse.rows < pseudoInverse.rows || this.prevPseudoInverse.cols < pseudoInverse.cols ) {
+
+			this.prevPseudoInverse = mat.create( pseudoInverse.rows, pseudoInverse.cols );
+
+		}
+
+		// fill with Infinity to invalidate stale data beyond current dimensions
+		mat.fill( this.prevJacobian, Infinity );
+		mat.fill( this.prevPseudoInverse, Infinity );
+
+		// copy the latest data
+		mat.copySubMatrix( this.prevJacobian, jacobian, rows, cols );
+		mat.copySubMatrix( this.prevPseudoInverse, pseudoInverse, pseudoInverse.rows, pseudoInverse.cols );
 
 	}
 
