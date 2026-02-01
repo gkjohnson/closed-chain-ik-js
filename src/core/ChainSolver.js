@@ -643,6 +643,8 @@ export class ChainSolver {
 							vec3.subtract( tempRotVec, tempRotVec, tempRotVec2 );
 							vec3.scale( tempRotVec, tempRotVec, rotationFactor / delta );
 
+							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
+							// See solver.js for details on unifying closure semantics.
 							if ( targetJoint.isGoal ) {
 
 								const { translationDoFCount, rotationDoFCount, dof } = targetJoint;

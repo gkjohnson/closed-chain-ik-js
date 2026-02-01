@@ -32,6 +32,7 @@ export function accumulateClosureError(
 	// Get the error from child towards the closure target
 	joint.getClosureError( tempPos, tempRotVec );
 
+	// TODO: Non-Goal closures assume all 6 DoFs are constrained. See TODO below.
 	let rowCount = 6;
 	if ( joint.isGoal ) {
 
@@ -80,6 +81,13 @@ export function accumulateClosureError(
 
 		vec3.scale( tempRotVec, tempRotVec, rotationFactor );
 
+		// TODO: Currently Goals and non-Goal closures have different semantics:
+		// - Goals: DoFs specify which axes to CONSTRAIN (inverted via setFreeDoF)
+		// - Non-Goal closures: Hardcoded to constrain all 6 axes, DoFs ignored
+		//
+		// Ideally, closures should work like joints where DoFs specify FREE axes
+		// and the remaining axes are constrained. This would allow partial closures
+		// (eg a ball-socket closure that only constrains position, not rotation).
 		if ( joint.isGoal ) {
 
 			for ( let i = 0; i < translationDoFCount; i ++ ) {
