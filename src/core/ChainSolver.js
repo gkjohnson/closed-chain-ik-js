@@ -46,14 +46,9 @@ function computeAnalyticalJacobianColumn(
 	outRotVecJacobian,
 ) {
 
-	// Get joint position from its world matrix
-	mat4.getTranslation( jointWorldPos, jointMatrix );
-
 	// Transform local axis to world space using the rotation part of the matrix
-	// Extract rotation as quaternion and use it to rotate the axis
 	mat4.getRotation( tempAxisQuat, jointMatrix );
-	const localAxis = LOCAL_AXES[ dof ];
-	vec3.transformQuat( axisWorld, localAxis, tempAxisQuat );
+	vec3.transformQuat( axisWorld, LOCAL_AXES[ dof ], tempAxisQuat );
 
 	if ( dof < 3 ) {
 
@@ -68,6 +63,7 @@ function computeAnalyticalJacobianColumn(
 	} else {
 
 		// Rotational DOF: position change is axis × (target - joint)
+		mat4.getTranslation( jointWorldPos, jointMatrix );
 		vec3.subtract( toTarget, targetPos, jointWorldPos );
 		vec3.cross( outPosJacobian, axisWorld, toTarget );
 
@@ -701,10 +697,9 @@ export class ChainSolver {
 								// Our analytical gives +d(position)/d(theta), so we need to negate
 								// Additionally, for connected closures (error = closure - child), moving child
 								// means the derivative has opposite sign, so those cancel out to positive
-								const posSign = isConnected ? translationFactor : - translationFactor;
-								const rotSign = isConnected ? rotationFactor : - rotationFactor;
-								vec3.scale( tempPos, tempPos, posSign );
-								vec3.scale( tempRotVec, tempRotVec, rotSign );
+								const sign = isConnected ? 1 : - 1;
+								vec3.scale( tempPos, tempPos, sign * translationFactor );
+								vec3.scale( tempRotVec, tempRotVec, sign * rotationFactor );
 
 							} else {
 
