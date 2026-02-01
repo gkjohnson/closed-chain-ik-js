@@ -383,6 +383,7 @@ export class ChainSolver {
 
 				} else {
 
+					// TODO: it would be best to avoid memory allocation here
 					this.prevJacobian = mat.clone( jacobian );
 					this.prevPseudoInverse = mat.clone( pseudoInverse );
 
