@@ -48,7 +48,7 @@ export function accumulateClosureError(
 
 		} else {
 
-			rowCount += 3;
+			rowCount += rotationDoFCount;
 
 		}
 
@@ -96,11 +96,10 @@ export function accumulateClosureError(
 
 			}
 
-			if ( joint.rotationDoFCount === 3 ) {
+			for ( let i = 0; i < rotationDoFCount; i ++ ) {
 
-				mat.set( errorVector, startIndex + translationDoFCount + 0, 0, tempRotVec[ 0 ] );
-				mat.set( errorVector, startIndex + translationDoFCount + 1, 0, tempRotVec[ 1 ] );
-				mat.set( errorVector, startIndex + translationDoFCount + 2, 0, tempRotVec[ 2 ] );
+				const d = dof[ translationDoFCount + i ];
+				mat.set( errorVector, startIndex + translationDoFCount + i, 0, tempRotVec[ d - 3 ] );
 
 			}
 
