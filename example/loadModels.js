@@ -157,9 +157,9 @@ export function loadDigit() {
 			goalMap = new Map();
 
 			[
+				'torso',
 				'left_toe_pitch',
 				'right_toe_pitch',
-				'torso',
 			].forEach( name => {
 
 				const link = ik.find( l => l.name === name );
