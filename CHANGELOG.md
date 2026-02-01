@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Simplified internal Matrix initialization.
 - Use analytic Jacobian.
 - Remove "translationStep" and "rotatinoStep" options.
+- Use a simplified formulation for rest pose calculations for a significant speed up when using rest pose.
 
 ### Fixed
 - Fixed case where Matrices were not zeroed out when fetched from MatrixPool, possibly causing some outdated values to be used in calculations.
