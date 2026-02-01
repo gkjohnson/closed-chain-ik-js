@@ -1,6 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
+import { AXES } from './utils/constants.js';
 
 // temp reusable variables
 const tempRotVec = new Float64Array( 3 );
@@ -9,17 +10,6 @@ const jointWorldPos = new Float64Array( 3 );
 const targetWorldPos = new Float64Array( 3 );
 const axisWorld = new Float64Array( 3 );
 const toTarget = new Float64Array( 3 );
-
-// Local axis vectors for each DOF
-// TODO: remove these
-const LOCAL_AXES = [
-	new Float64Array( [ 1, 0, 0 ] ), // X
-	new Float64Array( [ 0, 1, 0 ] ), // Y
-	new Float64Array( [ 0, 0, 1 ] ), // Z
-	new Float64Array( [ 1, 0, 0 ] ), // EX (rotation around X)
-	new Float64Array( [ 0, 1, 0 ] ), // EY (rotation around Y)
-	new Float64Array( [ 0, 0, 1 ] ), // EZ (rotation around Z)
-];
 
 const tempAxisQuat = new Float64Array( 4 );
 const targetJoints = [];
@@ -605,7 +595,7 @@ export class ChainSolver {
 
 							// Transform local axis to world space using the rotation part of the matrix
 							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
-							vec3.transformQuat( axisWorld, LOCAL_AXES[ dof ], tempAxisQuat );
+							vec3.transformQuat( axisWorld, AXES[ dof ], tempAxisQuat );
 
 							if ( dof < 3 ) {
 
