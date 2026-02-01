@@ -134,7 +134,7 @@ describe( 'Joint', () => {
 
 				joint.addChild( joint2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -157,7 +157,7 @@ describe( 'Joint', () => {
 
 				joint.addChild( child2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -180,7 +180,7 @@ describe( 'Joint', () => {
 
 				joint.addChild( child2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -232,7 +232,7 @@ describe( 'Joint', () => {
 
 				joint.makeClosure( joint2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -257,7 +257,7 @@ describe( 'Joint', () => {
 
 				joint.makeClosure( child2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -301,7 +301,7 @@ describe( 'Joint', () => {
 
 				joint.removeChild( child2 );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 

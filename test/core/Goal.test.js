@@ -37,7 +37,7 @@ describe( 'Goal', () => {
 
 				goal.setGoalDoF( DOF.EX );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -60,7 +60,7 @@ describe( 'Goal', () => {
 
 				goal.addChild( new Link() );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
@@ -73,7 +73,7 @@ describe( 'Goal', () => {
 
 				goal.attachChild( new Link() );
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 
