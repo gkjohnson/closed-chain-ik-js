@@ -294,7 +294,7 @@ function init() {
 				const prismLink = new Link();
 				prismJoint.addChild( prismLink );
 
-				const goal = new Goal();
+				const goal = new Joint();
 				goal.setPosition( 0, 0, 0.05 );
 				goal.setEuler( Math.PI, 0, 0 );
 				prismLink.addChild( goal );
@@ -493,7 +493,7 @@ function render() {
 	}
 
 	// update the controls visibility
-	transformControls.visible = params.enableControls;
+	transformControls.getHelper().visible = params.enableControls;
 	transformControls.enabled = params.enableControls;
 
 	renderer.render( scene, camera );
