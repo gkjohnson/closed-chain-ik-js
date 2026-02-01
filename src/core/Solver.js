@@ -190,9 +190,6 @@ export class Solver {
 			s.translationFactor = this.translationFactor;
 			s.rotationFactor = this.rotationFactor;
 
-			s.translationStep = this.translationStep;
-			s.rotationStep = this.rotationStep;
-
 			s.translationErrorClamp = this.translationErrorClamp;
 			s.rotationErrorClamp = this.rotationErrorClamp;
 
