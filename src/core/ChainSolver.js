@@ -423,6 +423,9 @@ export class ChainSolver {
 
 				}
 
+				// Nullspace projection: "restPose - J^-1 * (J * restPose)" which is mathematically
+				// equivalent to "(I - J^-1 * J) * restPose". This version avoids constructing and
+				// performing a freeDoF x freeDoF multiplication needed for the identity calculations.
 
 				// J * restPose > errorRows x 1
 				const jRestPose = matrixPool.get( errorRows, 1 );
