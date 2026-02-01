@@ -553,7 +553,7 @@ getMaxLimit( dof : DOF ) : Number
 makeClosure( child : Link ) : void
 ```
 
-Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
+Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed. The solver constrains all 6 axes (position + orientation) between this joint and the target link.
 
 Note that when making a closure connection between a Joint and a Link the link will not be added to the Joints `children` array and instead will only be available on the `child` field. The Joint will be appended to the Links `closureJoints` array.
 
@@ -562,6 +562,18 @@ Note that when making a closure connection between a Joint and a Link the link w
 _extends [Joint](#Joint)_
 
 A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal cannot have children and only be used to make a closure.
+
+```js
+goal.setFreeDoF();                        // All axes constrained (default)
+goal.setFreeDoF(DOF.EX, DOF.EY, DOF.EZ);  // Position-only goal
+goal.setFreeDoF(DOF.X, DOF.Y, DOF.Z);     // Rotation-only goal
+```
+
+Or use `setGoalDoF()` to specify constrained axes directly:
+
+```js
+goal.setGoalDoF(DOF.X, DOF.Y, DOF.Z);     // Position-only goal
+```
 
 ## Solver
 
