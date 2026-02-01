@@ -323,7 +323,7 @@ export class ChainSolver {
 					mat.multiply( vqinv, v, qInverse );
 					mat.multiply( pseudoInverse, vqinv, uTranspose );
 
-				} catch ( err ) {
+				} catch {
 
 					failedSVD = true;
 
@@ -466,7 +466,7 @@ export class ChainSolver {
 			// there's still error and we're under the max iterations
 			iterations ++;
 
-		} while ( true );
+		} while ( true ); // eslint-disable-line
 
 		// Restore original error clamps in case it was modified during divergence checks
 		this.translationErrorClamp = originalTranslationErrorClamp;
