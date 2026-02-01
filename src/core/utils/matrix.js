@@ -304,7 +304,36 @@ function set( matrix, r, c, value ) {
 
 }
 
+function equal( a, b ) {
+
+	if ( a.length !== b.length || a[ 0 ].length !== b[ 0 ].length ) {
+
+		return false;
+
+	}
+
+	const rows = a.length;
+	const cols = a[ 0 ].length;
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			if ( a[ r ][ c ] !== b[ r ][ c ] ) {
+
+				return false;
+
+			}
+
+		}
+
+	}
+
+	return true;
+
+}
+
 export const mat = {
+	equal,
 	transpose,
 	identity,
 	zero,

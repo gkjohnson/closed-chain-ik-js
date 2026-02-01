@@ -88,6 +88,9 @@ export class ChainSolver {
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
 
+		this.prevJacobian = null;
+		this.prevJacobianInverse = null;
+
 		this.init();
 
 	}
@@ -331,7 +334,11 @@ export class ChainSolver {
 
 			}
 
-			if ( ! useSVD || failedSVD ) {
+			if ( this.prevJacobian && mat.equal( this.prevJacobian, jacobian ) ) {
+
+				mat.copy( pseudoInverse, this.prevJacobianInverse );
+
+			} else if ( ( ! useSVD || failedSVD ) ) {
 
 				// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
 				// J^T * J * x = J^T * e
@@ -434,6 +441,9 @@ export class ChainSolver {
 				}
 
 			}
+
+			this.prevJacobian = mat.clone( jacobian );
+			this.prevJacobianInverse = mat.clone( pseudoInverse );
 
 			// Check if our joints have not moved and returned stalled
 			if ( stallThreshold > 0 ) {
