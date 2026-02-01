@@ -304,9 +304,15 @@ function set( matrix, r, c, value ) {
 
 }
 
+function sameDimensions( a, b ) {
+
+	return a.length === b.length && a[ 0 ].length === b[ 0 ].length;
+
+}
+
 function equal( a, b ) {
 
-	if ( a.length !== b.length || a[ 0 ].length !== b[ 0 ].length ) {
+	if ( ! sameDimensions( a, b ) ) {
 
 		return false;
 
@@ -334,6 +340,7 @@ function equal( a, b ) {
 
 export const mat = {
 	equal,
+	sameDimensions,
 	transpose,
 	identity,
 	zero,

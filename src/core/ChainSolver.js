@@ -1,6 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
-import { mat } from './utils/matrix.js';
+import { mat, Matrix } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
 
 // temp reusable variables
@@ -88,8 +88,8 @@ export class ChainSolver {
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
 
-		this.prevJacobian = null;
-		this.prevJacobianInverse = null;
+		this.prevJacobian = mat.create( 0, 0 );
+		this.prevPseudoInverse = mat.create( 0, 0 );
 
 		this.init();
 
@@ -291,10 +291,9 @@ export class ChainSolver {
 
 			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
+			if ( mat.equal( this.prevJacobian, jacobian ) ) {
 
-			if ( this.prevJacobian && mat.equal( this.prevJacobian, jacobian ) ) {
-
-				mat.copy( pseudoInverse, this.prevJacobianInverse );
+				mat.copy( pseudoInverse, this.prevPseudoInverse );
 
 			} else {
 
@@ -377,8 +376,17 @@ export class ChainSolver {
 				}
 
 				// save the results for pre warming
-				this.prevJacobian = mat.clone( jacobian );
-				this.prevJacobianInverse = mat.clone( pseudoInverse );
+				if ( mat.sameDimensions( this.prevJacobian, jacobian ) ) {
+
+					mat.copy( this.prevJacobian, jacobian );
+					mat.copy( this.prevPseudoInverse, pseudoInverse );
+
+				} else {
+
+					this.prevJacobian = mat.clone( jacobian );
+					this.prevPseudoInverse = mat.clone( pseudoInverse );
+
+				}
 
 			}
 
