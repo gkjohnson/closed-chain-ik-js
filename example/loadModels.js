@@ -188,6 +188,112 @@ export function loadDigit() {
 
 }
 
+export function loadSpot() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		const url = 'https://raw.githubusercontent.com/heuristicus/spot_ros/refs/heads/master/spot_description/urdf/spot.urdf.xacro'
+		const xacroLoader = new XacroLoader();
+		xacroLoader.rospackCommands = {
+			optenv( field, def ) {
+
+				if ( field === 'SPOT_ARM' ) {
+
+					return 1;
+
+				} else {
+
+					return def;
+
+				}
+
+			},
+
+			find( pkg ) {
+
+				switch ( pkg ) {
+
+					case 'spot_description':
+						return 'https://raw.githubusercontent.com/heuristicus/spot_ros/refs/heads/master/spot_description/';
+					default:
+						return pkg;
+
+				}
+
+			}
+		};
+
+		xacroLoader.load( url, xacro => {
+
+			let ik, urdf, goalMap;
+
+			const manager = new LoadingManager();
+			manager.onLoad = () => {
+
+				let toRemove = [];
+				urdf.traverse( c => {
+
+					if ( c.isLineSegments ) {
+
+						toRemove.push( c );
+
+					}
+
+				} );
+
+				toRemove.forEach( c => c.removeFromParent() );
+				resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+			};
+
+			const urdfLoader = new URDFLoader( manager );
+			urdfLoader.packages = {
+				'spot_description': 'https://raw.githubusercontent.com/heuristicus/spot_ros/refs/heads/master/spot_description/'
+			};
+
+			urdf = urdfLoader.parse( xacro );
+			ik = urdfRobotToIKRoot( urdf );
+
+			urdf.setJointValue( 'arm_joint1', Math.PI / 2 );
+			urdf.setJointValue( 'arm_joint2', - Math.PI / 2 );
+			urdf.setJointValue( 'arm_joint3', Math.PI / 2 );
+			setIKFromUrdf( ik, urdf );
+
+			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
+			ik.setMatrixNeedsUpdate();
+			goalMap = new Map();
+
+			[
+				'gripper',
+				'body',
+			].forEach( name => {
+
+				const link = ik.find( l => l.name === name );
+				const goal = new Joint();
+				link.getWorldPosition( goal.position );
+				link.getWorldQuaternion( goal.quaternion );
+				goal.makeClosure( link );
+				goalMap.set( goal, link );
+
+			} );
+
+			ik.traverse( c => {
+
+				if ( c.isJoint ) {
+
+					c.dofRestPose.set( c.dofValues );
+					c.restPoseSet = true;
+
+				}
+
+			} );
+
+		}, reject );
+
+	} );
+
+}
+
 export function loadStaubli() {
 
 	return new Promise( ( resolve, reject ) => {

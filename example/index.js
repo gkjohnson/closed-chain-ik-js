@@ -37,6 +37,7 @@ import {
 	loadStaubli,
 	loadDigit,
 	loadCuriosity,
+	loadSpot,
 } from './loadModels.js';
 
 const params = {
@@ -569,7 +570,7 @@ function rebuildGUI() {
 	gui = new GUI();
 	gui.width = 350;
 
-	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli', 'Digit' ] ).onChange( value => {
+	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli', 'Digit', 'Spot' ] ).onChange( value => {
 
 		let promise = null;
 		switch ( value ) {
@@ -592,6 +593,10 @@ function rebuildGUI() {
 
 			case 'Digit':
 				promise = loadDigit();
+				break;
+
+			case 'Spot':
+				promise = loadSpot();
 				break;
 
 		}
@@ -640,6 +645,10 @@ function rebuildGUI() {
 
 			case 'Digit':
 				promise = loadDigit();
+				break;
+
+			case 'Spot':
+				promise = loadSpot();
 				break;
 
 		}
