@@ -153,6 +153,7 @@ function init() {
 				transformControls.setSpace( transformControls.space === 'local' ? 'world' : 'local' );
 				break;
 			case 'f':
+				camera.position.sub( controls.target );
 				controls.target.set( 0, 0, 0 );
 				controls.update();
 				break;
@@ -522,7 +523,7 @@ function render() {
 	} );
 
 	transformControls.enabled = selectedGoalIndex !== - 1;
-	transformControls.visible = selectedGoalIndex !== - 1;
+	transformControls.getHelper().visible = selectedGoalIndex !== - 1;
 
 	// update light shadow to tightly encapsulate urdf
 	if ( urdfRoot !== null ) {
