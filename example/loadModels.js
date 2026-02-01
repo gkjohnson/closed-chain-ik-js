@@ -3,6 +3,7 @@ import {
 	Joint,
 	urdfRobotToIKRoot,
 	setIKFromUrdf,
+	IKUtils,
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
 import { LoadingManager } from 'three';
@@ -171,16 +172,7 @@ export function loadDigit() {
 
 			} );
 
-			ik.traverse( c => {
-
-				if ( c.isJoint ) {
-
-					c.dofRestPose.set( c.dofValues );
-					c.restPoseSet = true;
-
-				}
-
-			} );
+			IKUtils.saveRestPose( ik );
 
 		} ).catch( reject );
 
@@ -277,16 +269,7 @@ export function loadSpot() {
 
 			} );
 
-			ik.traverse( c => {
-
-				if ( c.isJoint ) {
-
-					c.dofRestPose.set( c.dofValues );
-					c.restPoseSet = true;
-
-				}
-
-			} );
+			IKUtils.saveRestPose( ik );
 
 		}, reject );
 
@@ -406,12 +389,7 @@ export function loadATHLETE() {
 			goalMap = new Map();
 			ik.traverse( c => {
 
-				if ( c.isJoint ) {
-
-					c.dofRestPose.set( c.dofValues );
-					c.restPoseSet = true;
-
-				} else if ( /^Foot/.test( c.name ) ) {
+				if ( /^Foot/.test( c.name ) ) {
 
 					const link = urdf.links[ c.name ];
 					const ee = new Joint();
@@ -427,6 +405,8 @@ export function loadATHLETE() {
 				}
 
 			} );
+
+			IKUtils.saveRestPose( ik );
 
 		}, null, reject );
 
@@ -477,12 +457,7 @@ export function loadRobonaut() {
 			goalMap = new Map();
 			ik.traverse( c => {
 
-				if ( c.isJoint ) {
-
-					c.dofRestPose.set( c.dofValues );
-					c.restPoseSet = true;
-
-				} else if (
+				if (
 					c.name === 'r2/left_leg_foot' ||
 					c.name === 'r2/right_leg_foot'
 				) {
@@ -502,6 +477,7 @@ export function loadRobonaut() {
 
 			} );
 
+			IKUtils.saveRestPose( ik );
 
 		}, null, reject );
 
@@ -620,12 +596,7 @@ export function loadAthnaut() {
 			const goalMap = new Map();
 			ik.traverse( c => {
 
-				if ( c.isJoint ) {
-
-					c.dofRestPose.set( c.dofValues );
-					c.restPoseSet = true;
-
-				} else if ( /^Foot/.test( c.name ) ) {
+				if ( /^Foot/.test( c.name ) ) {
 
 					const link = athlete.links[ c.name ];
 					const ee = new Joint();
@@ -641,6 +612,8 @@ export function loadAthnaut() {
 				}
 
 			} );
+
+			IKUtils.saveRestPose( ik );
 
 			resolve( { ik, urdf: athlete, goalMap, helperScale: 0.2 } );
 
