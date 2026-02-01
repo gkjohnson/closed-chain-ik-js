@@ -41,6 +41,8 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [Digit](https://github.com/adubredu/DigitRobot.jl)
 
+[Spot](https://github.com/heuristicus/spot_ros)
+
 # Installation
 
 ```

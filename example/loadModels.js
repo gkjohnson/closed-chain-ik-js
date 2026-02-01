@@ -192,7 +192,7 @@ export function loadSpot() {
 
 	return new Promise( ( resolve, reject ) => {
 
-		const url = 'https://raw.githubusercontent.com/heuristicus/spot_ros/refs/heads/master/spot_description/urdf/spot.urdf.xacro'
+		const url = 'https://raw.githubusercontent.com/heuristicus/spot_ros/refs/heads/master/spot_description/urdf/spot.urdf.xacro';
 		const xacroLoader = new XacroLoader();
 		xacroLoader.rospackCommands = {
 			optenv( field, def ) {
