@@ -11,6 +11,7 @@ const axisWorld = new Float64Array( 3 );
 const toTarget = new Float64Array( 3 );
 
 // Local axis vectors for each DOF
+// TODO: remove these
 const LOCAL_AXES = [
 	new Float64Array( [ 1, 0, 0 ] ), // X
 	new Float64Array( [ 0, 1, 0 ] ), // Y
@@ -20,52 +21,7 @@ const LOCAL_AXES = [
 	new Float64Array( [ 0, 0, 1 ] ), // EZ (rotation around Z)
 ];
 
-// Temp quaternion for axis transformation
 const tempAxisQuat = new Float64Array( 4 );
-
-// Compute analytical Jacobian column for a single DOF's effect on a target position/orientation
-// dof: the degree of freedom index (0-5)
-// jointMatrix: the joint's identity DoF world matrix (4x4) - frame before DoF rotation
-// targetPos: the target position in world space (vec3)
-// outPosJacobian: output position jacobian (vec3) - how target position changes
-// outRotVecJacobian: output rotation vector jacobian (vec3) - how target orientation changes
-function computeAnalyticalJacobianColumn(
-	dof,
-	jointMatrix,
-	targetPos,
-	outPosJacobian,
-	outRotVecJacobian,
-) {
-
-	// Transform local axis to world space using the rotation part of the matrix
-	mat4.getRotation( tempAxisQuat, jointMatrix );
-	vec3.transformQuat( axisWorld, LOCAL_AXES[ dof ], tempAxisQuat );
-
-	if ( dof < 3 ) {
-
-		// Translational DOF: position change is just the axis direction
-		vec3.copy( outPosJacobian, axisWorld );
-
-		// Translation doesn't affect orientation
-		outRotVecJacobian[ 0 ] = 0;
-		outRotVecJacobian[ 1 ] = 0;
-		outRotVecJacobian[ 2 ] = 0;
-
-	} else {
-
-		// Rotational DOF: position change is axis × (target - joint)
-		mat4.getTranslation( jointWorldPos, jointMatrix );
-		vec3.subtract( toTarget, targetPos, jointWorldPos );
-		vec3.cross( outPosJacobian, axisWorld, toTarget );
-
-		// Rotation vector derivative: for a small rotation θ around axis n,
-		// the rotation vector is θn, so the derivative w.r.t. θ is just n
-		vec3.copy( outRotVecJacobian, axisWorld );
-
-	}
-
-}
-
 const targetJoints = [];
 const freeJoints = [];
 const errorResultInfo = {
@@ -614,6 +570,7 @@ export class ChainSolver {
 			const relevantConnectedClosures = affectedConnectedClosures.get( freeJoint );
 			const dofList = freeJoint.dof;
 			const colCount = freeJoint.translationDoFCount + freeJoint.rotationDoFCount;
+			const identityDoFMatrixWorld = freeJoint.cachedIdentityDoFMatrixWorld;
 
 			const isLocked = lockedJointDoFCount.has( freeJoint );
 			const lockedDoF = lockedJointDoF.get( freeJoint );
@@ -645,20 +602,37 @@ export class ChainSolver {
 							// Determine which position we're affecting and the sign. If we're the connected child then
 							// we need to invert the change needed.
 							const isConnected = relevantConnectedClosures.has( targetJoint );
-							const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
 
-							// Get the target position which is needed to calculate the impact of rotation
-							// TODO: do this internally?
-							mat4.getTranslation( targetWorldPos, affectedMatrix );
+							// Transform local axis to world space using the rotation part of the matrix
+							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
+							vec3.transformQuat( axisWorld, LOCAL_AXES[ dof ], tempAxisQuat );
 
-							// compute analytical Jacobian column
-							computeAnalyticalJacobianColumn(
-								dof,
-								freeJoint.cachedIdentityDoFMatrixWorld,
-								targetWorldPos,
-								tempPos,
-								tempRotVec,
-							);
+							if ( dof < 3 ) {
+
+								// translation
+								vec3.copy( tempPos, axisWorld );
+								tempRotVec[ 0 ] = 0;
+								tempRotVec[ 1 ] = 0;
+								tempRotVec[ 2 ] = 0;
+
+							} else {
+
+								// rotation
+								// get the target position which is needed to calculate the impact of rotation
+								const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
+								mat4.getTranslation( targetWorldPos, affectedMatrix );
+
+								// get relative position
+								mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
+								vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
+
+								// the change of a point by a rotation about an axis is the cross vector
+								vec3.cross( tempPos, axisWorld, toTarget );
+
+								// for a rotation vector the delta is the same as the axis of rotation
+								vec3.copy( tempRotVec, axisWorld );
+
+							}
 
 							// Error is defined as (closure - child), so:
 							// - For direct closures: moving closure changes error positively, so negate
