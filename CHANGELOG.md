@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Simplified internal Matrix initialization.
+- Use analytic Jacobian.
+- Remove "translationStep" and "rotatinoStep" options.
 
 ### Fixed
 - Fixed case where Matrices were not zeroed out when fetched from MatrixPool, possibly causing some outdated values to be used in calculations.
