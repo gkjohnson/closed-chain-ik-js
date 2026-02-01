@@ -601,11 +601,6 @@ rotationConvergeThreshold = 1e-5;
 translationFactor = 1;
 rotationFactor = 1;
 
-// The amount to move a joint when calculating the change in error a joint has
-// for a jacobian.
-translationStep = 1e-3;
-rotationStep = 1e-3;
-
 // The step to take towards the IK goals when solving. Setting this to a larger value
 // may solve more quickly but may lead also lead to divergence.
 translationErrorClamp = 0.1;
