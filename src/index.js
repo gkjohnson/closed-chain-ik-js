@@ -7,4 +7,4 @@ export { WorkerSolver } from './worker/WorkerSolver.js';
 export { IKRootsHelper } from './three/IKRootsHelper.js';
 export { setIKFromUrdf, setUrdfFromIK, urdfRobotToIKRoot } from './three/urdfHelpers.js';
 export { findRoots } from './core/utils/findRoots.js';
-export * as IKUtils from './utils/IKUtils.js';
+export * as IKUtils from './core/utils/IKUtils.js';
