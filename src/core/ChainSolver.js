@@ -1,6 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
-import { mat, Matrix } from './utils/matrix.js';
+import { mat } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
 
 // temp reusable variables

@@ -1,7 +1,7 @@
 import linearSolve from 'linear-solve';
 import { SVD } from 'svd-js';
 
-export class Matrix extends Array {
+class Matrix extends Array {
 
 	constructor( rows, cols ) {
 
