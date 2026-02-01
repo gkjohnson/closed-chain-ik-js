@@ -35,6 +35,7 @@ import {
 	loadATHLETE,
 	loadRobonaut,
 	loadStaubli,
+	loadDigit,
 	loadCuriosity,
 } from './loadModels.js';
 
@@ -568,7 +569,7 @@ function rebuildGUI() {
 	gui = new GUI();
 	gui.width = 350;
 
-	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli' ] ).onChange( value => {
+	gui.add( params, 'model', [ 'ATHLETE', 'Robonaut', 'Curiosity', 'Staubli', 'Digit' ] ).onChange( value => {
 
 		let promise = null;
 		switch ( value ) {
@@ -587,6 +588,10 @@ function rebuildGUI() {
 
 			case 'Staubli':
 				promise = loadStaubli();
+				break;
+
+			case 'Digit':
+				promise = loadDigit();
 				break;
 
 		}
@@ -631,6 +636,10 @@ function rebuildGUI() {
 
 			case 'Staubli':
 				promise = loadStaubli();
+				break;
+
+			case 'Digit':
+				promise = loadDigit();
 				break;
 
 		}

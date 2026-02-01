@@ -8,6 +8,8 @@ import { DEG2RAD } from '../src/core/utils/constants.js';
 import { LoadingManager } from 'three';
 import { XacroLoader } from 'xacro-parser';
 import { quat } from 'gl-matrix';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
 export function loadCuriosity() {
 
@@ -95,6 +97,92 @@ export function loadCuriosity() {
 			goalMap.set( ee, tool );
 
 		}, reject );
+
+	} );
+
+}
+
+export function loadDigit() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		const url = 'https://raw.githubusercontent.com/adubredu/DigitRobot.jl/refs/heads/main/urdf/digit_model.urdf';
+		let ik, urdf, goalMap;
+
+		const manager = new LoadingManager();
+		manager.onLoad = () => {
+
+			resolve( { ik, urdf, goalMap, helperScale: 0.3 } );
+
+		};
+
+		const urdfLoader = new URDFLoader( manager );
+		urdfLoader.loadMeshCb = ( url, manager, done ) => {
+
+			new MTLLoader( manager )
+				.loadAsync( url.replace( /.obj$/, '.mtl' ) )
+				.then( mtl => {
+
+					mtl.preload();
+					new OBJLoader( manager )
+						.setMaterials( mtl )
+						.loadAsync( url ).then( res => {
+
+							done( res );
+
+						} );
+
+				} );
+
+		};
+
+		urdfLoader.packages = 'https://raw.githubusercontent.com/adubredu/DigitRobot.jl/refs/heads/main/urdf';
+
+		urdfLoader.loadAsync( url ).then( res => {
+
+			urdf = res;
+			ik = urdfRobotToIKRoot( urdf );
+
+			// make the root fixed
+			quat.fromEuler( ik.quaternion, - 90, 0, 0 );
+			ik.setMatrixNeedsUpdate();
+
+			// start the joints off at reasonable angles
+			urdf.setJointValue( 'hip_abduction_right', - 0.3 );
+			urdf.setJointValue( 'toe_pitch_joint_right', 0.1 );
+			urdf.setJointValue( 'hip_abduction_left', 0.3 );
+			urdf.setJointValue( 'toe_pitch_joint_left', - 0.1 );
+			setIKFromUrdf( ik, urdf );
+
+			goalMap = new Map();
+
+			[
+				'left_toe_pitch',
+				'right_toe_pitch',
+				'torso',
+			].forEach( name => {
+
+				const link = ik.find( l => l.name === name );
+				const goal = new Joint();
+				link.getWorldPosition( goal.position );
+				link.getWorldQuaternion( goal.quaternion );
+				goal.makeClosure( link );
+				goalMap.set( goal, link );
+
+			} );
+
+			ik.traverse( c => {
+
+				if ( c.isJoint ) {
+
+					c.dofRestPose.set( c.dofValues );
+					c.restPoseSet = true;
+
+				}
+
+			} );
+
+		} ).catch( reject );
 
 	} );
 
