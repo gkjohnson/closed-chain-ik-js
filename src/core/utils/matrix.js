@@ -1,7 +1,7 @@
 import linearSolve from 'linear-solve';
 import { SVD } from 'svd-js';
 
-export class Matrix extends Array {
+class Matrix extends Array {
 
 	constructor( rows, cols ) {
 
@@ -53,9 +53,15 @@ function identity( outMatrix ) {
 
 function zero( outMatrix ) {
 
+	fill( outMatrix, 0 );
+
+}
+
+function fill( outMatrix, value ) {
+
 	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
 
-		outMatrix[ r ].fill( 0 );
+		outMatrix[ r ].fill( value );
 
 	}
 
@@ -304,10 +310,95 @@ function set( matrix, r, c, value ) {
 
 }
 
+function sameDimensions( a, b ) {
+
+	return a.length === b.length && a[ 0 ].length === b[ 0 ].length;
+
+}
+
+function equal( a, b ) {
+
+	if ( ! sameDimensions( a, b ) ) {
+
+		return false;
+
+	}
+
+	const rows = a.length;
+	const cols = a[ 0 ].length;
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			if ( a[ r ][ c ] !== b[ r ][ c ] ) {
+
+				return false;
+
+			}
+
+		}
+
+	}
+
+	return true;
+
+}
+
+function copySubMatrix( outMatrix, sourceMatrix, rows, cols ) {
+
+	if ( outMatrix.rows < rows || outMatrix.cols < cols || sourceMatrix.rows < rows || sourceMatrix.cols < cols ) {
+
+		throw new Error( 'copySubMatrix: matrix dimensions insufficient' );
+
+	}
+
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			outMatrix[ r ][ c ] = sourceMatrix[ r ][ c ];
+
+		}
+
+	}
+
+}
+
+function equalSubMatrix( a, b, rows, cols ) {
+
+	if ( a.rows < rows || a.cols < cols || b.rows < rows || b.cols < cols ) {
+
+		return false;
+
+	}
+
+	for ( let r = 0; r < rows; r ++ ) {
+
+		for ( let c = 0; c < cols; c ++ ) {
+
+			if ( a[ r ][ c ] !== b[ r ][ c ] ) {
+
+				return false;
+
+			}
+
+		}
+
+	}
+
+	return true;
+
+}
+
 export const mat = {
+	copySubMatrix,
+	equalSubMatrix,
+	equal,
+	sameDimensions,
 	transpose,
 	identity,
 	zero,
+	fill,
 	scale,
 	multiply,
 	create,

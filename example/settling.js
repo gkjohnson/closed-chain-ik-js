@@ -479,7 +479,7 @@ function updateIk() {
 
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
 
-		// udpate drive goals from the new location
+		// update drive goals from the new location
 		ikRoot.updateMatrixWorld( true );
 
 		driveGoals.forEach( ( goal, i ) => {
@@ -514,9 +514,12 @@ function updateIk() {
 
 		solveOutput += delta.toFixed( 2 ) + 'ms ' + SOLVE_STATUS_NAMES[ results[ 0 ] ] + '\n';
 
-		const isConverged = results.filter( r => r === SOLVE_STATUS.CONVERGED ).length === results.length;
-		const isAllDiverged = results.filter( r => r === SOLVE_STATUS.DIVERGED ).length === results.length;
-		if ( isConverged || isAllDiverged ) {
+		const shouldContinue = results.filter( r => {
+
+			return r === SOLVE_STATUS.TIMEOUT || r === SOLVE_STATUS.STALLED;
+
+		} ).length !== 0;
+		if ( ! shouldContinue ) {
 
 			break;
 

@@ -84,6 +84,10 @@ export class ChainSolver {
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
 
+		// Cached jacobian and pseudo-inverse for warm start
+		this.prevJacobian = mat.create( 0, 0 );
+		this.prevPseudoInverse = mat.create( 0, 0 );
+
 		this.init();
 
 	}
@@ -284,81 +288,92 @@ export class ChainSolver {
 
 			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
-			let failedSVD = false;
-			if ( useSVD ) {
+			if ( this.jacobianCacheEquals( jacobian ) ) {
 
-				try {
+				this.restorePseudoInverse( pseudoInverse );
 
-					const m = errorRows;
-					const n = freeDoF;
-					const k = Math.min( m, n );
+			} else {
 
-					const u = matrixPool.get( m, k ); // m x k
-					const q = matrixPool.get( k, k ); // k x k
-					const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
+				let failedSVD = false;
+				if ( useSVD ) {
 
-					mat.svd( u, q, v, jacobian );
+					try {
 
-					const uTranspose = matrixPool.get( k, m );
-					const qInverse = matrixPool.get( k, k );
-					mat.transpose( uTranspose, u );
+						const m = errorRows;
+						const n = freeDoF;
+						const k = Math.min( m, n );
 
-					// Damped pseudo-inverse: σ / (σ² + λ²)
-					// This gives smooth behavior near singularities instead of hard truncation
-					const lambda2 = dampingFactor ** 2;
-					for ( let i = 0, l = q.length; i < l; i ++ ) {
+						const u = matrixPool.get( m, k ); // m x k
+						const q = matrixPool.get( k, k ); // k x k
+						const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
 
-						const sigma = mat.get( q, i, i );
-						const inv = sigma / ( sigma * sigma + lambda2 );
-						mat.set( qInverse, i, i, inv );
+						mat.svd( u, q, v, jacobian );
+
+						const uTranspose = matrixPool.get( k, m );
+						const qInverse = matrixPool.get( k, k );
+						mat.transpose( uTranspose, u );
+
+						// Damped pseudo-inverse: σ / (σ² + λ²)
+						// This gives smooth behavior near singularities instead of hard truncation
+						const lambda2 = dampingFactor ** 2;
+						for ( let i = 0, l = q.length; i < l; i ++ ) {
+
+							const sigma = mat.get( q, i, i );
+							const inv = sigma / ( sigma * sigma + lambda2 );
+							mat.set( qInverse, i, i, inv );
+
+						}
+
+						// V * Qinv * Ut
+						const vqinv = matrixPool.get( n, k );
+						mat.multiply( vqinv, v, qInverse );
+						mat.multiply( pseudoInverse, vqinv, uTranspose );
+
+					} catch {
+
+						failedSVD = true;
 
 					}
 
-					// V * Qinv * Ut
-					const vqinv = matrixPool.get( n, k );
-					mat.multiply( vqinv, v, qInverse );
-					mat.multiply( pseudoInverse, vqinv, uTranspose );
+				}
 
-				} catch {
+				if ( ! useSVD || failedSVD ) {
 
-					failedSVD = true;
+					// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
+					// J^T * J * x = J^T * e
+					// x = J^T * ( J * J^T )^-1 * e
+
+					// and with the adding damping
+					// x = J^T * ( J * J^T + l^2 * I )^-1 * e
+
+					// l^2 * I
+					const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
+					mat.identity( jacobianIdentityDamping );
+					mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
+
+					// J^T
+					const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
+					mat.transpose( jacobianTranspose, jacobian );
+
+					// J * J^T
+					const jjt = matrixPool.get( errorRows, errorRows );
+					mat.multiply( jjt, jacobian, jacobianTranspose );
+
+					// J * J^T + l^2 * I
+					const jjti = matrixPool.get( errorRows, errorRows );
+					mat.add( jjti, jjt, jacobianIdentityDamping );
+
+					// ( J * J^T + l^2 * I )^-1
+					const jjtii = matrixPool.get( errorRows, errorRows );
+					mat.invert( jjtii, jjti );
+
+					// J^T * ( J * J^T + l^2 * I )^-1
+					mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
 
 				}
 
-			}
-
-			if ( ! useSVD || failedSVD ) {
-
-				// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
-				// J^T * J * x = J^T * e
-				// x = J^T * ( J * J^T )^-1 * e
-
-				// and with the adding damping
-				// x = J^T * ( J * J^T + l^2 * I )^-1 * e
-
-				// l^2 * I
-				const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
-				mat.identity( jacobianIdentityDamping );
-				mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
-
-				// J^T
-				const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
-				mat.transpose( jacobianTranspose, jacobian );
-
-				// J * J^T
-				const jjt = matrixPool.get( errorRows, errorRows );
-				mat.multiply( jjt, jacobian, jacobianTranspose );
-
-				// J * J^T + l^2 * I
-				const jjti = matrixPool.get( errorRows, errorRows );
-				mat.add( jjti, jjt, jacobianIdentityDamping );
-
-				// ( J * J^T + l^2 * I )^-1
-				const jjtii = matrixPool.get( errorRows, errorRows );
-				mat.invert( jjtii, jjti );
-
-				// J^T * ( J * J^T + l^2 * I )^-1
-				mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
+				// save the results for warm start
+				this.cacheJacobianResult( jacobian, pseudoInverse );
 
 			}
 
@@ -838,6 +853,46 @@ export class ChainSolver {
 		dofResultInfo.errorRows = errorRows;
 		dofResultInfo.freeDoF = freeDoF;
 		dofResultInfo.totalError = totalError;
+
+	}
+
+	// Check if the cached jacobian equals the given jacobian
+	jacobianCacheEquals( matrix ) {
+
+		return mat.equalSubMatrix( this.prevJacobian, matrix, matrix.rows, matrix.cols );
+
+	}
+
+	// Copy cached pseudo-inverse to the output matrix
+	restorePseudoInverse( target ) {
+
+		mat.copySubMatrix( target, this.prevPseudoInverse, target.rows, target.cols );
+
+	}
+
+	cacheJacobianResult( jacobian, pseudoInverse ) {
+
+		// grow the cached matrices if needed
+		const { rows, cols } = jacobian;
+		if ( this.prevJacobian.rows < rows || this.prevJacobian.cols < cols ) {
+
+			this.prevJacobian = mat.create( rows, cols );
+
+		}
+
+		if ( this.prevPseudoInverse.rows < pseudoInverse.rows || this.prevPseudoInverse.cols < pseudoInverse.cols ) {
+
+			this.prevPseudoInverse = mat.create( pseudoInverse.rows, pseudoInverse.cols );
+
+		}
+
+		// fill with Infinity to invalidate stale data beyond current dimensions
+		mat.fill( this.prevJacobian, Infinity );
+		mat.fill( this.prevPseudoInverse, Infinity );
+
+		// copy the latest data
+		mat.copySubMatrix( this.prevJacobian, jacobian, rows, cols );
+		mat.copySubMatrix( this.prevPseudoInverse, pseudoInverse, pseudoInverse.rows, pseudoInverse.cols );
 
 	}
 
