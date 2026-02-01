@@ -38,19 +38,12 @@ export function accumulateClosureError(
 		tempPos[ 0 ] *= dofFlags[ 0 ];
 		tempPos[ 1 ] *= dofFlags[ 1 ];
 		tempPos[ 2 ] *= dofFlags[ 2 ];
-		rowCount = translationDoFCount;
 
-		if ( rotationDoFCount === 0 ) {
+		tempRotVec[ 0 ] *= dofFlags[ 3 ];
+		tempRotVec[ 1 ] *= dofFlags[ 4 ];
+		tempRotVec[ 2 ] *= dofFlags[ 5 ];
 
-			tempRotVec[ 0 ] = 0;
-			tempRotVec[ 1 ] = 0;
-			tempRotVec[ 2 ] = 0;
-
-		} else {
-
-			rowCount += rotationDoFCount;
-
-		}
+		rowCount = translationDoFCount + rotationDoFCount;
 
 	}
 
