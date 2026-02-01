@@ -63,6 +63,7 @@ export class Joint extends Frame {
 		this.matrixDoF = new Float32Array( 16 );
 		mat4.identity( this.matrixDoF );
 
+		// this is the position and orientation of the joint before offsets are applied
 		this.cachedIdentityDoFMatrixWorld = new Float32Array( 16 );
 		mat4.identity( this.cachedIdentityDoFMatrixWorld );
 
@@ -584,8 +585,6 @@ export class Joint extends Frame {
 			mat4.copy( cachedIdentityDoFMatrixWorld, matrix );
 
 		}
-
-
 
 	}
 

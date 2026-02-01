@@ -642,16 +642,16 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// Determine which position we're affecting and the sign
+							// Determine which position we're affecting and the sign. If we're the connected child then
+							// we need to invert the change needed.
 							const isConnected = relevantConnectedClosures.has( targetJoint );
 							const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
 
-							// Get the target position
+							// Get the target position which is needed to calculate the impact of rotation
+							// TODO: do this internally?
 							mat4.getTranslation( targetWorldPos, affectedMatrix );
 
-							// Compute analytical Jacobian column
-							// Use cachedIdentityDoFMatrixWorld - the axis is defined in the frame BEFORE
-							// the DoF rotation is applied (the axis doesn't rotate with the joint)
+							// compute analytical Jacobian column
 							computeAnalyticalJacobianColumn(
 								dof,
 								freeJoint.cachedIdentityDoFMatrixWorld,
