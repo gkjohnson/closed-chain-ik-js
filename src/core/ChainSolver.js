@@ -1,4 +1,4 @@
-import { vec3, vec4, mat4 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { getMatrixDifference } from './utils/glmatrix.js';
@@ -8,9 +8,9 @@ const targetRelativeToJointMatrix = new Float64Array( 16 );
 const targetDeltaWorldMatrix = new Float64Array( 16 );
 const tempDeltaWorldMatrix = new Float64Array( 16 );
 const tempInverseMatrixWorld = new Float64Array( 16 );
-const tempQuat = new Float64Array( 4 );
+const tempRotVec = new Float64Array( 3 );
 const tempPos = new Float64Array( 3 );
-const tempQuat2 = new Float64Array( 4 );
+const tempRotVec2 = new Float64Array( 3 );
 const tempPos2 = new Float64Array( 3 );
 
 // temp variables for analytical Jacobian
@@ -38,14 +38,14 @@ const tempAxisQuat = new Float64Array( 4 );
 // jointMatrix: the joint's identity DoF world matrix (4x4) - frame before DoF rotation
 // targetPos: the target position in world space (vec3)
 // outPosJacobian: output position jacobian (vec3) - how target position changes
-// outQuatJacobian: output quaternion jacobian (vec4) - how target orientation changes
+// outRotVecJacobian: output rotation vector jacobian (vec3) - how target orientation changes
 // translationFactor/rotationFactor: scaling factors
 function computeAnalyticalJacobianColumn(
 	dof,
 	jointMatrix,
 	targetPos,
 	outPosJacobian,
-	outQuatJacobian,
+	outRotVecJacobian,
 	translationFactor,
 	rotationFactor
 ) {
@@ -67,10 +67,9 @@ function computeAnalyticalJacobianColumn(
 		outPosJacobian[ 2 ] = axisWorld[ 2 ] * translationFactor;
 
 		// Translation doesn't affect orientation
-		outQuatJacobian[ 0 ] = 0;
-		outQuatJacobian[ 1 ] = 0;
-		outQuatJacobian[ 2 ] = 0;
-		outQuatJacobian[ 3 ] = 0;
+		outRotVecJacobian[ 0 ] = 0;
+		outRotVecJacobian[ 1 ] = 0;
+		outRotVecJacobian[ 2 ] = 0;
 
 	} else {
 
@@ -82,12 +81,11 @@ function computeAnalyticalJacobianColumn(
 		outPosJacobian[ 1 ] = crossResult[ 1 ] * translationFactor;
 		outPosJacobian[ 2 ] = crossResult[ 2 ] * translationFactor;
 
-		// Quaternion derivative for small rotation: ~0.5 * axis
-		// This is an approximation for the derivative of quaternion error
-		outQuatJacobian[ 0 ] = 0.5 * axisWorld[ 0 ] * rotationFactor;
-		outQuatJacobian[ 1 ] = 0.5 * axisWorld[ 1 ] * rotationFactor;
-		outQuatJacobian[ 2 ] = 0.5 * axisWorld[ 2 ] * rotationFactor;
-		outQuatJacobian[ 3 ] = 0;
+		// Rotation vector derivative: for a small rotation θ around axis n,
+		// the rotation vector is θn, so the derivative w.r.t. θ is just n
+		outRotVecJacobian[ 0 ] = axisWorld[ 0 ] * rotationFactor;
+		outRotVecJacobian[ 1 ] = axisWorld[ 1 ] * rotationFactor;
+		outRotVecJacobian[ 2 ] = axisWorld[ 2 ] * rotationFactor;
 
 	}
 
@@ -255,7 +253,14 @@ export class ChainSolver {
 			prevDoFValues,
 			useSVD,
 			matrixPool,
+			dampingFactor,
+			maxIterations,
 		} = this;
+
+		// Store original error clamps for backtracking
+		const originalTranslationErrorClamp = this.translationErrorClamp;
+		const originalRotationErrorClamp = this.rotationErrorClamp;
+		let errorClampFactor = 1;
 
 		let iterations = 0;
 		let prevErrorMagnitude = Infinity;
@@ -304,27 +309,46 @@ export class ChainSolver {
 
 			}
 
-			// Check if we've diverged
+			// Check if we've diverged - backtrack with smaller step
 			if ( totalError > prevErrorMagnitude + divergeThreshold ) {
 
+				// Revert joint values and update matrices
 				prevDoFValues.forEach( ( dofValues, joint ) => {
 
 					joint.dofValues.set( dofValues );
 					joint.setMatrixDoFNeedsUpdate();
+					joint.updateMatrixWorld();
 
 				} );
 
+				// Halve error clamps to take smaller steps
+				errorClampFactor *= 0.5;
+				this.translationErrorClamp = originalTranslationErrorClamp * errorClampFactor;
+				this.rotationErrorClamp = originalRotationErrorClamp * errorClampFactor;
 
-				status = SOLVE_STATUS.DIVERGED;
-				break;
+				// If we've taken a max number of steps or too many iterations then give up
+				if ( errorClampFactor < 0.5 ** 6 || iterations > maxIterations ) {
+
+					status = SOLVE_STATUS.DIVERGED;
+					break;
+
+				}
+
+			} else {
+
+				// Update the previous error and cache joint state for divergence check next frame
+				// Because we haven't diverged these values are in a known good state
+				prevErrorMagnitude = totalError;
+				prevDoFValues.forEach( ( dofValues, joint ) => {
+
+					dofValues.set( joint.dofValues );
+
+				} );
 
 			}
 
-			prevErrorMagnitude = totalError;
-
 			// Check if we've hit max iterations
-			iterations ++;
-			if ( iterations > this.maxIterations ) {
+			if ( iterations > maxIterations ) {
 
 				status = SOLVE_STATUS.TIMEOUT;
 				break;
@@ -362,22 +386,13 @@ export class ChainSolver {
 					const qInverse = matrixPool.get( k, k );
 					mat.transpose( uTranspose, u );
 
-					// if the diagonal value is close to 0 when taking the inverse
-					// then set it to zero.
+					// Damped pseudo-inverse: σ / (σ² + λ²)
+					// This gives smooth behavior near singularities instead of hard truncation
+					const lambda2 = dampingFactor ** 2;
 					for ( let i = 0, l = q.length; i < l; i ++ ) {
 
-						const val = mat.get( q, i, i );
-						let inv;
-						if ( Math.abs( val ) < 0.001 ) {
-
-							inv = 0;
-
-						} else {
-
-							inv = 1 / val;
-
-						}
-
+						const sigma = mat.get( q, i, i );
+						const inv = sigma / ( sigma * sigma + lambda2 );
 						mat.set( qInverse, i, i, inv );
 
 					}
@@ -387,7 +402,7 @@ export class ChainSolver {
 					mat.multiply( vqinv, v, qInverse );
 					mat.multiply( pseudoInverse, vqinv, uTranspose );
 
-				} catch ( err ) {
+				} catch {
 
 					failedSVD = true;
 
@@ -469,12 +484,8 @@ export class ChainSolver {
 
 					} else {
 
-						for ( let d = 0; d < colCount; d ++ ) {
-
-							mat.set( restPose, colIndex, 0, 0 );
-							colIndex ++;
-
-						}
+						// No rest pose set, values already zeroed
+						colIndex += colCount;
 
 					}
 
@@ -528,20 +539,17 @@ export class ChainSolver {
 
 			}
 
-			// Prep for a divergence check
-			prevDoFValues.forEach( ( dofValues, joint ) => {
-
-				dofValues.set( joint.dofValues );
-
-			} );
-
-			// apply the latest joint angles and lock and joints that have
-			// hit their joint limits.
+			// Apply joint angles
 			this.applyJointAngles( freeJoints, deltaTheta );
 
 			// there's still error and we're under the max iterations
+			iterations ++;
 
-		} while ( true );
+		} while ( true ); // eslint-disable-line
+
+		// Restore original error clamps in case it was modified during divergence checks
+		this.translationErrorClamp = originalTranslationErrorClamp;
+		this.rotationErrorClamp = originalRotationErrorClamp;
 
 		targetJoints.length = 0;
 		freeJoints.length = 0;
@@ -698,7 +706,7 @@ export class ChainSolver {
 									freeJoint.cachedIdentityDoFMatrixWorld,
 									targetWorldPos,
 									tempPos,
-									tempQuat,
+									tempRotVec,
 									translationFactor,
 									rotationFactor
 								);
@@ -712,18 +720,17 @@ export class ChainSolver {
 									tempPos[ 0 ] = - tempPos[ 0 ];
 									tempPos[ 1 ] = - tempPos[ 1 ];
 									tempPos[ 2 ] = - tempPos[ 2 ];
-									tempQuat[ 0 ] = - tempQuat[ 0 ];
-									tempQuat[ 1 ] = - tempQuat[ 1 ];
-									tempQuat[ 2 ] = - tempQuat[ 2 ];
-									tempQuat[ 3 ] = - tempQuat[ 3 ];
+									tempRotVec[ 0 ] = - tempRotVec[ 0 ];
+									tempRotVec[ 1 ] = - tempRotVec[ 1 ];
+									tempRotVec[ 2 ] = - tempRotVec[ 2 ];
 
 								}
 
 							} else {
 
-								// Numerical Jacobian computation (original code)
-								// Get the error from child towards the closure target
-								targetJoint.getClosureError( tempPos, tempQuat );
+								// Numerical Jacobian computation
+								// Get the error from child towards the closure target as rotation vector
+								targetJoint.getClosureError( tempPos, tempRotVec );
 								if ( relevantConnectedClosures.has( targetJoint ) ) {
 
 									// If this is affecting a link connected to a closure joint then adjust that child link by
@@ -732,7 +739,7 @@ export class ChainSolver {
 									mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 									// Get the new error
-									getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempQuat2 );
+									getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempRotVec2 );
 
 								} else {
 
@@ -742,7 +749,7 @@ export class ChainSolver {
 									mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
 
 									// Get the new error
-									getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempQuat2 );
+									getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempRotVec2 );
 
 								}
 
@@ -751,11 +758,13 @@ export class ChainSolver {
 								vec3.subtract( tempPos, tempPos, tempPos2 );
 								vec3.scale( tempPos, tempPos, translationFactor / delta );
 
-								vec4.subtract( tempQuat, tempQuat, tempQuat2 );
-								vec4.scale( tempQuat, tempQuat, rotationFactor / delta );
+								vec3.subtract( tempRotVec, tempRotVec, tempRotVec2 );
+								vec3.scale( tempRotVec, tempRotVec, rotationFactor / delta );
 
 							}
 
+							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
+							// See solver.js for details on unifying closure semantics.
 							if ( targetJoint.isGoal ) {
 
 								const { translationDoFCount, rotationDoFCount, dof } = targetJoint;
@@ -766,17 +775,14 @@ export class ChainSolver {
 
 								}
 
-								if ( rotationDoFCount === 3 ) {
+								for ( let i = 0; i < rotationDoFCount; i ++ ) {
 
-									mat.set( outJacobian, rowIndex + translationDoFCount + 0, colIndex, tempQuat[ 0 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 1, colIndex, tempQuat[ 1 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 2, colIndex, tempQuat[ 2 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 3, colIndex, tempQuat[ 3 ] );
-									rowIndex += 4;
+									const d = dof[ translationDoFCount + i ];
+									mat.set( outJacobian, rowIndex + translationDoFCount + i, colIndex, tempRotVec[ d - 3 ] );
 
 								}
 
-								rowIndex += translationDoFCount;
+								rowIndex += translationDoFCount + rotationDoFCount;
 
 							} else {
 
@@ -785,37 +791,26 @@ export class ChainSolver {
 								mat.set( outJacobian, rowIndex + 1, colIndex, tempPos[ 1 ] );
 								mat.set( outJacobian, rowIndex + 2, colIndex, tempPos[ 2 ] );
 
-								// set rotation
-								mat.set( outJacobian, rowIndex + 3, colIndex, tempQuat[ 0 ] );
-								mat.set( outJacobian, rowIndex + 4, colIndex, tempQuat[ 1 ] );
-								mat.set( outJacobian, rowIndex + 5, colIndex, tempQuat[ 2 ] );
-								mat.set( outJacobian, rowIndex + 6, colIndex, tempQuat[ 3 ] );
-								rowIndex += 7;
+								// set rotation vector
+								mat.set( outJacobian, rowIndex + 3, colIndex, tempRotVec[ 0 ] );
+								mat.set( outJacobian, rowIndex + 4, colIndex, tempRotVec[ 1 ] );
+								mat.set( outJacobian, rowIndex + 5, colIndex, tempRotVec[ 2 ] );
+								rowIndex += 6;
 
 							}
 
 						} else {
 
-							// if the target isn't relevant then there's no delta
-							let totalRows = 7;
+							// Target isn't relevant, values already zeroed
 							if ( targetJoint.isGoal ) {
 
-								totalRows = targetJoint.translationDoFCount;
-								if ( targetJoint.rotationDoFCount === 3 ) {
+								rowIndex += targetJoint.translationDoFCount + targetJoint.rotationDoFCount;
 
-									totalRows += 4;
+							} else {
 
-								}
-
-							}
-
-							for ( let i = 0; i < totalRows; i ++ ) {
-
-								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
+								rowIndex += 6;
 
 							}
-
-							rowIndex += totalRows;
 
 						}
 
@@ -842,16 +837,9 @@ export class ChainSolver {
 
 							}
 
-						} else {
-
-							for ( let i = 0; i < rowCount; i ++ ) {
-
-								mat.set( outJacobian, rowIndex + i, colIndex, 0 );
-
-							}
-
 						}
 
+						// else: values already zeroed
 						rowIndex += rowCount;
 
 					}

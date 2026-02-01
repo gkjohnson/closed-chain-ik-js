@@ -309,7 +309,7 @@ describe( 'Frame', () => {
 				f.addChild( f );
 				throw new Error();
 
-			} catch ( e ) {
+			} catch {
 
 				caught = true;
 

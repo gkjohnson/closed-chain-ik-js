@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - Unreleased
+### Added
+- Basic benchmark for solve.
+- Used damped pseudo inverse for SVD case.
+- Make progressively smaller step sizes towards goals if an IK chain is diverging.
+
+### Changed
+- Simplified internal Matrix initialization.
+
+### Fixed
+- Fixed case where Matrices were not zeroed out when fetched from MatrixPool, possibly causing some outdated values to be used in calculations.
+
 ## [0.0.5] - 2025-07-18
 ### Fixed
 - Adjust package version requirements.

@@ -1,16 +1,16 @@
-import { vec3, vec4 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import { DOF } from '../Joint.js';
 import { mat } from './matrix.js';
 
 const tempPos = new Float64Array( 3 );
-const tempQuat = new Float64Array( 4 );
+const tempRotVec = new Float64Array( 3 );
 const tempEuler = new Float64Array( 3 );
 export function accumulateClosureError(
 	solver,
 	joint,
 	startIndex,
 	errorVector = null,
-	result = { isConverged: false, rowCount: 7, totalError: 0 }
+	result = { isConverged: false, rowCount: 6, totalError: 0 }
 ) {
 
 	const {
@@ -30,35 +30,28 @@ export function accumulateClosureError(
 	} = joint;
 
 	// Get the error from child towards the closure target
-	joint.getClosureError( tempPos, tempQuat );
+	joint.getClosureError( tempPos, tempRotVec );
 
-	let rowCount = 7;
+	// TODO: Non-Goal closures assume all 6 DoFs are constrained. See TODO below.
+	let rowCount = 6;
 	if ( joint.isGoal ) {
 
 		tempPos[ 0 ] *= dofFlags[ 0 ];
 		tempPos[ 1 ] *= dofFlags[ 1 ];
 		tempPos[ 2 ] *= dofFlags[ 2 ];
-		rowCount = translationDoFCount;
 
-		if ( rotationDoFCount === 0 ) {
+		tempRotVec[ 0 ] *= dofFlags[ 3 ];
+		tempRotVec[ 1 ] *= dofFlags[ 4 ];
+		tempRotVec[ 2 ] *= dofFlags[ 5 ];
 
-			tempQuat[ 0 ] = 0;
-			tempQuat[ 1 ] = 0;
-			tempQuat[ 2 ] = 0;
-			tempQuat[ 3 ] = 0;
-
-		} else {
-
-			rowCount += 4;
-
-		}
+		rowCount = translationDoFCount + rotationDoFCount;
 
 	}
 
 	let isConverged = false;
 	let totalError = 0;
 	const posMag = vec3.length( tempPos );
-	const rotMag = vec4.length( tempQuat );
+	const rotMag = vec3.length( tempRotVec );
 	if (
 		posMag < translationConvergeThreshold &&
 		rotMag < rotationConvergeThreshold
@@ -78,16 +71,23 @@ export function accumulateClosureError(
 
 		}
 
-		vec4.scale( tempPos, tempPos, translationFactor );
+		vec3.scale( tempPos, tempPos, translationFactor );
 
 		if ( rotMag > rotationErrorClamp ) {
 
-			vec4.scale( tempQuat, tempQuat, rotationErrorClamp / rotMag );
+			vec3.scale( tempRotVec, tempRotVec, rotationErrorClamp / rotMag );
 
 		}
 
-		vec4.scale( tempQuat, tempQuat, rotationFactor );
+		vec3.scale( tempRotVec, tempRotVec, rotationFactor );
 
+		// TODO: Currently Goals and non-Goal closures have different semantics:
+		// - Goals: DoFs specify which axes to CONSTRAIN (inverted via setFreeDoF)
+		// - Non-Goal closures: Hardcoded to constrain all 6 axes, DoFs ignored
+		//
+		// Ideally, closures should work like joints where DoFs specify FREE axes
+		// and the remaining axes are constrained. This would allow partial closures
+		// (eg a ball-socket closure that only constrains position, not rotation).
 		if ( joint.isGoal ) {
 
 			for ( let i = 0; i < translationDoFCount; i ++ ) {
@@ -97,12 +97,10 @@ export function accumulateClosureError(
 
 			}
 
-			if ( joint.rotationDoFCount === 3 ) {
+			for ( let i = 0; i < rotationDoFCount; i ++ ) {
 
-				mat.set( errorVector, startIndex + translationDoFCount + 0, 0, tempQuat[ 0 ] );
-				mat.set( errorVector, startIndex + translationDoFCount + 1, 0, tempQuat[ 1 ] );
-				mat.set( errorVector, startIndex + translationDoFCount + 2, 0, tempQuat[ 2 ] );
-				mat.set( errorVector, startIndex + translationDoFCount + 3, 0, tempQuat[ 3 ] );
+				const d = dof[ translationDoFCount + i ];
+				mat.set( errorVector, startIndex + translationDoFCount + i, 0, tempRotVec[ d - 3 ] );
 
 			}
 
@@ -112,10 +110,9 @@ export function accumulateClosureError(
 			mat.set( errorVector, startIndex + 1, 0, tempPos[ 1 ] );
 			mat.set( errorVector, startIndex + 2, 0, tempPos[ 2 ] );
 
-			mat.set( errorVector, startIndex + 3, 0, tempQuat[ 0 ] );
-			mat.set( errorVector, startIndex + 4, 0, tempQuat[ 1 ] );
-			mat.set( errorVector, startIndex + 5, 0, tempQuat[ 2 ] );
-			mat.set( errorVector, startIndex + 6, 0, tempQuat[ 3 ] );
+			mat.set( errorVector, startIndex + 3, 0, tempRotVec[ 0 ] );
+			mat.set( errorVector, startIndex + 4, 0, tempRotVec[ 1 ] );
+			mat.set( errorVector, startIndex + 5, 0, tempRotVec[ 2 ] );
 
 		}
 

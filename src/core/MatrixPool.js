@@ -14,6 +14,11 @@ class FixedMatrixPool {
 
 				matrices[ index ] = matrix = mat.create( row, col );
 
+			} else {
+
+				// Zero out reused matrices to avoid stale data
+				mat.zero( matrix );
+
 			}
 
 			index ++;

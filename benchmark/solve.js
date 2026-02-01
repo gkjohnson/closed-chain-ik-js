@@ -60,12 +60,8 @@ function buildArm( numJoints = 6 ) {
 }
 
 // Set goal to a fixed reachable position
-// Arm has numJoints segments of 1 unit each, pointing up from origin
-// So end effector starts at (0, numJoints, 0)
 function setGoalPosition( goal, numJoints, iteration ) {
 
-	// Fixed positions that are reachable - arm can bend to reach these
-	// Cycle through a few different targets
 	const targets = [
 		[ 1, numJoints - 1, 0 ],
 		[ - 1, numJoints - 1, 0 ],
@@ -94,14 +90,6 @@ function runBenchmark( useAnalyticalJacobian, numJoints = 10, iterations = 100 )
 	solver.restPoseFactor = 0.001;
 	solver.dampingFactor = 0.01; // Higher damping for stability
 
-	// Debug: Check if solver found any chains
-	if ( solver.solvers.length === 0 ) {
-
-		console.error( 'ERROR: No chains found by solver!' );
-		return null;
-
-	}
-
 	console.log( `  Chains found: ${ solver.solvers.length }` );
 	console.log( `  Joints in chain: ${ solver.solvers[ 0 ].chain.length }` );
 
@@ -127,7 +115,6 @@ function runBenchmark( useAnalyticalJacobian, numJoints = 10, iterations = 100 )
 
 		times.push( end - start );
 
-		// Track status - result is just the status number, not an object
 		for ( let j = 0, l = results.length; j < l; j ++ ) {
 
 			const status = results[ j ];

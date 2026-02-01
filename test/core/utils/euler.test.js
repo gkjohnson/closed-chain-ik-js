@@ -1,6 +1,4 @@
-import { quat } from 'gl-matrix';
-import { smallestDifferenceQuaternion } from '../../../src/core/utils/quaternion.js';
-import { PI, PI2, HALF_PI, RAD2DEG } from '../../../src/core/utils/constants.js';
+import { PI, PI2, HALF_PI } from '../../../src/core/utils/constants.js';
 
 import {
 	clampEulerValue,
@@ -12,24 +10,7 @@ import {
 	toSmallestEulerDistance,
 	getClosestEulerRepresentation,
 } from '../../../src/core/utils/euler.js';
-
-function compare( a, b ) {
-
-	const qa = new Array( 4 );
-	const qb = new Array( 4 );
-	const delta = new Array( 4 );
-
-	quat.fromEuler( qa, a[ 0 ] * RAD2DEG, a[ 1 ] * RAD2DEG, a[ 2 ] * RAD2DEG );
-	quat.fromEuler( qb, b[ 0 ] * RAD2DEG, b[ 1 ] * RAD2DEG, b[ 2 ] * RAD2DEG );
-
-	smallestDifferenceQuaternion( delta, qa, qb );
-
-	expect( Math.abs( delta[ 0 ] ) ).toBeLessThan( 1e-7 );
-	expect( Math.abs( delta[ 1 ] ) ).toBeLessThan( 1e-7 );
-	expect( Math.abs( delta[ 2 ] ) ).toBeLessThan( 1e-7 );
-	expect( Math.abs( delta[ 3 ] ) ).toBeLessThan( 1e-7 );
-
-}
+import { expect } from 'vitest';
 
 describe( 'clampEulerValue', () => {
 
@@ -46,9 +27,9 @@ describe( 'clampEulerValue', () => {
 			expect( clampedAngle ).toBeLessThanOrEqual( PI );
 			expect( clampedAngle ).toBeGreaterThan( - PI );
 
-			compare( [ 0, 0, angle ], [ 0, 0, clampedAngle ] );
-			compare( [ 0, angle, 0 ], [ 0, clampedAngle, 0 ] );
-			compare( [ angle, 0, 0 ], [ clampedAngle, 0, 0 ] );
+			expect( [ 0, 0, angle ] ).toEqualEuler( [ 0, 0, clampedAngle ] );
+			expect( [ 0, angle, 0 ] ).toEqualEuler( [ 0, clampedAngle, 0 ] );
+			expect( [ angle, 0, 0 ] ).toEqualEuler( [ clampedAngle, 0, 0 ] );
 
 		}
 
@@ -92,20 +73,24 @@ describe( 'diffEulerDistance', () => {
 
 describe( 'getRedundantEulerRepresentation', () => {
 
-	for ( let i = 0; i < 100; i ++ ) {
+	it( 'should convert the euler angles to a minimal representation.', () => {
 
-		const euler = [
-			( Math.random() - 0.5 ) * 360 * 2,
-			( Math.random() - 0.5 ) * 360 * 2,
-			( Math.random() - 0.5 ) * 360 * 2,
-		];
+		for ( let i = 0; i < 100; i ++ ) {
 
-		const redundant = new Array( 3 );
-		getRedundantEulerRepresentation( redundant, euler );
+			const euler = [
+				( Math.random() - 0.5 ) * 360 * 2,
+				( Math.random() - 0.5 ) * 360 * 2,
+				( Math.random() - 0.5 ) * 360 * 2,
+			];
 
-		compare( euler, redundant );
+			const redundant = new Array( 3 );
+			getRedundantEulerRepresentation( redundant, euler );
 
-	}
+			expect( euler ).toEqualEuler( redundant );
+
+		}
+
+	} );
 
 } );
 
@@ -173,7 +158,7 @@ describe( 'toSmallestRedundantTwistRepresentation', () => {
 			expect( Math.abs( output[ 1 ] - a[ 1 ] ) ).toBeLessThanOrEqual( PI );
 			expect( Math.abs( output[ 2 ] - a[ 2 ] ) ).toBeLessThanOrEqual( PI );
 
-			compare( b, output );
+			expect( b ).toEqualEuler( output );
 
 		}
 
@@ -244,7 +229,7 @@ describe( 'getClosestEulerRepresentation', () => {
 
 				for ( let j = 0; j < results.length; j ++ ) {
 
-					compare( results[ i ], results[ j ] );
+					expect( results[ i ] ).toEqualEuler( results[ j ] );
 
 				}
 
