@@ -643,6 +643,8 @@ export class ChainSolver {
 							vec3.subtract( tempRotVec, tempRotVec, tempRotVec2 );
 							vec3.scale( tempRotVec, tempRotVec, rotationFactor / delta );
 
+							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
+							// See solver.js for details on unifying closure semantics.
 							if ( targetJoint.isGoal ) {
 
 								const { translationDoFCount, rotationDoFCount, dof } = targetJoint;
@@ -653,16 +655,14 @@ export class ChainSolver {
 
 								}
 
-								if ( rotationDoFCount === 3 ) {
+								for ( let i = 0; i < rotationDoFCount; i ++ ) {
 
-									mat.set( outJacobian, rowIndex + translationDoFCount + 0, colIndex, tempRotVec[ 0 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 1, colIndex, tempRotVec[ 1 ] );
-									mat.set( outJacobian, rowIndex + translationDoFCount + 2, colIndex, tempRotVec[ 2 ] );
-									rowIndex += 3;
+									const d = dof[ translationDoFCount + i ];
+									mat.set( outJacobian, rowIndex + translationDoFCount + i, colIndex, tempRotVec[ d - 3 ] );
 
 								}
 
-								rowIndex += translationDoFCount;
+								rowIndex += translationDoFCount + rotationDoFCount;
 
 							} else {
 
@@ -682,19 +682,15 @@ export class ChainSolver {
 						} else {
 
 							// Target isn't relevant, values already zeroed
-							let totalRows = 6;
 							if ( targetJoint.isGoal ) {
 
-								totalRows = targetJoint.translationDoFCount;
-								if ( targetJoint.rotationDoFCount === 3 ) {
+								rowIndex += targetJoint.translationDoFCount + targetJoint.rotationDoFCount;
 
-									totalRows += 3;
+							} else {
 
-								}
+								rowIndex += 6;
 
 							}
-
-							rowIndex += totalRows;
 
 						}
 
