@@ -18,7 +18,6 @@ const jointWorldPos = new Float64Array( 3 );
 const targetWorldPos = new Float64Array( 3 );
 const axisWorld = new Float64Array( 3 );
 const toTarget = new Float64Array( 3 );
-const crossResult = new Float64Array( 3 );
 
 // Local axis vectors for each DOF
 const LOCAL_AXES = [
@@ -39,15 +38,12 @@ const tempAxisQuat = new Float64Array( 4 );
 // targetPos: the target position in world space (vec3)
 // outPosJacobian: output position jacobian (vec3) - how target position changes
 // outRotVecJacobian: output rotation vector jacobian (vec3) - how target orientation changes
-// translationFactor/rotationFactor: scaling factors
 function computeAnalyticalJacobianColumn(
 	dof,
 	jointMatrix,
 	targetPos,
 	outPosJacobian,
 	outRotVecJacobian,
-	translationFactor,
-	rotationFactor
 ) {
 
 	// Get joint position from its world matrix
@@ -62,9 +58,7 @@ function computeAnalyticalJacobianColumn(
 	if ( dof < 3 ) {
 
 		// Translational DOF: position change is just the axis direction
-		outPosJacobian[ 0 ] = axisWorld[ 0 ] * translationFactor;
-		outPosJacobian[ 1 ] = axisWorld[ 1 ] * translationFactor;
-		outPosJacobian[ 2 ] = axisWorld[ 2 ] * translationFactor;
+		vec3.copy( outPosJacobian, axisWorld );
 
 		// Translation doesn't affect orientation
 		outRotVecJacobian[ 0 ] = 0;
@@ -75,17 +69,11 @@ function computeAnalyticalJacobianColumn(
 
 		// Rotational DOF: position change is axis × (target - joint)
 		vec3.subtract( toTarget, targetPos, jointWorldPos );
-		vec3.cross( crossResult, axisWorld, toTarget );
-
-		outPosJacobian[ 0 ] = crossResult[ 0 ] * translationFactor;
-		outPosJacobian[ 1 ] = crossResult[ 1 ] * translationFactor;
-		outPosJacobian[ 2 ] = crossResult[ 2 ] * translationFactor;
+		vec3.cross( outPosJacobian, axisWorld, toTarget );
 
 		// Rotation vector derivative: for a small rotation θ around axis n,
 		// the rotation vector is θn, so the derivative w.r.t. θ is just n
-		outRotVecJacobian[ 0 ] = axisWorld[ 0 ] * rotationFactor;
-		outRotVecJacobian[ 1 ] = axisWorld[ 1 ] * rotationFactor;
-		outRotVecJacobian[ 2 ] = axisWorld[ 2 ] * rotationFactor;
+		vec3.copy( outRotVecJacobian, axisWorld );
 
 	}
 
@@ -707,24 +695,16 @@ export class ChainSolver {
 									targetWorldPos,
 									tempPos,
 									tempRotVec,
-									translationFactor,
-									rotationFactor
 								);
 
 								// The numerical Jacobian computes (old_error - new_error)/delta = -d(error)/d(theta)
 								// Our analytical gives +d(position)/d(theta), so we need to negate
 								// Additionally, for connected closures (error = closure - child), moving child
 								// means the derivative has opposite sign, so those cancel out to positive
-								if ( ! isConnected ) {
-
-									tempPos[ 0 ] = - tempPos[ 0 ];
-									tempPos[ 1 ] = - tempPos[ 1 ];
-									tempPos[ 2 ] = - tempPos[ 2 ];
-									tempRotVec[ 0 ] = - tempRotVec[ 0 ];
-									tempRotVec[ 1 ] = - tempRotVec[ 1 ];
-									tempRotVec[ 2 ] = - tempRotVec[ 2 ];
-
-								}
+								const posSign = isConnected ? translationFactor : - translationFactor;
+								const rotSign = isConnected ? rotationFactor : - rotationFactor;
+								vec3.scale( tempPos, tempPos, posSign );
+								vec3.scale( tempRotVec, tempRotVec, rotSign );
 
 							} else {
 
