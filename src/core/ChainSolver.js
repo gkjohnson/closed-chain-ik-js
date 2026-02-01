@@ -423,19 +423,20 @@ export class ChainSolver {
 
 				}
 
-				// J^-1 * J
-				const jij = matrixPool.get( freeDoF, freeDoF );
-				mat.multiply( jij, pseudoInverse, jacobian );
+				// Nullspace projection: "restPose - J^-1 * (J * restPose)" which is mathematically
+				// equivalent to "(I - J^-1 * J) * restPose". This version avoids constructing and
+				// performing a freeDoF x freeDoF multiplication needed for the identity calculations.
 
-				// ( I - J^-1 * J )
-				const ident = matrixPool.get( freeDoF, freeDoF );
-				mat.identity( ident );
+				// J * restPose > errorRows x 1
+				const jRestPose = matrixPool.get( errorRows, 1 );
+				mat.multiply( jRestPose, jacobian, restPose );
 
-				const nullSpaceProjection = matrixPool.get( freeDoF, freeDoF );
-				mat.subtract( nullSpaceProjection, ident, jij );
+				// J^-1 * (J * restPose) > freeDoF x 1
+				const jijRestPose = matrixPool.get( freeDoF, 1 );
+				mat.multiply( jijRestPose, pseudoInverse, jRestPose );
 
-				// ( I - J^-1 * J ) * restPose
-				mat.multiply( restPoseResult, nullSpaceProjection, restPose );
+				// restPose - J^-1 * (J * restPose) > freeDoF x 1
+				mat.subtract( restPoseResult, restPose, jijRestPose );
 
 				for ( let r = 0; r < freeDoF; r ++ ) {
 
