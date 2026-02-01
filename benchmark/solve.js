@@ -79,13 +79,12 @@ function setGoalPosition( goal, numJoints, iteration ) {
 }
 
 // Run benchmark
-function runBenchmark( useAnalyticalJacobian, numJoints = 10, iterations = 100 ) {
+function runBenchmark( numJoints = 10, iterations = 100 ) {
 
 	const { root, goal } = buildArm( numJoints );
 
 	// Goal must be passed as a root so solver finds the closure chain
 	const solver = new Solver( [ root, goal ] );
-	solver.useAnalyticalJacobian = useAnalyticalJacobian;
 	solver.maxIterations = 10;
 	solver.restPoseFactor = 0.001;
 	solver.dampingFactor = 0.01; // Higher damping for stability
@@ -141,31 +140,12 @@ console.log( 'IK Solver Benchmark' );
 console.log( '===================' );
 console.log( `${ NUM_JOINTS }-DOF serial arm, ${ ITERATIONS } solves\n` );
 
-console.log( 'Running with Numerical Jacobian...' );
-const numerical = runBenchmark( false, NUM_JOINTS, ITERATIONS );
-if ( numerical ) {
+const result = runBenchmark( NUM_JOINTS, ITERATIONS );
+if ( result ) {
 
-	console.log( `  Avg: ${ numerical.avg.toFixed( 3 ) }ms` );
-	console.log( `  Min: ${ numerical.min.toFixed( 3 ) }ms` );
-	console.log( `  Max: ${ numerical.max.toFixed( 3 ) }ms` );
-	console.log( `  Status: ${ JSON.stringify( numerical.statusCounts ) }` );
-
-}
-
-console.log( '\nRunning with Analytical Jacobian...' );
-const analytical = runBenchmark( true, NUM_JOINTS, ITERATIONS );
-if ( analytical ) {
-
-	console.log( `  Avg: ${ analytical.avg.toFixed( 3 ) }ms` );
-	console.log( `  Min: ${ analytical.min.toFixed( 3 ) }ms` );
-	console.log( `  Max: ${ analytical.max.toFixed( 3 ) }ms` );
-	console.log( `  Status: ${ JSON.stringify( analytical.statusCounts ) }` );
-
-}
-
-if ( numerical && analytical ) {
-
-	const speedup = ( ( numerical.avg - analytical.avg ) / numerical.avg * 100 ).toFixed( 1 );
-	console.log( `\nAnalytical Jacobian speedup: ${ speedup }%` );
+	console.log( `  Avg: ${ result.avg.toFixed( 3 ) }ms` );
+	console.log( `  Min: ${ result.min.toFixed( 3 ) }ms` );
+	console.log( `  Max: ${ result.max.toFixed( 3 ) }ms` );
+	console.log( `  Status: ${ JSON.stringify( result.statusCounts ) }` );
 
 }

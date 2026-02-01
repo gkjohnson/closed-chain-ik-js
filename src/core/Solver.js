@@ -9,7 +9,6 @@ export class Solver {
 		this.matrixPool = new MatrixPool();
 
 		this.useSVD = false;
-		this.useAnalyticalJacobian = false;
 
 		this.maxIterations = 5;
 		this.stallThreshold = 1e-4;
@@ -22,9 +21,6 @@ export class Solver {
 
 		this.translationFactor = 1;
 		this.rotationFactor = 1;
-
-		this.translationStep = 1e-3;
-		this.rotationStep = 1e-3;
 
 		this.translationErrorClamp = 0.1;
 		this.rotationErrorClamp = 0.1;
