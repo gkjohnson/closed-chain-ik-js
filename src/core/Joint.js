@@ -17,12 +17,10 @@ export const DOF = {
 export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
 
 const tempInverse = new Float32Array( 16 );
-const tempMatrix = new Float32Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempEuler = new Float32Array( 3 );
 const tempValueEuler = new Float32Array( 3 );
 const quatEuler = new Float32Array( 3 );
-const tempDoFValues = new Float32Array( 6 );
 
 // generate a matrix from a set of degrees of freedom
 function dofToMatrix( out, dof ) {
