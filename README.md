@@ -39,6 +39,8 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [PI Hexapod](https://github.com/PI-PhysikInstrumente/PI_ROS_Driver)
 
+[Digit](https://github.com/adubredu/DigitRobot.jl)
+
 # Installation
 
 ```
