@@ -1,10 +1,14 @@
-import { vec3 } from 'gl-matrix';
+import { vec3, quat } from 'gl-matrix';
 import { DOF } from '../Joint.js';
 import { mat } from './matrix.js';
+import { rotationVectorFromQuaternion, quaternionDelta } from './quaternion.js';
+import { RAD2DEG } from './constants.js';
 
 const tempPos = new Float64Array( 3 );
 const tempRotVec = new Float64Array( 3 );
 const tempEuler = new Float64Array( 3 );
+const tempQuat = new Float64Array( 4 );
+const tempQuat2 = new Float64Array( 4 );
 export function accumulateClosureError(
 	solver,
 	joint,
@@ -156,14 +160,38 @@ export function accumulateTargetError(
 	// get the position delta
 	const posDelta = vec3.distance( dofValues, dofTarget );
 
-	// TODO: if three euler angles are being used we should set this to a quaternion to measure
-	// error rather than euler angles. We should instead just always use quaternions for targets
-	// for now.
-	// Before running this solver we try to ensure the target and restPose are minimized
-	let rotDelta =
-		dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] +
-		dofTarget[ DOF.EY ] - dofValues[ DOF.EY ] +
-		dofTarget[ DOF.EZ ] - dofValues[ DOF.EZ ];
+	// For 3-DoF rotation joints, use rotation vector representation which avoids gimbal lock.
+	// For 1/2-DoF joints, use euler angle differences with minimum representation.
+	let rotDelta;
+	if ( rotationDoFCount === 3 ) {
+
+		// Convert current and target euler angles to quaternions
+		quat.fromEuler(
+			tempQuat,
+			dofValues[ DOF.EX ] * RAD2DEG,
+			dofValues[ DOF.EY ] * RAD2DEG,
+			dofValues[ DOF.EZ ] * RAD2DEG
+		);
+		quat.fromEuler(
+			tempQuat2,
+			dofTarget[ DOF.EX ] * RAD2DEG,
+			dofTarget[ DOF.EY ] * RAD2DEG,
+			dofTarget[ DOF.EZ ] * RAD2DEG
+		);
+
+		// Compute rotation vector from current to target
+		quaternionDelta( tempQuat, tempQuat2, tempQuat );
+		rotationVectorFromQuaternion( tempRotVec, tempQuat );
+		rotDelta = vec3.length( tempRotVec );
+
+	} else {
+
+		// For 1/2-DoF, use euler angle differences (with minimum representation applied earlier)
+		rotDelta = Math.abs( dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] ) +
+			Math.abs( dofTarget[ DOF.EY ] - dofValues[ DOF.EY ] ) +
+			Math.abs( dofTarget[ DOF.EZ ] - dofValues[ DOF.EZ ] );
+
+	}
 
 	// Get the row count
 	const lockedDoFCount = lockedJointDoFCount.get( joint ) || 0;
@@ -202,28 +230,67 @@ export function accumulateTargetError(
 
 		}
 
-		// get the euler differences
-		// before running this solver we minimize the euler targets
-		tempEuler[ 0 ] = joint.dofTarget[ 3 ] - joint.dofValues[ 3 ];
-		tempEuler[ 1 ] = joint.dofTarget[ 4 ] - joint.dofValues[ 4 ];
-		tempEuler[ 2 ] = joint.dofTarget[ 5 ] - joint.dofValues[ 5 ];
+		// For 3-DoF rotation, use rotation vector. For 1/2-DoF, use euler differences.
+		if ( rotationDoFCount === 3 ) {
 
-		// clamp the euler difference to the error step magnitude
-		const eulerMag = vec3.length( tempEuler );
-		vec3.scale( tempEuler, tempEuler, rotationFactor * rotationErrorClamp / eulerMag );
-		for ( let i = translationDoFCount, l = translationDoFCount + rotationDoFCount; i < l; i ++ ) {
+			// Rotation vector was already computed above in tempRotVec
+			// Clamp and scale
+			const rotMag = vec3.length( tempRotVec );
+			if ( rotMag > rotationErrorClamp ) {
 
-			const dof = dofList[ i ];
-
-			// skip this degree of freedom if it's locked
-			if ( isLocked && lockedDoF[ dof ] ) {
-
-				continue;
+				vec3.scale( tempRotVec, tempRotVec, rotationErrorClamp / rotMag );
 
 			}
 
-			mat.set( errorVector, startIndex + rowIndex, 0, tempEuler[ dof ] );
-			rowIndex ++;
+			vec3.scale( tempRotVec, tempRotVec, rotationFactor );
+
+			// Write all 3 rotation vector components
+			for ( let i = 0; i < 3; i ++ ) {
+
+				const dof = dofList[ translationDoFCount + i ];
+
+				// skip this degree of freedom if it's locked
+				if ( isLocked && lockedDoF[ dof ] ) {
+
+					continue;
+
+				}
+
+				mat.set( errorVector, startIndex + rowIndex, 0, tempRotVec[ i ] );
+				rowIndex ++;
+
+			}
+
+		} else {
+
+			// For 1/2-DoF, use euler angle differences
+			tempEuler[ 0 ] = joint.dofTarget[ 3 ] - joint.dofValues[ 3 ];
+			tempEuler[ 1 ] = joint.dofTarget[ 4 ] - joint.dofValues[ 4 ];
+			tempEuler[ 2 ] = joint.dofTarget[ 5 ] - joint.dofValues[ 5 ];
+
+			// clamp the euler difference to the error step magnitude
+			const eulerMag = vec3.length( tempEuler );
+			if ( eulerMag > 0 ) {
+
+				vec3.scale( tempEuler, tempEuler, rotationFactor * rotationErrorClamp / eulerMag );
+
+			}
+
+			for ( let i = translationDoFCount, l = translationDoFCount + rotationDoFCount; i < l; i ++ ) {
+
+				const dof = dofList[ i ];
+
+				// skip this degree of freedom if it's locked
+				if ( isLocked && lockedDoF[ dof ] ) {
+
+					continue;
+
+				}
+
+				mat.set( errorVector, startIndex + rowIndex, 0, tempEuler[ dof - 3 ] );
+				rowIndex ++;
+
+			}
 
 		}
 
