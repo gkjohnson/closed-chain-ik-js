@@ -167,9 +167,9 @@ SOLVE_STATUS.TIMEOUT,
 
 An array of strings representing the names of the above solve statuses.
 
-## Functions
+## IKUtils
 
-Set of utility functions including some for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+Utility functions for working with IK systems. Available as `IKUtils.findRoots()`, `IKUtils.saveRestPose()`, or as direct imports.
 
 ### findRoots
 
@@ -178,6 +178,18 @@ findRoots( frames : Array<Frame> ) : Array<Frame>
 ```
 
 Takes an array of frames to traverse including the closure joints and links and finds a set of unique nodes to treat as the roots of the connected trees for use in solving.
+
+### saveRestPose
+
+```js
+IKUtils.saveRestPose( ik : Frame ) : void
+```
+
+Traverses the IK tree and saves the current joint values as the rest pose for each joint. Sets `restPoseSet` to `true` on each joint.
+
+## URDF Functions
+
+Utility functions for creating an IK system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
 
 ### urdfRobotToIKRoot
 

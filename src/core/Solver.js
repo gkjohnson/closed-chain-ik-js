@@ -1,5 +1,5 @@
 import { ChainSolver } from './ChainSolver.js';
-import { findRoots } from './utils/findRoots.js';
+import { findRoots } from './utils/IKUtils.js';
 import { MatrixPool } from './MatrixPool.js';
 
 export class Solver {
