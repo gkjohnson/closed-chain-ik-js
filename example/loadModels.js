@@ -1,6 +1,5 @@
 import URDFLoader from 'urdf-loader';
 import {
-	Joint,
 	URDFUtils,
 	IKUtils,
 	Goal,
@@ -102,19 +101,17 @@ export async function loadCuriosity() {
 
 	const urdf = urdfLoader.parse( xacro );
 	urdf.joints.arm_03_joint.limit.upper = Math.PI * 3 / 2;
-
-	// ik & make the root fixed
-	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
-	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
-	ik.position[ 1 ] -= 0.5;
-	ik.clearDoF();
-	ik.setMatrixNeedsUpdate();
-
-	// start the joints off at reasonable angles
+	urdf.rotation.set( - Math.PI / 2, 0, 0 );
+	urdf.position.y -= 0.5;
 	urdf.setJointValue( 'arm_02_joint', - Math.PI / 2 );
 	urdf.setJointValue( 'arm_03_joint', Math.PI );
 	urdf.setJointValue( 'arm_04_joint', Math.PI );
+
+	// ik & make the root fixed
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	URDFUtils.setIKFromUrdf( ik, urdf );
+	IKUtils.saveRestPose( ik );
+	ik.clearDoF();
 
 	// construct goals
 	const goalMap = new Map();
@@ -131,8 +128,6 @@ export async function loadCuriosity() {
 	goalMap.set( ee, tool );
 
 	await managerReady;
-
-	IKUtils.saveRestPose( ik );
 	cleanGeometry( urdf );
 
 	return { ik, urdf, goalMap, helperScale: 0.3 };
@@ -167,18 +162,16 @@ export async function loadDigit() {
 	urdfLoader.packages = 'https://raw.githubusercontent.com/adubredu/DigitRobot.jl/refs/heads/main/urdf';
 
 	const urdf = await urdfLoader.loadAsync( url );
-
-	// ik & make the root fixed
-	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
-	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
-	ik.setMatrixNeedsUpdate();
-
-	// start the joints off at reasonable angles
+	urdf.rotation.set( - Math.PI / 2, 0, 0 );
 	urdf.setJointValue( 'hip_abduction_right', - 0.3 );
 	urdf.setJointValue( 'toe_pitch_joint_right', 0.1 );
 	urdf.setJointValue( 'hip_abduction_left', 0.3 );
 	urdf.setJointValue( 'toe_pitch_joint_left', - 0.1 );
+
+	// ik & make the root fixed
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	URDFUtils.setIKFromUrdf( ik, urdf );
+	IKUtils.saveRestPose( ik );
 
 	// create goals
 	const goalMap = new Map();
@@ -194,8 +187,6 @@ export async function loadDigit() {
 	} );
 
 	await managerReady;
-
-	IKUtils.saveRestPose( ik );
 	cleanGeometry( urdf );
 
 	return { ik, urdf, goalMap, helperScale: 0.3 };
