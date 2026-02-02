@@ -36,19 +36,30 @@ export function accumulateClosureError(
 	// Get the error from child towards the closure target
 	joint.getClosureError( tempPos, tempRotVec );
 
-	// TODO: Non-Goal closures assume all 6 DoFs are constrained. See TODO below.
+	// For Goals:
+	// - Translation: per-axis masking (individual DoFs)
+	// - Rotation: all-or-nothing (rotation vectors can't be decomposed into euler-like components)
 	let rowCount = 6;
 	if ( joint.isGoal ) {
 
+		// Mask translation per-axis
 		tempPos[ 0 ] *= dofFlags[ 0 ];
 		tempPos[ 1 ] *= dofFlags[ 1 ];
 		tempPos[ 2 ] *= dofFlags[ 2 ];
+		rowCount = translationDoFCount;
 
-		tempRotVec[ 0 ] *= dofFlags[ 3 ];
-		tempRotVec[ 1 ] *= dofFlags[ 4 ];
-		tempRotVec[ 2 ] *= dofFlags[ 5 ];
+		// Rotation is all-or-nothing
+		if ( rotationDoFCount === 0 ) {
 
-		rowCount = translationDoFCount + rotationDoFCount;
+			tempRotVec[ 0 ] = 0;
+			tempRotVec[ 1 ] = 0;
+			tempRotVec[ 2 ] = 0;
+
+		} else {
+
+			rowCount += 3;
+
+		}
 
 	}
 
@@ -85,15 +96,10 @@ export function accumulateClosureError(
 
 		vec3.scale( tempRotVec, tempRotVec, rotationFactor );
 
-		// TODO: Currently Goals and non-Goal closures have different semantics:
-		// - Goals: DoFs specify which axes to CONSTRAIN (inverted via setFreeDoF)
-		// - Non-Goal closures: Hardcoded to constrain all 6 axes, DoFs ignored
-		//
-		// Ideally, closures should work like joints where DoFs specify FREE axes
-		// and the remaining axes are constrained. This would allow partial closures
-		// (eg a ball-socket closure that only constrains position, not rotation).
+		// Goals: per-axis for translation, all-or-nothing for rotation
 		if ( joint.isGoal ) {
 
+			// Translation: per-axis
 			for ( let i = 0; i < translationDoFCount; i ++ ) {
 
 				const d = dof[ i ];
@@ -101,10 +107,12 @@ export function accumulateClosureError(
 
 			}
 
-			for ( let i = 0; i < rotationDoFCount; i ++ ) {
+			// Rotation: all-or-nothing (use full rotation vector)
+			if ( rotationDoFCount > 0 ) {
 
-				const d = dof[ translationDoFCount + i ];
-				mat.set( errorVector, startIndex + translationDoFCount + i, 0, tempRotVec[ d - 3 ] );
+				mat.set( errorVector, startIndex + translationDoFCount + 0, 0, tempRotVec[ 0 ] );
+				mat.set( errorVector, startIndex + translationDoFCount + 1, 0, tempRotVec[ 1 ] );
+				mat.set( errorVector, startIndex + translationDoFCount + 2, 0, tempRotVec[ 2 ] );
 
 			}
 
@@ -134,7 +142,7 @@ export function accumulateTargetError(
 	joint,
 	startIndex,
 	errorVector = null,
-	result = { isConverged: false, rowCount: 7, totalError: 0 }
+	result = { isConverged: false, rowCount: 6, totalError: 0 }
 ) {
 
 	// Find whether or not the target has converged or not
