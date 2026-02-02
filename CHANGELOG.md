@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Use a simplified formulation for rest pose calculations for a significant speed up when using rest pose.
 - Move "findRoots" to "IKUtils" export.
 - Moved "urdfRobotToIKRoot", "setUrdfFromIK", "setIKFromUrdf" to URDFUtils export.
+- URDFUtils.setIKFromUrdf: Root DoF values are now set with taking the IK root into account.
+- URDFUtils.urdfRobotToIKRoot: The produced IK system now accounts for any existing changes to the URDF joint values.
 
 ### Fixed
 - Fixed case where Matrices were not zeroed out when fetched from MatrixPool, possibly causing some outdated values to be used in calculations.
