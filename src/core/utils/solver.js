@@ -230,8 +230,17 @@ export function accumulateTargetError(
 
 		}
 
-		// For 3-DoF rotation, use rotation vector. For 1/2-DoF, use euler differences.
-		if ( rotationDoFCount === 3 ) {
+		// Check if any rotation DoF is locked
+		const rotationLocked = isLocked && (
+			lockedDoF[ DOF.EX ] || lockedDoF[ DOF.EY ] || lockedDoF[ DOF.EZ ]
+		);
+
+		// Use rotation vector for 3-DoF rotation ONLY when all rotation axes are free.
+		// When any rotation axis is locked, fall back to euler angles since rotation
+		// vector components can't be independently locked (they're coupled).
+		const useRotationVector = rotationDoFCount === 3 && ! rotationLocked;
+
+		if ( useRotationVector ) {
 
 			// Rotation vector was already computed above in tempRotVec
 			// Clamp and scale
@@ -247,15 +256,6 @@ export function accumulateTargetError(
 			// Write all 3 rotation vector components
 			for ( let i = 0; i < 3; i ++ ) {
 
-				const dof = dofList[ translationDoFCount + i ];
-
-				// skip this degree of freedom if it's locked
-				if ( isLocked && lockedDoF[ dof ] ) {
-
-					continue;
-
-				}
-
 				mat.set( errorVector, startIndex + rowIndex, 0, tempRotVec[ i ] );
 				rowIndex ++;
 
@@ -263,7 +263,7 @@ export function accumulateTargetError(
 
 		} else {
 
-			// For 1/2-DoF, use euler angle differences
+			// For 1/2-DoF or when rotation is locked, use euler angle differences
 			tempEuler[ 0 ] = joint.dofTarget[ 3 ] - joint.dofValues[ 3 ];
 			tempEuler[ 1 ] = joint.dofTarget[ 4 ] - joint.dofValues[ 4 ];
 			tempEuler[ 2 ] = joint.dofTarget[ 5 ] - joint.dofValues[ 5 ];
