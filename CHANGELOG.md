@@ -10,12 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Used damped pseudo inverse for SVD case.
 - Make progressively smaller step sizes towards goals if an IK chain is diverging.
 - Jacobian pseudo inverse caching for opportunistic performance gain.
+- Added "saveRestPose" to "IKUtils" export.
 
 ### Changed
 - Simplified internal Matrix initialization.
 - Use analytic Jacobian.
 - Remove "translationStep" and "rotatinoStep" options.
 - Use a simplified formulation for rest pose calculations for a significant speed up when using rest pose.
+- Move "findRoots" to "IKUtils" export.
+- Moved "urdfRobotToIKRoot", "setUrdfFromIK", "setIKFromUrdf" to URDFUtils export.
 
 ### Fixed
 - Fixed case where Matrices were not zeroed out when fetched from MatrixPool, possibly causing some outdated values to be used in calculations.
