@@ -427,6 +427,8 @@ export async function loadAthnaut() {
 		loader2.loadAsync( url2 ),
 	] );
 
+	await managerReady;
+
 	// joint the urdf structures together
 	// create a second r2
 	const r22 = r2.clone();
@@ -535,7 +537,6 @@ export async function loadAthnaut() {
 
 	} );
 
-	await managerReady;
 	cleanGeometry( athlete );
 
 	return { ik, urdf: athlete, goalMap, helperScale: 0.2 };
