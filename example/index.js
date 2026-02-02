@@ -28,6 +28,7 @@ import {
 	SOLVE_STATUS_NAMES,
 	IKRootsHelper,
 	URDFUtils,
+	Goal,
 } from '../src/index.js';
 import {
 	loadATHLETE,
@@ -297,7 +298,7 @@ function handleRightClick( ikLink, result ) {
 	const goalLink = new Link();
 	rootGoalJoint.addChild( goalLink );
 
-	const goalJoint = new Joint();
+	const goalJoint = new Goal();
 	goalJoint.name = 'GoalJoint-' + ikLink.name;
 	ikLink.getWorldPosition( goalJoint.position );
 	ikLink.getWorldQuaternion( goalJoint.quaternion );

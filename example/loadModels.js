@@ -3,6 +3,7 @@ import {
 	Joint,
 	URDFUtils,
 	IKUtils,
+	Goal,
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
 import { LoadingManager } from 'three';
@@ -120,7 +121,7 @@ export async function loadCuriosity() {
 	const tool = ik.find( l => l.name === 'arm_tools' );
 	const link = urdf.links.arm_tools;
 
-	const ee = new Joint();
+	const ee = new Goal();
 	ee.name = link.name;
 	ee.makeClosure( tool );
 
@@ -184,7 +185,7 @@ export async function loadDigit() {
 	[ 'torso', 'left_toe_pitch', 'right_toe_pitch' ].forEach( name => {
 
 		const link = ik.find( l => l.name === name );
-		const goal = new Joint();
+		const goal = new Goal();
 		link.getWorldPosition( goal.position );
 		link.getWorldQuaternion( goal.quaternion );
 		goal.makeClosure( link );
@@ -231,7 +232,7 @@ export async function loadSpot() {
 	[ 'gripper', 'body' ].forEach( name => {
 
 		const link = ik.find( l => l.name === name );
-		const goal = new Joint();
+		const goal = new Goal();
 		link.getWorldPosition( goal.position );
 		link.getWorldQuaternion( goal.quaternion );
 		goal.makeClosure( link );
@@ -278,7 +279,7 @@ export async function loadStaubli() {
 	const tool = ik.find( l => l.name === 'tool0' );
 	const link = urdf.links.tool0;
 
-	const ee = new Joint();
+	const ee = new Goal();
 	ee.name = link.name;
 	ee.makeClosure( tool );
 
@@ -327,7 +328,7 @@ export async function loadATHLETE() {
 		if ( /^Foot/.test( c.name ) ) {
 
 			const link = urdf.links[ c.name ];
-			const ee = new Joint();
+			const ee = new Goal();
 			ee.name = link.name;
 			ee.makeClosure( c );
 
@@ -387,7 +388,7 @@ export async function loadRobonaut() {
 		if ( c.name === 'r2/left_leg_foot' || c.name === 'r2/right_leg_foot' ) {
 
 			const link = urdf.links[ c.name ];
-			const ee = new Joint();
+			const ee = new Goal();
 			ee.name = link.name;
 			ee.makeClosure( c );
 
@@ -523,7 +524,7 @@ export async function loadAthnaut() {
 		if ( /^Foot/.test( c.name ) ) {
 
 			const link = athlete.links[ c.name ];
-			const ee = new Joint();
+			const ee = new Goal();
 			ee.name = link.name;
 			ee.makeClosure( c );
 
