@@ -1,8 +1,7 @@
 import URDFLoader from 'urdf-loader';
 import {
 	Joint,
-	urdfRobotToIKRoot,
-	setIKFromUrdf,
+	URDFUtils,
 	IKUtils,
 } from '../src/index.js';
 import { DEG2RAD } from '../src/core/utils/constants.js';
@@ -104,7 +103,7 @@ export async function loadCuriosity() {
 	urdf.joints.arm_03_joint.limit.upper = Math.PI * 3 / 2;
 
 	// ik & make the root fixed
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
 	ik.position[ 1 ] -= 0.5;
 	ik.clearDoF();
@@ -114,7 +113,7 @@ export async function loadCuriosity() {
 	urdf.setJointValue( 'arm_02_joint', - Math.PI / 2 );
 	urdf.setJointValue( 'arm_03_joint', Math.PI );
 	urdf.setJointValue( 'arm_04_joint', Math.PI );
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// construct goals
 	const goalMap = new Map();
@@ -169,7 +168,7 @@ export async function loadDigit() {
 	const urdf = await urdfLoader.loadAsync( url );
 
 	// ik & make the root fixed
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
 	ik.setMatrixNeedsUpdate();
 
@@ -178,7 +177,7 @@ export async function loadDigit() {
 	urdf.setJointValue( 'toe_pitch_joint_right', 0.1 );
 	urdf.setJointValue( 'hip_abduction_left', 0.3 );
 	urdf.setJointValue( 'toe_pitch_joint_left', - 0.1 );
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// create goals
 	const goalMap = new Map();
@@ -219,14 +218,14 @@ export async function loadSpot() {
 	const urdf = urdfLoader.parse( xacro );
 
 	// load ik and initialize positions
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
 	ik.setMatrixNeedsUpdate();
 
 	urdf.setJointValue( 'arm_joint1', Math.PI / 2 );
 	urdf.setJointValue( 'arm_joint2', - Math.PI / 2 );
 	urdf.setJointValue( 'arm_joint3', Math.PI / 2 );
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// create goals
 	const goalMap = new Map();
@@ -268,7 +267,7 @@ export async function loadStaubli() {
 	const urdf = urdfLoader.parse( xacro );
 
 	// ik & make root fixed
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 	ik.clearDoF();
 	quat.fromEuler( ik.quaternion, - 90, 0, 0 );
 	ik.position[ 1 ] -= 0.5;
@@ -278,7 +277,7 @@ export async function loadStaubli() {
 	urdf.setJointValue( 'joint_2', Math.PI / 4 );
 	urdf.setJointValue( 'joint_3', Math.PI / 2 );
 	urdf.setJointValue( 'joint_5', - Math.PI / 4 );
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// goals
 	const goalMap = new Map();
@@ -315,7 +314,7 @@ export async function loadATHLETE() {
 	const urdf = await loader.loadAsync( url );
 
 	// set up ik
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 
 	// update the robot joints
 	urdf.rotation.set( Math.PI / 2, 0, 0 );
@@ -327,7 +326,7 @@ export async function loadATHLETE() {
 
 	}
 
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// init goals
 	const goalMap = new Map();
@@ -374,7 +373,7 @@ export async function loadRobonaut() {
 	urdf.rotation.set( - Math.PI / 2, 0, 0 );
 
 	// init ik
-	const ik = urdfRobotToIKRoot( urdf );
+	const ik = URDFUtils.urdfRobotToIKRoot( urdf );
 
 	// set up initial points
 	urdf.joints[ 'r2/left_leg/joint3' ].setJointValue( 60 * DEG2RAD );
@@ -391,7 +390,7 @@ export async function loadRobonaut() {
 	urdf.joints[ 'r2/right_arm/joint3' ].setJointValue( - 90 * DEG2RAD );
 	urdf.joints[ 'r2/right_arm/joint4' ].setJointValue( - 90 * DEG2RAD );
 
-	setIKFromUrdf( ik, urdf );
+	URDFUtils.setIKFromUrdf( ik, urdf );
 
 	// goals
 	const goalMap = new Map();
@@ -484,7 +483,7 @@ export async function loadAthnaut() {
 	Object.assign( athlete.links, r22.links );
 
 	// init the ik
-	const ik = urdfRobotToIKRoot( athlete );
+	const ik = URDFUtils.urdfRobotToIKRoot( athlete );
 
 	// update the robot joints
 	athlete.rotation.set( Math.PI / 2, 0, 0 );
@@ -527,7 +526,7 @@ export async function loadAthnaut() {
 	athlete.joints[ 'r2/right_arm/joint3_2' ].setJointValue( - 90 * DEG2RAD );
 	athlete.joints[ 'r2/right_arm/joint4_2' ].setJointValue( - 90 * DEG2RAD );
 
-	setIKFromUrdf( ik, athlete );
+	URDFUtils.setIKFromUrdf( ik, athlete );
 
 	// create goals
 	const goalMap = new Map();

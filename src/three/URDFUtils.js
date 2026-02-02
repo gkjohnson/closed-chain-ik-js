@@ -192,17 +192,6 @@ export function setUrdfFromIK( urdfRoot, ikRoot ) {
 		urdfRoot.scale,
 	);
 
-	// urdfRoot.position.set(
-	// 	ikRoot.getDoFValue( DOF.X ),
-	// 	ikRoot.getDoFValue( DOF.Y ),
-	// 	ikRoot.getDoFValue( DOF.Z ),
-	// );
-	// urdfRoot.rotation.set(
-	// 	ikRoot.getDoFValue( DOF.EX ),
-	// 	ikRoot.getDoFValue( DOF.EY ),
-	// 	ikRoot.getDoFValue( DOF.EZ ),
-	// );
-
 	ikRoot.traverse( c => {
 
 		if ( c.isJoint ) {

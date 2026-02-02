@@ -5,6 +5,5 @@ export { Solver } from './core/Solver.js';
 export { SOLVE_STATUS, SOLVE_STATUS_NAMES } from './core/ChainSolver.js';
 export { WorkerSolver } from './worker/WorkerSolver.js';
 export { IKRootsHelper } from './three/IKRootsHelper.js';
-export { setIKFromUrdf, setUrdfFromIK, urdfRobotToIKRoot } from './three/urdfHelpers.js';
 export * as IKUtils from './core/utils/IKUtils.js';
-export { findRoots } from './core/utils/IKUtils.js';
+export * as URDFUtils from './three/URDFUtils.js';

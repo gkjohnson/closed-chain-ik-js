@@ -26,9 +26,7 @@ import {
 	Joint,
 	SOLVE_STATUS_NAMES,
 	IKRootsHelper,
-	setUrdfFromIK,
-	urdfRobotToIKRoot,
-	setIKFromUrdf,
+	URDFUtils,
 	Goal,
 	DOF,
 	SOLVE_STATUS,
@@ -223,7 +221,7 @@ function init() {
 			} );
 
 			urdfRoot = result;
-			ikRoot = urdfRobotToIKRoot( urdfRoot, true );
+			ikRoot = URDFUtils.urdfRobotToIKRoot( urdfRoot, true );
 
 			const differential = ikRoot.find( c => c.name === 'CENTER_DIFFERENTIAL' ).child;
 			differential.removeChild( differential.children[ 0 ] );
@@ -323,7 +321,7 @@ function init() {
 			drawThroughIkHelper.setDrawThrough( true );
 
 			urdfRoot.rotation.set( Math.PI / 2, 0, 0 );
-			setIKFromUrdf( ikRoot, urdfRoot );
+			URDFUtils.setIKFromUrdf( ikRoot, urdfRoot );
 
 			// initialize wheel goals
 			driveGoals = [
@@ -532,7 +530,7 @@ function updateIk() {
 
 	outputContainer.textContent = solveOutput;
 
-	setUrdfFromIK( urdfRoot, ikRoot );
+	URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 }
 
@@ -562,7 +560,7 @@ function render() {
 				targetObject.quaternion.z,
 				targetObject.quaternion.w,
 			);
-			setUrdfFromIK( urdfRoot, ikRoot );
+			URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 		}
 

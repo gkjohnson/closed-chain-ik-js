@@ -20,9 +20,7 @@ import {
 	Joint,
 	SOLVE_STATUS_NAMES,
 	IKRootsHelper,
-	setUrdfFromIK,
-	urdfRobotToIKRoot,
-	setIKFromUrdf,
+	URDFUtils,
 	Goal,
 	DOF,
 	SOLVE_STATUS,
@@ -127,7 +125,7 @@ function init() {
 
 		controls.enabled = true;
 		ikNeedsUpdate = true;
-		setIKFromUrdf( ikRoot, urdfRoot );
+		URDFUtils.setIKFromUrdf( ikRoot, urdfRoot );
 
 		ikRoot.updateMatrixWorld( true );
 
@@ -250,7 +248,7 @@ function init() {
 			}
 
 			// generate the ik root and set the root to a fixed position
-			ikRoot = urdfRobotToIKRoot( urdfRoot );
+			ikRoot = URDFUtils.urdfRobotToIKRoot( urdfRoot );
 			ikRoot.setDoF();
 
 			// update the root from the URDF so goals can be placed in world space
@@ -265,7 +263,7 @@ function init() {
 
 			}
 
-			setIKFromUrdf( ikRoot, urdfRoot );
+			URDFUtils.setIKFromUrdf( ikRoot, urdfRoot );
 
 			// set the goal for the hexapod platform
 			platformLink = ikRoot.find( c => c.name === 'platform_link' );
@@ -381,7 +379,7 @@ function updateIk() {
 	let solveOutput = '';
 	let totalTime = 0;
 
-	setIKFromUrdf( ikRoot, urdfRoot );
+	URDFUtils.setIKFromUrdf( ikRoot, urdfRoot );
 
 	let isConverged = false;
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
@@ -418,7 +416,7 @@ function updateIk() {
 
 	if ( ! params.displayConvergedOnly || isConverged ) {
 
-		setUrdfFromIK( urdfRoot, ikRoot );
+		URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 	}
 

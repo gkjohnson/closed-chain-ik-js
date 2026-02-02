@@ -29,7 +29,7 @@ import {
 	Joint,
 	SOLVE_STATUS_NAMES,
 	IKRootsHelper,
-	setUrdfFromIK,
+	URDFUtils,
 } from '../src/index.js';
 import {
 	loadATHLETE,
@@ -529,7 +529,7 @@ function solve() {
 		`avg solve time \t: ${ averageTime.toFixed( 3 ) }ms\n` +
 		statuses.map( s => SOLVE_STATUS_NAMES[ s ] ).join( '\n' );
 
-	setUrdfFromIK( urdfRoot, ikRoot );
+	URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 }
 

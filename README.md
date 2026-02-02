@@ -116,8 +116,6 @@ solver.solve();
 
 - The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
 
-- Smoothing out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
-
 - Enabling SVD on the Solver can cause divergence on solvable systems and stutter. See [#76](https://github.com/gkjohnson/closed-chain-ik-js/issues/76).
 
 # API
@@ -182,12 +180,12 @@ Takes an array of frames to traverse including the closure joints and links and 
 ### saveRestPose
 
 ```js
-IKUtils.saveRestPose( ik : Frame ) : void
+saveRestPose( ik : Frame ) : void
 ```
 
 Traverses the IK tree and saves the current joint values as the rest pose for each joint. Sets `restPoseSet` to `true` on each joint.
 
-## URDF Functions
+## URDFUtils
 
 Utility functions for creating an IK system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
 
