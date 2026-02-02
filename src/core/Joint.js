@@ -17,12 +17,10 @@ export const DOF = {
 export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
 
 const tempInverse = new Float32Array( 16 );
-const tempMatrix = new Float32Array( 16 );
 const tempQuat = new Float32Array( 4 );
 const tempEuler = new Float32Array( 3 );
 const tempValueEuler = new Float32Array( 3 );
 const quatEuler = new Float32Array( 3 );
-const tempDoFValues = new Float32Array( 6 );
 
 // generate a matrix from a set of degrees of freedom
 function dofToMatrix( out, dof ) {
@@ -63,6 +61,7 @@ export class Joint extends Frame {
 		this.matrixDoF = new Float32Array( 16 );
 		mat4.identity( this.matrixDoF );
 
+		// this is the position and orientation of the joint before offsets are applied
 		this.cachedIdentityDoFMatrixWorld = new Float32Array( 16 );
 		mat4.identity( this.cachedIdentityDoFMatrixWorld );
 
@@ -491,52 +490,6 @@ export class Joint extends Frame {
 
 	}
 
-	getDeltaWorldMatrix( dof, delta, outMatrix ) {
-
-		const {
-			dofValues,
-			minDoFLimit,
-			maxDoFLimit,
-			cachedIdentityDoFMatrixWorld,
-		} = this;
-
-		this.updateMatrixWorld();
-
-		// copy out set of dof values
-		tempDoFValues.set( dofValues );
-
-		// get the state
-		const min = minDoFLimit[ dof ];
-		const max = maxDoFLimit[ dof ];
-		const currVal = tempDoFValues[ dof ];
-
-		// check what our slack is
-		const minSlack = currVal - min;
-		const maxSlack = max - currVal;
-
-		// If we're constrained by either limit then move in the other direction then
-		// use the direction with the most slack.
-		let newVal = currVal + delta;
-		const isMaxConstrained = delta > 0 && newVal > max;
-		const isMinConstrained = delta < 0 && newVal < min;
-		const doInvert = ( isMaxConstrained && minSlack > maxSlack ) || ( isMinConstrained && maxSlack > minSlack );
-		if ( doInvert ) {
-
-			newVal = currVal - delta;
-
-		}
-
-		// update our dof array and compute the matrix
-		tempDoFValues[ dof ] = newVal;
-
-		dofToMatrix( tempMatrix, tempDoFValues );
-
-		mat4.multiply( outMatrix, cachedIdentityDoFMatrixWorld, tempMatrix );
-
-		return doInvert;
-
-	}
-
 	// matrix updates
 	setMatrixDoFNeedsUpdate() {
 
@@ -584,8 +537,6 @@ export class Joint extends Frame {
 			mat4.copy( cachedIdentityDoFMatrixWorld, matrix );
 
 		}
-
-
 
 	}
 

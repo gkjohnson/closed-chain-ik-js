@@ -1,18 +1,17 @@
 import { vec3, mat4 } from 'gl-matrix';
 import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
-import { getMatrixDifference } from './utils/glmatrix.js';
+import { AXES } from './utils/constants.js';
 
 // temp reusable variables
-const targetRelativeToJointMatrix = new Float64Array( 16 );
-const targetDeltaWorldMatrix = new Float64Array( 16 );
-const tempDeltaWorldMatrix = new Float64Array( 16 );
-const tempInverseMatrixWorld = new Float64Array( 16 );
 const tempRotVec = new Float64Array( 3 );
 const tempPos = new Float64Array( 3 );
-const tempRotVec2 = new Float64Array( 3 );
-const tempPos2 = new Float64Array( 3 );
+const jointWorldPos = new Float64Array( 3 );
+const targetWorldPos = new Float64Array( 3 );
+const axisWorld = new Float64Array( 3 );
+const toTarget = new Float64Array( 3 );
 
+const tempAxisQuat = new Float64Array( 4 );
 const targetJoints = [];
 const freeJoints = [];
 const errorResultInfo = {
@@ -77,9 +76,6 @@ export class ChainSolver {
 		this.translationFactor = - 1;
 		this.rotationFactor = - 1;
 
-		this.translationStep = - 1;
-		this.rotationStep = - 1;
-
 		this.translationErrorClamp = - 1;
 		this.rotationErrorClamp = - 1;
 
@@ -87,6 +83,10 @@ export class ChainSolver {
 		this.dampingFactor = - 1;
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
+
+		// Cached jacobian and pseudo-inverse for warm start
+		this.prevJacobian = mat.create( 0, 0 );
+		this.prevPseudoInverse = mat.create( 0, 0 );
 
 		this.init();
 
@@ -288,81 +288,92 @@ export class ChainSolver {
 
 			// Solve for the pseudo inverse of the jacobian
 			const pseudoInverse = matrixPool.get( freeDoF, errorRows );
-			let failedSVD = false;
-			if ( useSVD ) {
+			if ( this.jacobianCacheEquals( jacobian ) ) {
 
-				try {
+				this.restorePseudoInverse( pseudoInverse );
 
-					const m = errorRows;
-					const n = freeDoF;
-					const k = Math.min( m, n );
+			} else {
 
-					const u = matrixPool.get( m, k ); // m x k
-					const q = matrixPool.get( k, k ); // k x k
-					const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
+				let failedSVD = false;
+				if ( useSVD ) {
 
-					mat.svd( u, q, v, jacobian );
+					try {
 
-					const uTranspose = matrixPool.get( k, m );
-					const qInverse = matrixPool.get( k, k );
-					mat.transpose( uTranspose, u );
+						const m = errorRows;
+						const n = freeDoF;
+						const k = Math.min( m, n );
 
-					// Damped pseudo-inverse: σ / (σ² + λ²)
-					// This gives smooth behavior near singularities instead of hard truncation
-					const lambda2 = dampingFactor ** 2;
-					for ( let i = 0, l = q.length; i < l; i ++ ) {
+						const u = matrixPool.get( m, k ); // m x k
+						const q = matrixPool.get( k, k ); // k x k
+						const v = matrixPool.get( n, k ); // ( k x n )^T -> ( n x k )
 
-						const sigma = mat.get( q, i, i );
-						const inv = sigma / ( sigma * sigma + lambda2 );
-						mat.set( qInverse, i, i, inv );
+						mat.svd( u, q, v, jacobian );
+
+						const uTranspose = matrixPool.get( k, m );
+						const qInverse = matrixPool.get( k, k );
+						mat.transpose( uTranspose, u );
+
+						// Damped pseudo-inverse: σ / (σ² + λ²)
+						// This gives smooth behavior near singularities instead of hard truncation
+						const lambda2 = dampingFactor ** 2;
+						for ( let i = 0, l = q.length; i < l; i ++ ) {
+
+							const sigma = mat.get( q, i, i );
+							const inv = sigma / ( sigma * sigma + lambda2 );
+							mat.set( qInverse, i, i, inv );
+
+						}
+
+						// V * Qinv * Ut
+						const vqinv = matrixPool.get( n, k );
+						mat.multiply( vqinv, v, qInverse );
+						mat.multiply( pseudoInverse, vqinv, uTranspose );
+
+					} catch {
+
+						failedSVD = true;
 
 					}
 
-					// V * Qinv * Ut
-					const vqinv = matrixPool.get( n, k );
-					mat.multiply( vqinv, v, qInverse );
-					mat.multiply( pseudoInverse, vqinv, uTranspose );
+				}
 
-				} catch {
+				if ( ! useSVD || failedSVD ) {
 
-					failedSVD = true;
+					// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
+					// J^T * J * x = J^T * e
+					// x = J^T * ( J * J^T )^-1 * e
+
+					// and with the adding damping
+					// x = J^T * ( J * J^T + l^2 * I )^-1 * e
+
+					// l^2 * I
+					const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
+					mat.identity( jacobianIdentityDamping );
+					mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
+
+					// J^T
+					const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
+					mat.transpose( jacobianTranspose, jacobian );
+
+					// J * J^T
+					const jjt = matrixPool.get( errorRows, errorRows );
+					mat.multiply( jjt, jacobian, jacobianTranspose );
+
+					// J * J^T + l^2 * I
+					const jjti = matrixPool.get( errorRows, errorRows );
+					mat.add( jjti, jjt, jacobianIdentityDamping );
+
+					// ( J * J^T + l^2 * I )^-1
+					const jjtii = matrixPool.get( errorRows, errorRows );
+					mat.invert( jjtii, jjti );
+
+					// J^T * ( J * J^T + l^2 * I )^-1
+					mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
 
 				}
 
-			}
-
-			if ( ! useSVD || failedSVD ) {
-
-				// Use a transpose pseudo inverse approach: A^T * A * x = A^T * b with the damping term
-				// J^T * J * x = J^T * e
-				// x = J^T * ( J * J^T )^-1 * e
-
-				// and with the adding damping
-				// x = J^T * ( J * J^T + l^2 * I )^-1 * e
-
-				// l^2 * I
-				const jacobianIdentityDamping = matrixPool.get( errorRows, errorRows );
-				mat.identity( jacobianIdentityDamping );
-				mat.scale( jacobianIdentityDamping, jacobianIdentityDamping, this.dampingFactor ** 2 );
-
-				// J^T
-				const jacobianTranspose = matrixPool.get( freeDoF, errorRows );
-				mat.transpose( jacobianTranspose, jacobian );
-
-				// J * J^T
-				const jjt = matrixPool.get( errorRows, errorRows );
-				mat.multiply( jjt, jacobian, jacobianTranspose );
-
-				// J * J^T + l^2 * I
-				const jjti = matrixPool.get( errorRows, errorRows );
-				mat.add( jjti, jjt, jacobianIdentityDamping );
-
-				// ( J * J^T + l^2 * I )^-1
-				const jjtii = matrixPool.get( errorRows, errorRows );
-				mat.invert( jjtii, jjti );
-
-				// J^T * ( J * J^T + l^2 * I )^-1
-				mat.multiply( pseudoInverse, jacobianTranspose, jjtii );
+				// save the results for warm start
+				this.cacheJacobianResult( jacobian, pseudoInverse );
 
 			}
 
@@ -412,19 +423,20 @@ export class ChainSolver {
 
 				}
 
-				// J^-1 * J
-				const jij = matrixPool.get( freeDoF, freeDoF );
-				mat.multiply( jij, pseudoInverse, jacobian );
+				// Nullspace projection: "restPose - J^-1 * (J * restPose)" which is mathematically
+				// equivalent to "(I - J^-1 * J) * restPose". This version avoids constructing and
+				// performing a freeDoF x freeDoF multiplication needed for the identity calculations.
 
-				// ( I - J^-1 * J )
-				const ident = matrixPool.get( freeDoF, freeDoF );
-				mat.identity( ident );
+				// J * restPose > errorRows x 1
+				const jRestPose = matrixPool.get( errorRows, 1 );
+				mat.multiply( jRestPose, jacobian, restPose );
 
-				const nullSpaceProjection = matrixPool.get( freeDoF, freeDoF );
-				mat.subtract( nullSpaceProjection, ident, jij );
+				// J^-1 * (J * restPose) > freeDoF x 1
+				const jijRestPose = matrixPool.get( freeDoF, 1 );
+				mat.multiply( jijRestPose, pseudoInverse, jRestPose );
 
-				// ( I - J^-1 * J ) * restPose
-				mat.multiply( restPoseResult, nullSpaceProjection, restPose );
+				// restPose - J^-1 * (J * restPose) > freeDoF x 1
+				mat.subtract( restPoseResult, restPose, jijRestPose );
 
 				for ( let r = 0; r < freeDoF; r ++ ) {
 
@@ -543,38 +555,31 @@ export class ChainSolver {
 
 	// generate the jacobian
 	// The jacobian has one column for each free degree of freedom and a row for every
-	// target degree of freedom we have. The entries are generated by adjusting every
-	// DoF by some epsilon and storing how much it affected the target error.
+	// target degree of freedom we have.
 	fillJacobian( targetJoints, freeJoints, outJacobian ) {
 
 		const {
-			translationStep,
-			rotationStep,
 			lockedJointDoF,
 			lockedJointDoFCount,
 			translationFactor,
 			rotationFactor,
 		} = this;
 
-		// TODO: abstract this
 		const affectedClosures = this.affectedClosures;
 		const affectedConnectedClosures = this.affectedConnectedClosures;
 
 		let colIndex = 0;
 		for ( let c = 0, tc = freeJoints.length; c < tc; c ++ ) {
 
-			// TODO: If this is a goal we should skip adding it to the jacabian columns
 			const freeJoint = freeJoints[ c ];
 			const relevantClosures = affectedClosures.get( freeJoint );
 			const relevantConnectedClosures = affectedConnectedClosures.get( freeJoint );
 			const dofList = freeJoint.dof;
 			const colCount = freeJoint.translationDoFCount + freeJoint.rotationDoFCount;
+			const identityDoFMatrixWorld = freeJoint.cachedIdentityDoFMatrixWorld;
 
 			const isLocked = lockedJointDoFCount.has( freeJoint );
 			const lockedDoF = lockedJointDoF.get( freeJoint );
-
-			// get the world inverse of the free joint
-			mat4.invert( tempInverseMatrixWorld, freeJoint.matrixWorld );
 
 			// iterate over every degree of freedom in the joint
 			for ( let co = 0; co < colCount; co ++ ) {
@@ -590,14 +595,6 @@ export class ChainSolver {
 
 				let rowIndex = 0;
 
-				// generate the adjusted matrix based on the epsilon for the joint.
-				let delta = dof < 3 ? translationStep : rotationStep;
-				if ( freeJoint.getDeltaWorldMatrix( dof, delta, tempDeltaWorldMatrix ) ) {
-
-					delta *= - 1;
-
-				}
-
 				// Iterate over every target
 				for ( let r = 0, tr = targetJoints.length; r < tr; r ++ ) {
 
@@ -608,40 +605,47 @@ export class ChainSolver {
 
 						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
 
-							// TODO: If this is a Goal it should only adds 1 or 2 fields if only two axes are set.
-							// TODO: these could be cached per target joint get the current error within the closure joint
+							// Determine which position we're affecting and the sign. If we're the connected child then
+							// we need to invert the change needed.
+							const isConnected = relevantConnectedClosures.has( targetJoint );
 
-							// Get the error from child towards the closure target as rotation vector
-							targetJoint.getClosureError( tempPos, tempRotVec );
-							if ( relevantConnectedClosures.has( targetJoint ) ) {
+							// Transform local axis to world space using the rotation part of the matrix
+							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
+							vec3.transformQuat( axisWorld, AXES[ dof ], tempAxisQuat );
 
-								// If this is affecting a link connected to a closure joint then adjust that child link by
-								// the delta rotation.
-								mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.child.matrixWorld );
-								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+							if ( dof < 3 ) {
 
-								// Get the new error
-								getMatrixDifference( targetJoint.matrixWorld, targetDeltaWorldMatrix, tempPos2, tempRotVec2 );
+								// translation
+								vec3.copy( tempPos, axisWorld );
+								tempRotVec[ 0 ] = 0;
+								tempRotVec[ 1 ] = 0;
+								tempRotVec[ 2 ] = 0;
 
 							} else {
 
-								// If this is directly affecting a closure joint then adjust that child link by the delta
-								// rotation.
-								mat4.multiply( targetRelativeToJointMatrix, tempInverseMatrixWorld, targetJoint.matrixWorld );
-								mat4.multiply( targetDeltaWorldMatrix, tempDeltaWorldMatrix, targetRelativeToJointMatrix );
+								// rotation
+								// get the target position which is needed to calculate the impact of rotation
+								const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
+								mat4.getTranslation( targetWorldPos, affectedMatrix );
 
-								// Get the new error
-								getMatrixDifference( targetDeltaWorldMatrix, targetJoint.child.matrixWorld, tempPos2, tempRotVec2 );
+								// get relative position
+								mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
+								vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
+
+								// the change of a point by a rotation about an axis is the cross vector
+								vec3.cross( tempPos, axisWorld, toTarget );
+
+								// for a rotation vector the delta is the same as the axis of rotation
+								vec3.copy( tempRotVec, axisWorld );
 
 							}
 
-							// Get the amount that the rotation and translation error changed due to the
-							// small DoF adjustment to serve as the derivative.
-							vec3.subtract( tempPos, tempPos, tempPos2 );
-							vec3.scale( tempPos, tempPos, translationFactor / delta );
-
-							vec3.subtract( tempRotVec, tempRotVec, tempRotVec2 );
-							vec3.scale( tempRotVec, tempRotVec, rotationFactor / delta );
+							// Error is defined as (closure - child), so:
+							// - For direct closures: moving closure changes error positively, so negate
+							// - For connected closures: moving child changes error negatively, so keep positive
+							const sign = isConnected ? 1 : - 1;
+							vec3.scale( tempPos, tempPos, sign * translationFactor );
+							vec3.scale( tempRotVec, tempRotVec, sign * rotationFactor );
 
 							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
 							// See solver.js for details on unifying closure semantics.
@@ -850,6 +854,46 @@ export class ChainSolver {
 		dofResultInfo.errorRows = errorRows;
 		dofResultInfo.freeDoF = freeDoF;
 		dofResultInfo.totalError = totalError;
+
+	}
+
+	// Check if the cached jacobian equals the given jacobian
+	jacobianCacheEquals( matrix ) {
+
+		return mat.equalSubMatrix( this.prevJacobian, matrix, matrix.rows, matrix.cols );
+
+	}
+
+	// Copy cached pseudo-inverse to the output matrix
+	restorePseudoInverse( target ) {
+
+		mat.copySubMatrix( target, this.prevPseudoInverse, target.rows, target.cols );
+
+	}
+
+	cacheJacobianResult( jacobian, pseudoInverse ) {
+
+		// grow the cached matrices if needed
+		const { rows, cols } = jacobian;
+		if ( this.prevJacobian.rows < rows || this.prevJacobian.cols < cols ) {
+
+			this.prevJacobian = mat.create( rows, cols );
+
+		}
+
+		if ( this.prevPseudoInverse.rows < pseudoInverse.rows || this.prevPseudoInverse.cols < pseudoInverse.cols ) {
+
+			this.prevPseudoInverse = mat.create( pseudoInverse.rows, pseudoInverse.cols );
+
+		}
+
+		// fill with Infinity to invalidate stale data beyond current dimensions
+		mat.fill( this.prevJacobian, Infinity );
+		mat.fill( this.prevPseudoInverse, Infinity );
+
+		// copy the latest data
+		mat.copySubMatrix( this.prevJacobian, jacobian, rows, cols );
+		mat.copySubMatrix( this.prevPseudoInverse, pseudoInverse, pseudoInverse.rows, pseudoInverse.cols );
 
 	}
 

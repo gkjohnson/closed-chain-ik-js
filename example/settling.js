@@ -26,9 +26,7 @@ import {
 	Joint,
 	SOLVE_STATUS_NAMES,
 	IKRootsHelper,
-	setUrdfFromIK,
-	urdfRobotToIKRoot,
-	setIKFromUrdf,
+	URDFUtils,
 	Goal,
 	DOF,
 	SOLVE_STATUS,
@@ -223,7 +221,7 @@ function init() {
 			} );
 
 			urdfRoot = result;
-			ikRoot = urdfRobotToIKRoot( urdfRoot, true );
+			ikRoot = URDFUtils.urdfRobotToIKRoot( urdfRoot, true );
 
 			const differential = ikRoot.find( c => c.name === 'CENTER_DIFFERENTIAL' ).child;
 			differential.removeChild( differential.children[ 0 ] );
@@ -323,7 +321,7 @@ function init() {
 			drawThroughIkHelper.setDrawThrough( true );
 
 			urdfRoot.rotation.set( Math.PI / 2, 0, 0 );
-			setIKFromUrdf( ikRoot, urdfRoot );
+			URDFUtils.setIKFromUrdf( ikRoot, urdfRoot );
 
 			// initialize wheel goals
 			driveGoals = [
@@ -479,7 +477,7 @@ function updateIk() {
 
 	for ( let i = 0; i < params.settleIterations; i ++ ) {
 
-		// udpate drive goals from the new location
+		// update drive goals from the new location
 		ikRoot.updateMatrixWorld( true );
 
 		driveGoals.forEach( ( goal, i ) => {
@@ -514,9 +512,12 @@ function updateIk() {
 
 		solveOutput += delta.toFixed( 2 ) + 'ms ' + SOLVE_STATUS_NAMES[ results[ 0 ] ] + '\n';
 
-		const isConverged = results.filter( r => r === SOLVE_STATUS.CONVERGED ).length === results.length;
-		const isAllDiverged = results.filter( r => r === SOLVE_STATUS.DIVERGED ).length === results.length;
-		if ( isConverged || isAllDiverged ) {
+		const shouldContinue = results.filter( r => {
+
+			return r === SOLVE_STATUS.TIMEOUT || r === SOLVE_STATUS.STALLED;
+
+		} ).length !== 0;
+		if ( ! shouldContinue ) {
 
 			break;
 
@@ -529,7 +530,7 @@ function updateIk() {
 
 	outputContainer.textContent = solveOutput;
 
-	setUrdfFromIK( urdfRoot, ikRoot );
+	URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 }
 
@@ -559,7 +560,7 @@ function render() {
 				targetObject.quaternion.z,
 				targetObject.quaternion.w,
 			);
-			setUrdfFromIK( urdfRoot, ikRoot );
+			URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 		}
 

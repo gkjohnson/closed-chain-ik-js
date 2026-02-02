@@ -39,6 +39,10 @@ Robitics models used in the project are for demonstration purposes only and subj
 
 [PI Hexapod](https://github.com/PI-PhysikInstrumente/PI_ROS_Driver)
 
+[Digit](https://github.com/adubredu/DigitRobot.jl)
+
+[Spot](https://github.com/heuristicus/spot_ros)
+
 # Installation
 
 ```
@@ -112,8 +116,6 @@ solver.solve();
 
 - The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
 
-- Smoothing out 3DoF non closure ball joint behavior is in progress. See issue [#22](https://github.com/gkjohnson/closed-chain-ik-js/issues/22).
-
 - Enabling SVD on the Solver can cause divergence on solvable systems and stutter. See [#76](https://github.com/gkjohnson/closed-chain-ik-js/issues/76).
 
 # API
@@ -163,9 +165,9 @@ SOLVE_STATUS.TIMEOUT,
 
 An array of strings representing the names of the above solve statuses.
 
-## Functions
+## IKUtils
 
-Set of utility functions including some for creating an ik system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
+Utility functions for working with IK systems. Available as `IKUtils.findRoots()`, `IKUtils.saveRestPose()`, or as direct imports.
 
 ### findRoots
 
@@ -174,6 +176,18 @@ findRoots( frames : Array<Frame> ) : Array<Frame>
 ```
 
 Takes an array of frames to traverse including the closure joints and links and finds a set of unique nodes to treat as the roots of the connected trees for use in solving.
+
+### saveRestPose
+
+```js
+saveRestPose( ik : Frame ) : void
+```
+
+Traverses the IK tree and saves the current joint values as the rest pose for each joint. Sets `restPoseSet` to `true` on each joint.
+
+## URDFUtils
+
+Utility functions for creating an IK system from and working with results from [URDFLoader](https://github.com/gkjohnson/urdf-loaders/tree/master/javascript).
 
 ### urdfRobotToIKRoot
 
@@ -549,7 +563,7 @@ getMaxLimit( dof : DOF ) : Number
 makeClosure( child : Link ) : void
 ```
 
-Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed.
+Declares the relationship between this joint and the given child link is a closure meaning there is no direct parent child relationship but the [Solver](#Solver) will treat the closure link as a target for this joint to keep them closed. The solver constrains all 6 axes (position + orientation) between this joint and the target link.
 
 Note that when making a closure connection between a Joint and a Link the link will not be added to the Joints `children` array and instead will only be available on the `child` field. The Joint will be appended to the Links `closureJoints` array.
 
@@ -558,6 +572,18 @@ Note that when making a closure connection between a Joint and a Link the link w
 _extends [Joint](#Joint)_
 
 A [Frame](#Frame) representing a goal to achieve for a connected [Link](#Link). Set degrees of freedom represent fixed goals for a link to achieve as opposed to moveable degrees of freedom defined for [Joints](#Joint). A goal cannot have children and only be used to make a closure.
+
+```js
+goal.setFreeDoF();                        // All axes constrained (default)
+goal.setFreeDoF(DOF.EX, DOF.EY, DOF.EZ);  // Position-only goal
+goal.setFreeDoF(DOF.X, DOF.Y, DOF.Z);     // Rotation-only goal
+```
+
+Or use `setGoalDoF()` to specify constrained axes directly:
+
+```js
+goal.setGoalDoF(DOF.X, DOF.Y, DOF.Z);     // Position-only goal
+```
 
 ## Solver
 
@@ -600,11 +626,6 @@ rotationConvergeThreshold = 1e-5;
 // be solved "evenly". Values are expected to be in the range [ 0, 1 ].
 translationFactor = 1;
 rotationFactor = 1;
-
-// The amount to move a joint when calculating the change in error a joint has
-// for a jacobian.
-translationStep = 1e-3;
-rotationStep = 1e-3;
 
 // The step to take towards the IK goals when solving. Setting this to a larger value
 // may solve more quickly but may lead also lead to divergence.

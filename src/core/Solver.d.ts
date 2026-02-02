@@ -17,9 +17,6 @@ export class Solver {
 	translationFactor : Number;
 	rotationFactor : Number;
 
-	translationStep : Number;
-	rotationStep : Number;
-
 	translationErrorClamp : Number;
 	rotationErrorClamp : Number;
 

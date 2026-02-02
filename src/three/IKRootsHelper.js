@@ -1,7 +1,7 @@
 import { Group, Vector2, Color } from 'three';
 import { IKJointHelper } from './IKJointHelper.js';
 import { IKLinkHelper } from './IKLinkHelper.js';
-import { findRoots } from '../core/utils/findRoots.js';
+import { findRoots } from '../core/utils/IKUtils.js';
 
 const currLinks = new Set();
 const currJoints = new Set();

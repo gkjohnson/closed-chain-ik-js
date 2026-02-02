@@ -41,7 +41,7 @@ import {
 	Link,
 	Joint,
 	IKRootsHelper,
-	setUrdfFromIK,
+	URDFUtils,
 } from '../src/index.js';
 import {
 	loadATHLETE,
@@ -561,7 +561,7 @@ function render() {
 
 			}
 
-			setUrdfFromIK( urdfRoot, ikRoot );
+			URDFUtils.setUrdfFromIK( urdfRoot, ikRoot );
 
 		}
 
@@ -897,7 +897,7 @@ function loadModel( promise ) {
 
 			} );
 
-			setUrdfFromIK( urdf, ik );
+			URDFUtils.setUrdfFromIK( urdf, ik );
 
 			const box = new Box3();
 			urdf.updateMatrixWorld( true );

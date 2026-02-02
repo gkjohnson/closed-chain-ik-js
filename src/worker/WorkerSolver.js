@@ -7,7 +7,7 @@ import {
 	copyBufferToFrame,
 	JOINT_STRIDE,
 } from './utils.js';
-import { findRoots } from '../core/utils/findRoots.js';
+import { findRoots } from '../core/utils/IKUtils.js';
 
 const useSharedArrayBuffers = ( typeof SharedArrayBuffer ) !== 'undefined';
 

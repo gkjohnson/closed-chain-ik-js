@@ -1,6 +1,6 @@
 import { Link } from '../../src/core/Link.js';
 import { Joint, DOF } from '../../src/core/Joint.js';
-import { findRoots } from '../../src/core/utils/findRoots.js';
+import { findRoots } from '../../src/core/utils/IKUtils.js';
 
 describe( 'Joint', () => {
 
@@ -338,13 +338,6 @@ describe( 'Joint', () => {
 			expect( roots2 ).toEqual( [ closureChild, parent, closureChild2 ] );
 
 		} );
-
-	} );
-
-	describe( 'getDeltaWorldMatrix', () => {
-
-		it.todo( 'should describe an offset world matrix based on the give DoF.' );
-		it.todo( 'should return true if the delta was inverted due to a joint limit.' );
 
 	} );
 

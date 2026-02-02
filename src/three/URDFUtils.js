@@ -13,6 +13,32 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 	let node;
 	let doReturn = true;
 
+	// if this is the root then we need to reset all the joints so we
+	// can initialize our IK from a default "0" state
+	let savedJoints = null;
+	if ( isRoot ) {
+
+		savedJoints = {};
+		urdfNode.traverse( c => {
+
+			if ( c.isURDFJoint ) {
+
+				savedJoints[ c.name ] = {
+					ignoreLimits: c.ignoreLimits,
+					values: [ ...c.jointValue ],
+				};
+
+				c.ignoreLimits = true;
+				c.setJointValue( 0, 0, 0, 0, 0, 0 );
+
+			}
+
+		} );
+
+		urdfNode.updateMatrixWorld( true );
+
+	}
+
 	if ( urdfNode.isURDFRobot ) {
 
 		rootNode = new Joint();
@@ -113,26 +139,21 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 	}
 
-	// don't position the urdf root because we're treating the positions at
-	// degrees of freedom
-	if ( ! isRoot ) {
+	// position the nodes
+	// even the root node is positioned even though it's marked as a free DoF in order to align
+	// with the robots positioning - and the user may mark it as "fixed" afterward.
+	( rootNode || node ).setPosition(
+		urdfNode.position.x,
+		urdfNode.position.y,
+		urdfNode.position.z,
+	);
 
-		( rootNode || node )
-			.setPosition(
-				urdfNode.position.x,
-				urdfNode.position.y,
-				urdfNode.position.z,
-			);
-
-		( rootNode || node )
-			.setQuaternion(
-				urdfNode.quaternion.x,
-				urdfNode.quaternion.y,
-				urdfNode.quaternion.z,
-				urdfNode.quaternion.w,
-			);
-
-	}
+	( rootNode || node ).setQuaternion(
+		urdfNode.quaternion.x,
+		urdfNode.quaternion.y,
+		urdfNode.quaternion.z,
+		urdfNode.quaternion.w,
+	);
 
 	const children = urdfNode.children;
 	for ( let i = 0, l = children.length; i < l; i ++ ) {
@@ -148,6 +169,24 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 	}
 
+	// reset all the joint angles
+	if ( isRoot ) {
+
+		urdfNode.traverse( c => {
+
+			if ( c.isURDFJoint ) {
+
+				const { values, ignoreLimits } = savedJoints[ c.name ];
+				c.setJointValue( ...values );
+				c.ignoreLimits = ignoreLimits;
+
+			}
+
+		} );
+
+		urdfNode.updateMatrixWorld( true );
+
+	}
 
 	return ( ! trimUnused || doReturn ) ? rootNode || node : null;
 
@@ -155,15 +194,21 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
-	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x );
-	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y );
-	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z );
-
+	// get the ik root transforms
 	tempEuler.copy( urdfRoot.rotation );
 	tempEuler.reorder( 'ZYX' );
-	ikRoot.setDoFValue( DOF.EX, tempEuler.x );
-	ikRoot.setDoFValue( DOF.EY, tempEuler.y );
-	ikRoot.setDoFValue( DOF.EZ, tempEuler.z );
+
+	const [ ex, ey, ez ] = tempEuler;
+	const [ x, y, z ] = ikRoot.position;
+
+	// set target DoF relative to the actual root position
+	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x - x );
+	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y - y );
+	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z - z );
+
+	ikRoot.setDoFValue( DOF.EX, tempEuler.x - ex );
+	ikRoot.setDoFValue( DOF.EY, tempEuler.y - ey );
+	ikRoot.setDoFValue( DOF.EZ, tempEuler.z - ez );
 
 	ikRoot.traverse( c => {
 
@@ -191,17 +236,6 @@ export function setUrdfFromIK( urdfRoot, ikRoot ) {
 		urdfRoot.quaternion,
 		urdfRoot.scale,
 	);
-
-	// urdfRoot.position.set(
-	// 	ikRoot.getDoFValue( DOF.X ),
-	// 	ikRoot.getDoFValue( DOF.Y ),
-	// 	ikRoot.getDoFValue( DOF.Z ),
-	// );
-	// urdfRoot.rotation.set(
-	// 	ikRoot.getDoFValue( DOF.EX ),
-	// 	ikRoot.getDoFValue( DOF.EY ),
-	// 	ikRoot.getDoFValue( DOF.EZ ),
-	// );
 
 	ikRoot.traverse( c => {
 
