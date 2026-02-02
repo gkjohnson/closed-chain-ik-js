@@ -1,6 +1,6 @@
 import { Link } from '../../src/core/Link.js';
 import { Joint, DOF } from '../../src/core/Joint.js';
-import { findRoots } from '../../src/core/utils/findRoots.js';
+import { findRoots } from '../../src/core/utils/IKUtils.js';
 
 describe( 'Joint', () => {
 
