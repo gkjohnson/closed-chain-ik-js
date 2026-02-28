@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Hexapod Platform IK</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                user-select: none;
+                box-sizing: border-box;
+            }
+
+            html, body {
+                overflow: hidden;
+            }
+
+			a {
+				color: white;
+			}
+
+            #output {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                padding: 5px;
+                margin: 5px;
+                white-space: pre;
+                line-height: 1.5em;
+                color: white;
+                font-family: monospace;
+
+                background: rgba( 0, 0, 0, 0.4 );
+            }
+
+            #info {
+                position: absolute;
+                text-align: center;
+                margin: auto;
+                width: 100%;
+                padding: 10px;
+                color: white;
+                pointer-events: none;
+                font-family: monospace;
+            }
+        </style>
+      <script type="module" crossorigin src="./assets/hexapod-3Qd09zah.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/IKRootsHelper-COUPCDCE.js">
+      <link rel="modulepreload" crossorigin href="./assets/stats.module-BmaK_bvY.js">
+      <link rel="modulepreload" crossorigin href="./assets/URDFLoader-BGE-E6rN.js">
+    </head>
+    <body>
+		<div id="info">
+			Hexapod platform inverse kinematics.
+			<br/>
+			Model courtesy of <a href="https://github.com/PI-PhysikInstrumente/PI_ROS_Driver">Physik Instrumente.</a>
+		</div>
+        <div id="output"></div>
+    </body>
+</html>

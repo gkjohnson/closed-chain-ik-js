@@ -1,0 +1,54 @@
+<html>
+    <head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta charset="utf-8"/>
+
+		<title>IK Goal Example</title>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+				user-select: none;
+				box-sizing: border-box;
+            }
+
+			html, body {
+				overflow: hidden;
+			}
+
+			#output {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				padding: 10px;
+				white-space: pre;
+				line-height: 1.5em;
+				color: white;
+				font-family: monospace;
+			}
+
+			#info {
+				position: absolute;
+				text-align: center;
+				margin: auto;
+				width: 100%;
+				padding: 10px;
+				color: white;
+				pointer-events: none;
+				font-family: monospace;
+			}
+        </style>
+      <script type="module" crossorigin src="./assets/goals-BNE8AJUX.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/IKRootsHelper-COUPCDCE.js">
+      <link rel="modulepreload" crossorigin href="./assets/stats.module-BmaK_bvY.js">
+    </head>
+    <body>
+		<div id="info">
+			Demonstrates a kinematic system using a goal to solve with options
+			<br/>
+			for constraining the goal to translation or rotation axes.
+		</div>
+		<div id="output"></div>
+    </body>
+</html>
