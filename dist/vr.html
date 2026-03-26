@@ -1,0 +1,58 @@
+<html>
+    <head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta charset="utf-8"/>
+
+		<title>VR IK Example</title>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+				user-select: none;
+				box-sizing: border-box;
+            }
+
+			html, body {
+				overflow: hidden;
+			}
+
+			#output {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				padding: 10px;
+				white-space: pre;
+				line-height: 1.5em;
+				color: white;
+				font-family: monospace;
+			}
+
+			#info {
+				position: absolute;
+				text-align: center;
+				margin: auto;
+				width: 100%;
+				padding: 10px;
+				color: white;
+				pointer-events: none;
+				font-family: monospace;
+			}
+        </style>
+      <script type="module" crossorigin src="./assets/vr-D2qWuq2W.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/IKRootsHelper-COUPCDCE.js">
+      <link rel="modulepreload" crossorigin href="./assets/GLTFLoader-B1LzBeNl.js">
+      <link rel="modulepreload" crossorigin href="./assets/URDFLoader-BGE-E6rN.js">
+      <link rel="modulepreload" crossorigin href="./assets/loadModels-BQg7RtQk.js">
+    </head>
+    <body>
+		<div id="info">
+			Click and drag to set a goal and move a part of the model.
+			<br/>
+			Click a goal a second time to remove it. Goals are rendered as gold balls.
+			<br/>
+			<br/>
+			Disable shadows and live raycasting if performance is low.
+		</div>
+    </body>
+</html>

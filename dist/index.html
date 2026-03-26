@@ -1,0 +1,65 @@
+<html>
+    <head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta charset="utf-8"/>
+
+		<title>URDF Model IK Example</title>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+				user-select: none;
+				box-sizing: border-box;
+            }
+
+			html, body {
+				overflow: hidden;
+			}
+
+			#output {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				padding: 10px;
+				white-space: pre;
+				line-height: 1.5em;
+				color: white;
+				font-family: monospace;
+			}
+
+			#info {
+				position: absolute;
+				text-align: center;
+				margin: auto;
+				width: 100%;
+				padding: 10px;
+				color: white;
+				pointer-events: none;
+				font-family: monospace;
+			}
+        </style>
+      <script type="module" crossorigin src="./assets/index-DSVAXiLs.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/IKRootsHelper-COUPCDCE.js">
+      <link rel="modulepreload" crossorigin href="./assets/stats.module-BmaK_bvY.js">
+      <link rel="modulepreload" crossorigin href="./assets/URDFLoader-BGE-E6rN.js">
+      <link rel="modulepreload" crossorigin href="./assets/loadModels-BQg7RtQk.js">
+    </head>
+    <body>
+		<div id="info">
+			Goals are rendered as gold balls.
+
+			<br/>
+			<br/>
+			Right click to create a goal associated with an IK link.
+			<br/>
+			If a goal is already created for that link it is moved.
+			<br/>
+			<br/>
+			Left click to select goals and move them. Press "Delete" to remove goals.
+			<br/>
+			Press "F" to recenter.
+		</div>
+		<div id="output"></div>
+    </body>
+</html>
