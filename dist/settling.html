@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <title>M2020 Perseverance Rover Rocker Bogie Settling</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                user-select: none;
+                box-sizing: border-box;
+            }
+
+            html, body {
+                overflow: hidden;
+            }
+
+            #output {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                padding: 5px;
+                margin: 5px;
+                white-space: pre;
+                line-height: 1.5em;
+                color: white;
+                font-family: monospace;
+
+                background: rgba( 0, 0, 0, 0.4 );
+            }
+
+            #info {
+                position: absolute;
+                text-align: center;
+                margin: auto;
+                width: 100%;
+                padding: 10px;
+                color: white;
+                pointer-events: none;
+                font-family: monospace;
+            }
+        </style>
+      <script type="module" crossorigin src="./assets/settling-Cw28-KPc.js"></script>
+      <link rel="modulepreload" crossorigin href="./assets/IKRootsHelper-COUPCDCE.js">
+      <link rel="modulepreload" crossorigin href="./assets/stats.module-BmaK_bvY.js">
+      <link rel="modulepreload" crossorigin href="./assets/URDFLoader-BGE-E6rN.js">
+      <link rel="modulepreload" crossorigin href="./assets/GLTFLoader-B1LzBeNl.js">
+    </head>
+    <body>
+		<div id="info">
+			Settling the Perseverance rocker-bogie system with parallel kinematics.
+			<br/>
+			Model courtesy of NASA/JPL-Caltech
+		</div>
+        <div id="output"></div>
+    </body>
+</html>
