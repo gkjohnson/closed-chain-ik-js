@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Frame.setWorldQuaternion producing the wrong result when the frame already had a local rotation.
 - Target joint rotation error using a signed sum so opposing or negative errors could report as converged.
 - Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
+- Solver throwing instead of returning STALLED when a chain has no free degrees of freedom.
 
 ## [0.0.6] - 2026-02-02
 ### Added
