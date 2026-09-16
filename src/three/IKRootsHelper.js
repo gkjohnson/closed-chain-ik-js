@@ -168,6 +168,7 @@ export class IKRootsHelper extends Group {
 			const helper = joints.get( joint );
 			this.remove( helper );
 			helper.dispose();
+			joints.delete( joint );
 
 		} );
 
@@ -176,6 +177,7 @@ export class IKRootsHelper extends Group {
 			const helper = links.get( link );
 			this.remove( helper );
 			helper.dispose();
+			links.delete( link );
 
 		} );
 
@@ -186,7 +188,7 @@ export class IKRootsHelper extends Group {
 	dispose() {
 
 		const { links, joints } = this;
-		joints.forEach( ( [ joint, helper ] ) => {
+		joints.forEach( helper => {
 
 			this.remove( helper );
 			helper.dispose();
@@ -194,7 +196,7 @@ export class IKRootsHelper extends Group {
 		} );
 		joints.clear();
 
-		links.forEach( ( [ link, helper ] ) => {
+		links.forEach( helper => {
 
 			this.remove( helper );
 			helper.dispose();
