@@ -173,7 +173,23 @@ function solve( outMatrix, matrix, vector ) {
 
 function svd( ru, rq, rv, matrix ) {
 
-	const { u, v, q } = SVD( matrix );
+	// svd-js implements the Golub-Reinsch routine which only handles rows >= cols. This is a
+	// limitation of the library, not the math: decomposing the transpose and swapping the
+	// outputs is exact since if A^T = U * Q * V^T then A = V * Q * U^T
+	const rows = matrix.length;
+	const cols = matrix[ 0 ].length;
+	let u, v, q;
+	if ( rows < cols ) {
+
+		const transposed = create( cols, rows );
+		transpose( transposed, matrix );
+		( { u: v, v: u, q } = SVD( transposed ) );
+
+	} else {
+
+		( { u, v, q } = SVD( matrix ) );
+
+	}
 
 	const urows = u.length;
 	for ( let r = 0; r < urows; r ++ ) {
