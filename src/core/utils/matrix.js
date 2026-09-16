@@ -39,9 +39,11 @@ function transpose( outMatrix, a ) {
 
 function identity( outMatrix ) {
 
-	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
+	const tr = outMatrix.length;
+	const tc = outMatrix[ 0 ].length;
+	for ( let r = 0; r < tr; r ++ ) {
 
-		for ( let c = 0, tc = outMatrix.length; c < tc; c ++ ) {
+		for ( let c = 0; c < tc; c ++ ) {
 
 			outMatrix[ r ][ c ] = r === c ? 1 : 0;
 
@@ -69,9 +71,11 @@ function fill( outMatrix, value ) {
 
 function scale( outMatrix, matrix, scalar ) {
 
-	for ( let r = 0, tr = outMatrix.length; r < tr; r ++ ) {
+	const tr = outMatrix.length;
+	const tc = outMatrix[ 0 ].length;
+	for ( let r = 0; r < tr; r ++ ) {
 
-		for ( let c = 0, tc = outMatrix.length; c < tc; c ++ ) {
+		for ( let c = 0; c < tc; c ++ ) {
 
 			outMatrix[ r ][ c ] = matrix[ r ][ c ] * scalar;
 

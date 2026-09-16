@@ -1,11 +1,13 @@
-import { Euler } from 'three';
-import { quat } from 'gl-matrix';
+import { mat4, quat } from 'gl-matrix';
 import { Joint, DOF } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
+import { getEuler } from '../core/utils/glmatrix.js';
+import { DEG2RAD } from '../core/utils/constants.js';
 
 const tempVec = new Float64Array( 3 );
 const tempVec2 = new Float64Array( 3 );
-const tempEuler = new Euler();
+const tempQuat = new Float64Array( 4 );
+const tempMatrix = new Float64Array( 16 );
 
 export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
 
@@ -194,21 +196,24 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
-	// get the ik root transforms
-	tempEuler.copy( urdfRoot.rotation );
-	tempEuler.reorder( 'ZYX' );
+	// get the urdf root transform relative to the ik root frame
+	urdfRoot.updateMatrix();
+	ikRoot.updateMatrix();
+	mat4.invert( tempMatrix, ikRoot.matrix );
+	mat4.multiply( tempMatrix, tempMatrix, urdfRoot.matrix.elements );
 
-	const [ ex, ey, ez ] = tempEuler;
-	const [ x, y, z ] = ikRoot.position;
+	// set the root DoF so the ik root world transform matches the urdf root
+	mat4.getTranslation( tempVec, tempMatrix );
+	mat4.getRotation( tempQuat, tempMatrix );
+	getEuler( tempVec2, tempQuat );
 
-	// set target DoF relative to the actual root position
-	ikRoot.setDoFValue( DOF.X, urdfRoot.position.x - x );
-	ikRoot.setDoFValue( DOF.Y, urdfRoot.position.y - y );
-	ikRoot.setDoFValue( DOF.Z, urdfRoot.position.z - z );
+	ikRoot.setDoFValue( DOF.X, tempVec[ 0 ] );
+	ikRoot.setDoFValue( DOF.Y, tempVec[ 1 ] );
+	ikRoot.setDoFValue( DOF.Z, tempVec[ 2 ] );
 
-	ikRoot.setDoFValue( DOF.EX, tempEuler.x - ex );
-	ikRoot.setDoFValue( DOF.EY, tempEuler.y - ey );
-	ikRoot.setDoFValue( DOF.EZ, tempEuler.z - ez );
+	ikRoot.setDoFValue( DOF.EX, tempVec2[ 0 ] * DEG2RAD );
+	ikRoot.setDoFValue( DOF.EY, tempVec2[ 1 ] * DEG2RAD );
+	ikRoot.setDoFValue( DOF.EZ, tempVec2[ 2 ] * DEG2RAD );
 
 	ikRoot.traverse( c => {
 

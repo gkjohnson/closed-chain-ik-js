@@ -53,7 +53,7 @@ self.onmessage = function ( { data: e } ) {
 			break;
 
 		// Stop the solve loop
-		case 'endSolve':
+		case 'stopSolve':
 			if ( solveHandle !== - 1 ) {
 
 				clearTimeout( solveHandle );

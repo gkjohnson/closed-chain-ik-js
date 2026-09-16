@@ -165,7 +165,7 @@ export class Frame {
 			const stop = cb( curr );
 			if ( stop ) {
 
-				return;
+				break;
 
 			}
 
