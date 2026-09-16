@@ -233,6 +233,14 @@ export class ChainSolver {
 
 			}
 
+			// Nothing can move if there are no free degrees of freedom
+			if ( freeDoF === 0 ) {
+
+				status = SOLVE_STATUS.STALLED;
+				break;
+
+			}
+
 			// Check if we've diverged - backtrack with smaller step
 			if ( totalError > prevErrorMagnitude + divergeThreshold ) {
 

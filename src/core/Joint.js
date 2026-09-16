@@ -73,7 +73,7 @@ export class Joint extends Frame {
 	// private helpers
 	_getQuaternion( target, outQuat ) {
 
-		quat.fromEuler( outQuat, target[ DOF.EX ], target[ DOF.EY ], target[ DOF.EZ ] );
+		quat.fromEuler( outQuat, target[ DOF.EX ] * RAD2DEG, target[ DOF.EY ] * RAD2DEG, target[ DOF.EZ ] * RAD2DEG );
 
 	}
 

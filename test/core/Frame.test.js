@@ -153,6 +153,23 @@ describe( 'Frame', () => {
 
 		} );
 
+		it( 'should account for the parent when the child already has a local rotation.', () => {
+
+			const p = new Frame();
+			const f = new Frame();
+			p.addChild( f );
+
+			p.setEuler( 0, 0, HALF_PI );
+			f.setEuler( 0, 0, 0.7 );
+			f.setWorldQuaternion( 0, 0, 0, 1 );
+
+			const worldQuat = new Float32Array( 4 );
+			f.getWorldQuaternion( worldQuat );
+
+			expect( quaternionDistance( worldQuat, [ 0, 0, 0, 1 ] ) ).toBeLessThan( 1e-6 );
+
+		} );
+
 	} );
 
 	describe( 'travesreParents', () => {
