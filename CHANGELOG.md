@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
 - Solver throwing instead of returning STALLED when a chain has no free degrees of freedom.
 - "useSVD" silently falling back to damped least squares when there are more free DoF than constraint rows.
+- Jacobian columns for joints above a closure fork only accounting for one side of the closure.
 
 ## [0.0.6] - 2026-02-02
 ### Added

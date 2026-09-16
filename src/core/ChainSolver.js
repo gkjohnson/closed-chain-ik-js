@@ -36,6 +36,30 @@ export const SOLVE_STATUS = {
 
 export const SOLVE_STATUS_NAMES = Object.entries( SOLVE_STATUS ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( el => el[ 0 ] );
 
+// Accumulate the change in world position and rotation of the frame at "matrix" for a unit
+// change of a joint dof about "axisWorld" at "jointWorldPos", scaled by "sign".
+function accumulateDoFInfluence( outPos, outRotVec, dof, axisWorld, jointWorldPos, matrix, sign ) {
+
+	if ( dof < 3 ) {
+
+		// translation
+		vec3.scaleAndAdd( outPos, outPos, axisWorld, sign );
+
+	} else {
+
+		// the change of a point by a rotation about an axis is the cross vector
+		mat4.getTranslation( targetWorldPos, matrix );
+		vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
+		vec3.cross( toTarget, axisWorld, toTarget );
+		vec3.scaleAndAdd( outPos, outPos, toTarget, sign );
+
+		// for a rotation vector the delta is the same as the axis of rotation
+		vec3.scaleAndAdd( outRotVec, outRotVec, axisWorld, sign );
+
+	}
+
+}
+
 export class ChainSolver {
 
 	constructor( chain ) {
@@ -614,49 +638,34 @@ export class ChainSolver {
 					// if it's a closure target
 					if ( targetJoint.isClosure ) {
 
-						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
-
-							// Determine which position we're affecting and the sign. If we're the connected child then
-							// we need to invert the change needed.
-							const isConnected = relevantConnectedClosures.has( targetJoint );
+						const affectsClosure = relevantClosures.has( targetJoint );
+						const affectsChild = relevantConnectedClosures.has( targetJoint );
+						if ( affectsClosure || affectsChild ) {
 
 							// Transform local axis to world space using the rotation part of the matrix
 							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
 							vec3.transformQuat( axisWorld, AXES[ dof ], tempAxisQuat );
+							mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
 
-							if ( dof < 3 ) {
+							// Error is defined as (closure - child) and the jacobian stores the negated derivative, so
+							// moving the closure contributes with sign -1 and moving the child with sign +1. A joint
+							// above the fork moves both and the two contributions cancel except for the offset between them.
+							vec3.zero( tempPos );
+							vec3.zero( tempRotVec );
+							if ( affectsClosure ) {
 
-								// translation
-								vec3.copy( tempPos, axisWorld );
-								tempRotVec[ 0 ] = 0;
-								tempRotVec[ 1 ] = 0;
-								tempRotVec[ 2 ] = 0;
-
-							} else {
-
-								// rotation
-								// get the target position which is needed to calculate the impact of rotation
-								const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
-								mat4.getTranslation( targetWorldPos, affectedMatrix );
-
-								// get relative position
-								mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
-								vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
-
-								// the change of a point by a rotation about an axis is the cross vector
-								vec3.cross( tempPos, axisWorld, toTarget );
-
-								// for a rotation vector the delta is the same as the axis of rotation
-								vec3.copy( tempRotVec, axisWorld );
+								accumulateDoFInfluence( tempPos, tempRotVec, dof, axisWorld, jointWorldPos, targetJoint.matrixWorld, - 1 );
 
 							}
 
-							// Error is defined as (closure - child), so:
-							// - For direct closures: moving closure changes error positively, so negate
-							// - For connected closures: moving child changes error negatively, so keep positive
-							const sign = isConnected ? 1 : - 1;
-							vec3.scale( tempPos, tempPos, sign * translationFactor );
-							vec3.scale( tempRotVec, tempRotVec, sign * rotationFactor );
+							if ( affectsChild ) {
+
+								accumulateDoFInfluence( tempPos, tempRotVec, dof, axisWorld, jointWorldPos, targetJoint.child.matrixWorld, 1 );
+
+							}
+
+							vec3.scale( tempPos, tempPos, translationFactor );
+							vec3.scale( tempRotVec, tempRotVec, rotationFactor );
 
 							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
 							// See solver.js for details on unifying closure semantics.
