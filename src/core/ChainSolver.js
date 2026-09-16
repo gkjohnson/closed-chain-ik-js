@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix';
-import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
+import { accumulateClosureError, accumulateTargetError, getClosureRowCount } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { AXES } from './utils/constants.js';
 
@@ -677,8 +677,6 @@ export class ChainSolver {
 
 								}
 
-								rowIndex += translationDoFCount + rotationDoFCount;
-
 							} else {
 
 								// set translation
@@ -690,24 +688,13 @@ export class ChainSolver {
 								mat.set( outJacobian, rowIndex + 3, colIndex, tempRotVec[ 0 ] );
 								mat.set( outJacobian, rowIndex + 4, colIndex, tempRotVec[ 1 ] );
 								mat.set( outJacobian, rowIndex + 5, colIndex, tempRotVec[ 2 ] );
-								rowIndex += 6;
-
-							}
-
-						} else {
-
-							// Target isn't relevant, values already zeroed
-							if ( targetJoint.isGoal ) {
-
-								rowIndex += targetJoint.translationDoFCount + targetJoint.rotationDoFCount;
-
-							} else {
-
-								rowIndex += 6;
 
 							}
 
 						}
+
+						// else: target isn't relevant, values already zeroed
+						rowIndex += getClosureRowCount( targetJoint );
 
 					}
 
