@@ -237,7 +237,7 @@ export class Frame {
 
 		traverseVariablesInUse = originalVariablesInUse;
 		traversedChildren.clear();
-		stack.fill( null );
+		stack.fill( null, 0, tot );
 
 	}
 
