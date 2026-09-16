@@ -593,6 +593,7 @@ export class ChainSolver {
 			const lockedDoF = lockedJointDoF.get( freeJoint );
 
 			// iterate over every degree of freedom in the joint
+			let jointColIndex = 0;
 			for ( let co = 0; co < colCount; co ++ ) {
 
 				const dof = dofList[ co ];
@@ -714,23 +715,16 @@ export class ChainSolver {
 					// Check if this joint has a target set and update the jacobian rows if it does
 					if ( targetJoint.targetSet ) {
 
-						const rowCount = targetJoint.translationDoFCount + targetJoint.rotationDoFCount;
+						const rowCount = targetJoint.translationDoFCount + targetJoint.rotationDoFCount - ( lockedJointDoFCount.get( targetJoint ) || 0 );
 
 						if ( freeJoint === targetJoint ) {
 
-							// if we're just dealing with a target dof joint then there can't be any influence
-							// but otherwise the only joint that can have an effect on this error is the joint
-							// itself.
-							// TODO: Having noted that is this really necessary? Is there any way that this doesn't just
-							// jump to the solution and lock? How can we afford some slack? With a low weight? Does that
-							// get applied here?
+							// the only joint that can have an effect on this error is the joint itself and
+							// each degree of freedom only affects its own row.
 							// TODO: If this joint happens to have three euler joints we need to use a quat here. Otherwise we
 							// use the euler angles.
-							for ( let i = 0; i < rowCount; i ++ ) {
-
-								mat.set( outJacobian, rowIndex + colIndex, colIndex, - 1 );
-
-							}
+							const factor = dof < 3 ? translationFactor : rotationFactor;
+							mat.set( outJacobian, rowIndex + jointColIndex, colIndex, factor );
 
 						}
 
@@ -742,6 +736,7 @@ export class ChainSolver {
 				}
 
 				colIndex ++;
+				jointColIndex ++;
 
 			}
 

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Target joint rotation error using a signed sum so opposing or negative errors could report as converged.
 - Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
 - Solver throwing instead of returning STALLED when a chain has no free degrees of freedom.
+- Solver throwing when a joint with "targetSet" is part of a solved chain and stepping in the wrong direction toward the target.
 
 ## [0.0.6] - 2026-02-02
 ### Added
