@@ -72,7 +72,7 @@ export class WorkerSolver {
 
 				const status = e.data.status;
 				this.status = status;
-				if ( status !== SOLVE_STATUS.TIMEOUT ) {
+				if ( ! status.includes( SOLVE_STATUS.TIMEOUT ) ) {
 
 					this.running = false;
 
