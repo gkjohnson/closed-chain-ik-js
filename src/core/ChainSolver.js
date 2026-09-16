@@ -190,6 +190,9 @@ export class ChainSolver {
 		// Clear out all the locked joints
 		lockedJointDoFCount.clear();
 
+		// Invalidate the cached pseudo inverse since solver settings may have changed
+		mat.fill( this.prevJacobian, Infinity );
+
 		// TODO: instead of trying to use minimal euler angles we should try to represent joint
 		// error as a quaternion in the quaternion vector.
 		for ( let i = 0, l = chain.length; i < l; i ++ ) {
