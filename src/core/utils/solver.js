@@ -169,9 +169,9 @@ export function accumulateTargetError(
 	// for now.
 	// Before running this solver we try to ensure the target and restPose are minimized
 	let rotDelta =
-		dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] +
-		dofTarget[ DOF.EY ] - dofValues[ DOF.EY ] +
-		dofTarget[ DOF.EZ ] - dofValues[ DOF.EZ ];
+		Math.abs( dofTarget[ DOF.EX ] - dofValues[ DOF.EX ] ) +
+		Math.abs( dofTarget[ DOF.EY ] - dofValues[ DOF.EY ] ) +
+		Math.abs( dofTarget[ DOF.EZ ] - dofValues[ DOF.EZ ] );
 
 	// Get the row count
 	const lockedDoFCount = lockedJointDoFCount.get( joint ) || 0;
