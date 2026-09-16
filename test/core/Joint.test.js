@@ -70,6 +70,26 @@ describe( 'Joint', () => {
 
 	} );
 
+	describe( 'getDoFQuaternion', () => {
+
+		it( 'should return the quaternion for the current dof euler angles.', () => {
+
+			const joint = new Joint();
+			joint.setDoF( DOF.EZ );
+			joint.setDoFValues( Math.PI / 2 );
+
+			const result = new Float64Array( 4 );
+			joint.getDoFQuaternion( result );
+
+			expect( result[ 0 ] ).toBeCloseTo( 0 );
+			expect( result[ 1 ] ).toBeCloseTo( 0 );
+			expect( result[ 2 ] ).toBeCloseTo( Math.SQRT1_2 );
+			expect( result[ 3 ] ).toBeCloseTo( Math.SQRT1_2 );
+
+		} );
+
+	} );
+
 	describe( 'setMatrixDoFNeedsUpdate', () => {
 
 		it( 'should mark the joint as needing a dof matrix and world matrix update.', () => {
