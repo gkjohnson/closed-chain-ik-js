@@ -99,7 +99,7 @@ export class Frame {
 
 	setWorldQuaternion( x, y, z, w ) {
 
-		const parent = this;
+		const parent = this.parent;
 
 		tempQuat[ 0 ] = x;
 		tempQuat[ 1 ] = y;
