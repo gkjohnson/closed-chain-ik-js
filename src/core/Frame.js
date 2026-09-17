@@ -10,29 +10,81 @@ const sharedTraversedChildren = new Set();
 const sharedTraverseArray = [];
 let traverseVariablesInUse = false;
 
+/**
+ * @callback FrameCallback
+ * @param {Frame} frame - The frame being visited.
+ * @returns {boolean} Return `true` to stop the traversal.
+ */
+
+/**
+ * Base class for `Link`, `Joint`, and `Goal` representing a frame defined by a position and
+ * rotation in space.
+ */
 export class Frame {
 
 	constructor() {
 
+		/**
+		 * Name of the frame.
+		 * @type {string}
+		 */
 		this.name = '';
 
+		/**
+		 * Orientation of the frame relative to its parent. If modified directly
+		 * `setMatrixNeedsUpdate` must be called.
+		 * @type {Float32Array}
+		 */
 		this.quaternion = new Float32Array( [ 0, 0, 0, 1 ] );
+
+		/**
+		 * Position of the frame relative to its parent. If modified directly
+		 * `setMatrixNeedsUpdate` must be called.
+		 * @type {Float32Array}
+		 */
 		this.position = new Float32Array( 3 );
 
+		/**
+		 * Local transform matrix composed from the position and quaternion.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.matrix = new Float32Array( 16 );
 		mat4.identity( this.matrix );
 
+		/**
+		 * World transform matrix computed from the parent world matrix and the local matrix.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.matrixWorld = new Float32Array( 16 );
 		mat4.identity( this.matrixWorld );
 
 		this.matrixNeedsUpdate = false;
 		this.matrixWorldNeedsUpdate = false;
 
+		/**
+		 * The frame this frame is a child of.
+		 * @type {Frame | null}
+		 * @readonly
+		 */
 		this.parent = null;
+
+		/**
+		 * The frames this frame is a parent of.
+		 * @type {Array<Frame>}
+		 * @readonly
+		 */
 		this.children = [];
 
 	}
 
+	/**
+	 * Sets the position of the frame relative to its parent.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 */
 	setPosition( ...args ) {
 
 		const position = this.position;
@@ -48,6 +100,12 @@ export class Frame {
 
 	}
 
+	/**
+	 * Sets the orientation of the frame relative to its parent from Euler angles in radians.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 */
 	setEuler( x, y, z ) {
 
 		quat.fromEuler( tempQuat, x * RAD2DEG, y * RAD2DEG, z * RAD2DEG );
@@ -55,6 +113,13 @@ export class Frame {
 
 	}
 
+	/**
+	 * Sets the orientation of the frame relative to its parent.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 * @param {number} w
+	 */
 	setQuaternion( ...args ) {
 
 		const quaternion = this.quaternion;
@@ -70,6 +135,13 @@ export class Frame {
 
 	}
 
+	/**
+	 * Sets the position of the frame in world space. The local position relative to the parent
+	 * is computed automatically.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 */
 	setWorldPosition( x, y, z ) {
 
 		const parent = this.parent;
@@ -90,6 +162,13 @@ export class Frame {
 
 	}
 
+	/**
+	 * Sets the orientation of the frame in world space from Euler angles in radians. The local
+	 * orientation relative to the parent is computed automatically.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 */
 	setWorldEuler( x, y, z ) {
 
 		quat.fromEuler( tempQuat, x * RAD2DEG, y * RAD2DEG, z * RAD2DEG );
@@ -97,6 +176,14 @@ export class Frame {
 
 	}
 
+	/**
+	 * Sets the orientation of the frame in world space. The local orientation relative to the
+	 * parent is computed automatically.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 * @param {number} w
+	 */
 	setWorldQuaternion( x, y, z, w ) {
 
 		const parent = this.parent;
@@ -120,6 +207,10 @@ export class Frame {
 
 	}
 
+	/**
+	 * Writes the position of the frame in world space into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getWorldPosition( arr ) {
 
 		this.updateMatrixWorld();
@@ -127,6 +218,10 @@ export class Frame {
 
 	}
 
+	/**
+	 * Writes the orientation of the frame in world space into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getWorldQuaternion( arr ) {
 
 		this.updateMatrixWorld();
@@ -134,6 +229,11 @@ export class Frame {
 
 	}
 
+	/**
+	 * Calls `callback` for every ancestor starting with the parent. Returning `true` from the
+	 * callback stops the traversal.
+	 * @param {FrameCallback} callback
+	 */
 	traverseParents( cb ) {
 
 		// Use the shared variables if they're not already in use to avoid
@@ -179,6 +279,11 @@ export class Frame {
 
 	}
 
+	/**
+	 * Calls `callback` for this frame and every descendant in breadth first order. Returning
+	 * `true` from the callback stops traversal below that frame.
+	 * @param {FrameCallback} callback
+	 */
 	traverse( cb ) {
 
 		// Use the shared variables if they're not already in use to avoid
@@ -237,10 +342,16 @@ export class Frame {
 
 		traverseVariablesInUse = originalVariablesInUse;
 		traversedChildren.clear();
-		stack.fill( null );
+		stack.fill( null, 0, tot );
 
 	}
 
+	/**
+	 * Returns the first frame in the tree, including this one, for which `callback` returns
+	 * `true`, or `null` if none does.
+	 * @param {FrameCallback} callback
+	 * @returns {Frame | null}
+	 */
 	find( cb ) {
 
 		let result = null;
@@ -262,6 +373,11 @@ export class Frame {
 
 	}
 
+	/**
+	 * Adds a child to this frame and sets its parent to this frame. Throws if the child already
+	 * has a parent.
+	 * @param {Frame} child
+	 */
 	addChild( child ) {
 
 		if ( child.parent ) {
@@ -293,6 +409,10 @@ export class Frame {
 
 	}
 
+	/**
+	 * Removes the given child from this frame. Throws if the frame is not a child of this frame.
+	 * @param {Frame} child
+	 */
 	removeChild( child ) {
 
 		if ( child.parent !== this ) {
@@ -310,6 +430,10 @@ export class Frame {
 
 	}
 
+	/**
+	 * Adds the given frame as a child while preserving its world transform.
+	 * @param {Frame} child
+	 */
 	attachChild( child ) {
 
 		this.updateMatrixWorld();
@@ -324,6 +448,10 @@ export class Frame {
 
 	}
 
+	/**
+	 * Removes the given child while preserving its world transform.
+	 * @param {Frame} child
+	 */
 	detachChild( child ) {
 
 		this.updateMatrixWorld();
@@ -351,6 +479,9 @@ export class Frame {
 
 	}
 
+	/**
+	 * Flags this frame as needing its local and world matrices updated.
+	 */
 	setMatrixNeedsUpdate() {
 
 		if ( this.matrixNeedsUpdate === false ) {
@@ -362,6 +493,9 @@ export class Frame {
 
 	}
 
+	/**
+	 * Flags this frame and all its descendants as needing their world matrices updated.
+	 */
 	setMatrixWorldNeedsUpdate() {
 
 		this.traverse( c => {
@@ -379,6 +513,9 @@ export class Frame {
 
 	}
 
+	/**
+	 * Updates the local matrix if it has been flagged as needing an update.
+	 */
 	updateMatrix() {
 
 		if ( this.matrixNeedsUpdate ) {
@@ -390,6 +527,11 @@ export class Frame {
 
 	}
 
+	/**
+	 * Updates the local and world matrices if they have been flagged as needing an update,
+	 * updating parent matrices first as needed.
+	 * @param {boolean} [updateChildren=false] - Also update the world matrices of all descendants.
+	 */
 	updateMatrixWorld( updateChildren = false ) {
 
 		const { parent } = this;

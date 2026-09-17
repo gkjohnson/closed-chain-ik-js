@@ -1,10 +1,22 @@
+/** @import { Link } from './Link.js' */
 import { mat4, quat } from 'gl-matrix';
 import { Frame } from './Frame.js';
 import { getClosestEulerRepresentation, toSmallestEulerValueDistance } from './utils/euler.js';
 import { getEuler, getMatrixDifference } from './utils/glmatrix.js';
 import { RAD2DEG, DEG2RAD } from './utils/constants.js';
 
-// degrees of freedom axes
+/**
+ * Degrees of freedom that can be assigned to a joint.
+ *
+ * ```js
+ * // Translation along an axis
+ * DOF.X, DOF.Y, DOF.Z
+ *
+ * // Euler rotation about an axis
+ * DOF.EX, DOF.EY, DOF.EZ
+ * ```
+ * @type {Object<string, number>}
+ */
 export const DOF = {
 	X: 0,
 	Y: 1,
@@ -14,6 +26,10 @@ export const DOF = {
 	EZ: 5,
 };
 
+/**
+ * Names of the degrees of freedom indexed by `DOF` value.
+ * @type {Array<string>}
+ */
 export const DOF_NAMES = Object.entries( DOF ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( e => e[ 0 ] );
 
 const tempInverse = new Float32Array( 16 );
@@ -30,6 +46,12 @@ function dofToMatrix( out, dof ) {
 
 }
 
+/**
+ * A frame representing a kinematic joint with any combination of degrees of freedom. Each
+ * degree of freedom is an offset applied on top of the frame transform. Only links may be
+ * added as children and a joint may only have a single child.
+ * @extends Frame
+ */
 export class Joint extends Frame {
 
 	constructor() {
@@ -37,27 +59,110 @@ export class Joint extends Frame {
 		super();
 		this.isJoint = true;
 
+		/**
+		 * The child link of the joint, whether added directly or through `makeClosure`.
+		 * @type {Link | null}
+		 * @readonly
+		 */
 		this.child = null;
+
+		/**
+		 * Whether the child relationship is a closure made with `makeClosure`.
+		 * @type {boolean}
+		 * @readonly
+		 */
 		this.isClosure = false;
 
 		this.trackJointWrap = false;
+
+		/**
+		 * Number of rotation degrees of freedom set on the joint.
+		 * @type {number}
+		 * @readonly
+		 */
 		this.rotationDoFCount = 0;
+
+		/**
+		 * Number of translation degrees of freedom set on the joint.
+		 * @type {number}
+		 * @readonly
+		 */
 		this.translationDoFCount = 0;
 
 		// TODO: should we make DoF Flags a bit mask flag?
+		/**
+		 * The degrees of freedom set on the joint in `DOF` order.
+		 * @type {Array<number>}
+		 * @readonly
+		 */
 		this.dof = [];
+
+		/**
+		 * Flags indexed by `DOF` value that are `1` when the degree of freedom is set.
+		 * @type {Uint8Array}
+		 * @readonly
+		 */
 		this.dofFlags = new Uint8Array( 6 );
+
+		/**
+		 * Current values of each degree of freedom indexed by `DOF` value. If modified directly
+		 * `setMatrixDoFNeedsUpdate` must be called.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.dofValues = new Float32Array( 6 );
+
+		/**
+		 * Target value of each degree of freedom indexed by `DOF` value. The solver moves the
+		 * joint toward these when `targetSet` is true.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.dofTarget = new Float32Array( 6 );
+
+		/**
+		 * Rest pose of each degree of freedom indexed by `DOF` value. The solver moves the joint
+		 * toward these when `restPoseSet` is true and it does not compromise the other goals.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.dofRestPose = new Float32Array( 6 );
 
+		/**
+		 * Minimum limit of each degree of freedom indexed by `DOF` value.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.minDoFLimit = new Float32Array( 6 ).fill( - Infinity );
+
+		/**
+		 * Maximum limit of each degree of freedom indexed by `DOF` value.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.maxDoFLimit = new Float32Array( 6 ).fill( Infinity );
 
+		/**
+		 * Whether the solver should move the joint toward `dofTarget`.
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.targetSet = false;
+
+		/**
+		 * Whether the solver should move the joint toward `dofRestPose`.
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.restPoseSet = false;
 
 		this.matrixDoFNeedsUpdate = false;
+
+		/**
+		 * Transform offset produced by the current degree of freedom values.
+		 * @type {Float32Array}
+		 * @readonly
+		 */
 		this.matrixDoF = new Float32Array( 16 );
 		mat4.identity( this.matrixDoF );
 
@@ -193,13 +298,20 @@ export class Joint extends Frame {
 
 	}
 
-	// Set the degrees of freedom
+	/**
+	 * Removes all degrees of freedom from the joint.
+	 */
 	clearDoF() {
 
 		this.setDoF();
 
 	}
 
+	/**
+	 * Sets the degrees of freedom of the joint and resets all related values and limits.
+	 * Arguments must be in `X`, `Y`, `Z`, `EX`, `EY`, `EZ` order without duplicates.
+	 * @param {...number} dof - The `DOF` fields to set.
+	 */
 	setDoF( ...args ) {
 
 		args.forEach( ( dof, i ) => {
@@ -250,7 +362,10 @@ export class Joint extends Frame {
 
 	}
 
-	// Get and set the values of the different degrees of freedom
+	/**
+	 * Sets the value of every degree of freedom in `dof` order, clamped to the joint limits.
+	 * @param {...number} values - One value per degree of freedom.
+	 */
 	setDoFValues( ...values ) {
 
 		this.setMatrixDoFNeedsUpdate();
@@ -258,6 +373,12 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Sets the value of a degree of freedom, clamped to the joint limits.
+	 * @param {number} dof - The `DOF` field to set.
+	 * @param {number} value
+	 * @returns {boolean} Whether the value was clamped to a limit.
+	 */
 	setDoFValue( dof, value ) {
 
 		this.setMatrixDoFNeedsUpdate();
@@ -265,105 +386,176 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Returns the value of a degree of freedom.
+	 * @param {number} dof - The `DOF` field to get.
+	 * @returns {number}
+	 */
 	getDoFValue( dof ) {
 
 		return this.dofValues[ dof ];
 
 	}
 
+	/**
+	 * Writes the rotation degree of freedom values as a quaternion into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getDoFQuaternion( outQuat ) {
 
 		this._getQuaternion( this.dofValues, outQuat );
 
 	}
 
+	/**
+	 * Writes the rotation degree of freedom values as Euler angles into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getDoFEuler( outEuler ) {
 
 		this._getEuler( this.dofValues, outEuler );
 
 	}
 
+	/**
+	 * Writes the translation degree of freedom values into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getDoFPosition( outPos ) {
 
 		this._getPosition( this.dofValues, outPos );
 
 	}
 
-	// Get and set the restPose values of the different degrees of freedom
+	/**
+	 * Sets the rest pose of every degree of freedom in `dof` order, clamped to the joint limits.
+	 * @param {...number} values - One value per degree of freedom.
+	 */
 	setRestPoseValues( ...values ) {
 
 		this._setValues( this.dofRestPose, values );
 
 	}
 
+	/**
+	 * Sets the rest pose of a degree of freedom, clamped to the joint limits.
+	 * @param {number} dof - The `DOF` field to set.
+	 * @param {number} value
+	 * @returns {boolean} Whether the value was clamped to a limit.
+	 */
 	setRestPoseValue( dof, value ) {
 
 		return this._setValue( this.dofRestPose, dof, value );
 
 	}
 
+	/**
+	 * Returns the rest pose of a degree of freedom.
+	 * @param {number} dof - The `DOF` field to get.
+	 * @returns {number}
+	 */
 	getRestPoseValue( dof ) {
 
 		return this.dofRestPose[ dof ];
 
 	}
 
+	/**
+	 * Writes the rotation rest pose as a quaternion into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getRestPoseQuaternion( outQuat ) {
 
 		this._getQuaternion( this.dofRestPose, outQuat );
 
 	}
 
+	/**
+	 * Writes the rotation rest pose as Euler angles into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getRestPoseEuler( outEuler ) {
 
 		this._getEuler( this.dofRestPose, outEuler );
 
 	}
 
+	/**
+	 * Writes the translation rest pose into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getRestPosePosition( outPos ) {
 
 		this._getPosition( this.dofRestPose, outPos );
 
 	}
 
-	// Get and set the restPose values of the different degrees of freedom
+	/**
+	 * Sets the target of every degree of freedom in `dof` order, clamped to the joint limits.
+	 * @param {...number} values - One value per degree of freedom.
+	 */
 	setTargetValues( ...values ) {
 
 		this._setValues( this.dofTarget, values );
 
 	}
 
+	/**
+	 * Sets the target of a degree of freedom, clamped to the joint limits.
+	 * @param {number} dof - The `DOF` field to set.
+	 * @param {number} value
+	 */
 	setTargetValue( dof, value ) {
 
 		this._setValue( this.dofTarget, dof, value );
 
 	}
 
+	/**
+	 * Returns the target of a degree of freedom.
+	 * @param {number} dof - The `DOF` field to get.
+	 * @returns {number}
+	 */
 	getTargetValue( dof ) {
 
 		return this.dofTarget[ dof ];
 
 	}
 
+	/**
+	 * Writes the rotation target as a quaternion into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getTargetQuaternion( outQuat ) {
 
 		this._getQuaternion( this.dofTarget, outQuat );
 
 	}
 
+	/**
+	 * Writes the rotation target as Euler angles into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getTargetEuler( outEuler ) {
 
 		this._getEuler( this.dofTarget, outEuler );
 
 	}
 
+	/**
+	 * Writes the translation target into `target`.
+	 * @param {Array<number> | Float32Array} target
+	 */
 	getTargetPosition( outPos ) {
 
 		this._getPosition( this.dofTarget, outPos );
 
 	}
 
-	// Joint Limits
+	/**
+	 * Sets the minimum limit of every degree of freedom in `dof` order.
+	 * @param {...number} values - One value per degree of freedom.
+	 */
 	setMinLimits( ...values ) {
 
 		const { dof } = this;
@@ -376,6 +568,11 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Sets the minimum limit of a degree of freedom and clamps the current value to it.
+	 * @param {number} dof - The `DOF` field to set.
+	 * @param {number} value
+	 */
 	setMinLimit( dof, value ) {
 
 		this.minDoFLimit[ dof ] = value;
@@ -383,12 +580,21 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Returns the minimum limit of a degree of freedom.
+	 * @param {number} dof - The `DOF` field to get.
+	 * @returns {number}
+	 */
 	getMinLimit( dof ) {
 
 		return this.minDoFLimit[ dof ];
 
 	}
 
+	/**
+	 * Sets the maximum limit of every degree of freedom in `dof` order.
+	 * @param {...number} values - One value per degree of freedom.
+	 */
 	setMaxLimits( ...values ) {
 
 		const { dof } = this;
@@ -401,6 +607,11 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Sets the maximum limit of a degree of freedom and clamps the current value to it.
+	 * @param {number} dof - The `DOF` field to set.
+	 * @param {number} value
+	 */
 	setMaxLimit( dof, value ) {
 
 		this.maxDoFLimit[ dof ] = value;
@@ -408,6 +619,11 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Returns the maximum limit of a degree of freedom.
+	 * @param {number} dof - The `DOF` field to get.
+	 * @returns {number}
+	 */
 	getMaxLimit( dof ) {
 
 		return this.maxDoFLimit[ dof ];
@@ -490,7 +706,9 @@ export class Joint extends Frame {
 
 	}
 
-	// matrix updates
+	/**
+	 * Flags the joint as needing its degree of freedom matrix and world matrix updated.
+	 */
 	setMatrixDoFNeedsUpdate() {
 
 		if ( this.matrixDoFNeedsUpdate === false ) {
@@ -540,7 +758,13 @@ export class Joint extends Frame {
 
 	}
 
-	// Add child overrides
+	/**
+	 * Connects the given link to this joint as a closure. The link is not added to `children`
+	 * and keeps its own parent, but is set as `child` and the joint is appended to the link's
+	 * `closureJoints`. The solver constrains all six axes between the joint and the link to
+	 * keep the closure closed.
+	 * @param {Link} child
+	 */
 	makeClosure( child ) {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {
@@ -559,6 +783,11 @@ export class Joint extends Frame {
 
 	}
 
+	/**
+	 * Adds a link as the child of this joint. Throws if the child is not a link or the joint
+	 * already has a child.
+	 * @param {Link} child
+	 */
 	addChild( child ) {
 
 		if ( ! child.isLink || this.child || child.parent === this ) {

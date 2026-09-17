@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- "closed-chain-ik/core", "closed-chain-ik/three", and "closed-chain-ik/worker" entry points so the three.js and worker code can be imported separately.
+
+### Changed
+- "WorkerSolver" is no longer exported from the root entry point and must be imported from "closed-chain-ik/worker".
+
+### Changed
+- Steps that increase the error are line searched within the same iteration for the scale with the least error instead of being reverted and shrinking every following step.
+- Additional damping is applied to near singular directions when using SVD so steps stay bounded near singularities. The threshold adapts, rising when full steps are rejected and relaxing when they are accepted or the solve stalls.
+
 ### Fixed
 - WorkerSolver.stop not stopping the worker solve loop and "running" flag being cleared prematurely.
 - IKRootsHelper.dispose throwing an error and removed helpers being retained after updateStructure.
@@ -15,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Target joint rotation error using a signed sum so opposing or negative errors could report as converged.
 - Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
 - Solver throwing instead of returning STALLED when a chain has no free degrees of freedom.
+- Solver throwing when a joint with "targetSet" is part of a solved chain and stepping in the wrong direction toward the target.
 - "useSVD" silently falling back to damped least squares when there are more free DoF than constraint rows.
 - Jacobian columns for joints above a closure fork only accounting for one side of the closure.
 

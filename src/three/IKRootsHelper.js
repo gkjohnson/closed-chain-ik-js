@@ -1,3 +1,4 @@
+/** @import { Frame } from '../core/Frame.js' */
 import { Group, Vector2, Color } from 'three';
 import { IKJointHelper } from './IKJointHelper.js';
 import { IKLinkHelper } from './IKLinkHelper.js';
@@ -5,11 +6,23 @@ import { findRoots } from '../core/utils/IKUtils.js';
 
 const currLinks = new Set();
 const currJoints = new Set();
+
+/**
+ * Renders the frames of an IK system in a three.js scene. Frame relationships are drawn as
+ * lines and joints are drawn with indicators for their degrees of freedom.
+ * @param {Frame | Array<Frame>} roots - The roots of the trees to render.
+ * @extends Group
+ */
 export class IKRootsHelper extends Group {
 
 	constructor( roots = [] ) {
 
 		super();
+
+		/**
+		 * The roots to render. If modified `updateStructure` must be called.
+		 * @type {Array<Frame>}
+		 */
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
 		this.joints = new Map();
 		this.links = new Map();
@@ -66,6 +79,11 @@ export class IKRootsHelper extends Group {
 
 	}
 
+	/**
+	 * Sets the color of the helper.
+	 * @param {Color | string | number} color
+	 * @returns {IKRootsHelper}
+	 */
 	setColor( c ) {
 
 		if ( c.isColor ) {
@@ -84,6 +102,11 @@ export class IKRootsHelper extends Group {
 
 	}
 
+	/**
+	 * Sets the scale of the joint indicators.
+	 * @param {number} scale
+	 * @returns {IKRootsHelper}
+	 */
 	setJointScale( s ) {
 
 		this.jointScale = s;
@@ -93,6 +116,11 @@ export class IKRootsHelper extends Group {
 
 	}
 
+	/**
+	 * Sets whether the helper is drawn on top of everything else in the scene.
+	 * @param {boolean} drawThrough
+	 * @returns {IKRootsHelper}
+	 */
 	setDrawThrough( value ) {
 
 		this.drawThrough = value;
@@ -102,6 +130,10 @@ export class IKRootsHelper extends Group {
 
 	}
 
+	/**
+	 * Rebuilds the helpers for the frames in the roots. Must be called whenever the structure of
+	 * the rendered trees or `roots` change.
+	 */
 	updateStructure() {
 
 		const { joints, links } = this;
@@ -185,6 +217,9 @@ export class IKRootsHelper extends Group {
 
 	}
 
+	/**
+	 * Disposes of every material and geometry created by the helper.
+	 */
 	dispose() {
 
 		const { links, joints } = this;

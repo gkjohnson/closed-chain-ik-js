@@ -21,6 +21,25 @@
   "type": "module",
   "module": "src/index.js",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./core": {
+      "types": "./src/core/index.d.ts",
+      "import": "./src/core/index.js"
+    },
+    "./three": {
+      "types": "./src/three/index.d.ts",
+      "import": "./src/three/index.js"
+    },
+    "./worker": {
+      "types": "./src/worker/index.d.ts",
+      "import": "./src/worker/index.js"
+    },
+    "./src/*": "./src/*"
+  },
   "files": [
     "src/*"
   ],

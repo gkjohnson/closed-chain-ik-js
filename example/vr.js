@@ -37,12 +37,12 @@ import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerM
 import { mat4 } from 'gl-matrix';
 import {
 	Solver,
-	WorkerSolver,
 	Link,
 	Joint,
 	IKRootsHelper,
 	URDFUtils,
 } from '../src/index.js';
+import { WorkerSolver } from '../src/worker/index.js';
 import {
 	loadATHLETE,
 	loadRobonaut,
