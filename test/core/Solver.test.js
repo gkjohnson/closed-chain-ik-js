@@ -173,4 +173,48 @@ describe( 'Solver', () => {
 
 	} );
 
+	it( 'should take a bounded step near a singularity without backtracking when using SVD.', () => {
+
+		// nearly straight arm reaching for a goal beyond its length along the arm axis
+		const root = new Joint();
+		const rootLink = new Link();
+		root.addChild( rootLink );
+		const j1 = new Joint();
+		j1.setDoF( DOF.EZ );
+		j1.setDoFValues( 0.01 );
+		const l1 = new Link();
+		l1.setPosition( 1, 0, 0 );
+		const j2 = new Joint();
+		j2.setDoF( DOF.EZ );
+		j2.setDoFValues( - 0.02 );
+		const l2 = new Link();
+		l2.setPosition( 1, 0, 0 );
+		rootLink.addChild( j1 );
+		j1.addChild( l1 );
+		l1.addChild( j2 );
+		j2.addChild( l2 );
+
+		const goal = new Goal();
+		goal.setGoalDoF( DOF.X, DOF.Y, DOF.Z );
+		goal.setPosition( 3, 0, 0 );
+		goal.makeClosure( l2 );
+
+		const solver = new Solver( [ root, goal ] );
+		solver.useSVD = true;
+		solver.maxIterations = 0;
+
+		const applySpy = vi.spyOn( ChainSolver.prototype, 'applyJointAngles' );
+		const before = getClosureErrorMagnitude( goal );
+		const status = solver.solve()[ 0 ];
+		const after = getClosureErrorMagnitude( goal );
+
+		expect( status ).not.toBe( SOLVE_STATUS.DIVERGED );
+		expect( after ).toBeLessThanOrEqual( before + solver.divergeThreshold );
+		expect( applySpy ).toHaveBeenCalledTimes( 1 );
+		expect( Math.abs( j1.getDoFValue( DOF.EZ ) ) ).toBeLessThan( 0.5 );
+		expect( Math.abs( j2.getDoFValue( DOF.EZ ) ) ).toBeLessThan( 0.5 );
+		applySpy.mockRestore();
+
+	} );
+
 } );

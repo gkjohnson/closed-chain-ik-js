@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Changed
 - Steps that increase the error are halved and retried within the same iteration instead of being reverted and shrinking every following step.
+- Additional damping is applied to near singular directions when using SVD so steps stay bounded near singularities.
 
 ### Fixed
 - WorkerSolver.stop not stopping the worker solve loop and "running" flag being cleared prematurely.
