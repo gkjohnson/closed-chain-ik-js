@@ -6,10 +6,10 @@ import { AXES } from './utils/constants.js';
 // temp reusable variables
 const tempRotVec = new Float64Array( 3 );
 const tempPos = new Float64Array( 3 );
-const jointWorldPos = new Float64Array( 3 );
-const targetWorldPos = new Float64Array( 3 );
+const pivotWorldPos = new Float64Array( 3 );
+const frameWorldPos = new Float64Array( 3 );
 const axisWorld = new Float64Array( 3 );
-const toTarget = new Float64Array( 3 );
+const leverArm = new Float64Array( 3 );
 
 const tempAxisQuat = new Float64Array( 4 );
 const targetJoints = [];
@@ -66,27 +66,19 @@ export const SOLVE_STATUS = {
  */
 export const SOLVE_STATUS_NAMES = Object.entries( SOLVE_STATUS ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( el => el[ 0 ] );
 
-// Accumulate the change in world position and rotation of the frame at "matrix" for a unit
-// change of a joint dof about "axisWorld" at "jointWorldPos", scaled by "sign".
-function accumulateDoFInfluence( outPos, outRotVec, dof, axisWorld, jointWorldPos, matrix, sign ) {
+// Adds how the frame at "frameMatrix" moves for a unit rotation about "rotationAxis" through
+// "pivotPos". "errorSign" is +1 or -1 depending on whether moving the frame raises or lowers
+// the closure error.
+function accumulateRotationInfluence( rotationAxis, pivotPos, frameMatrix, errorSign, outPos, outRotVec ) {
 
-	if ( dof < 3 ) {
+	// the frame position sweeps around the pivot
+	mat4.getTranslation( frameWorldPos, frameMatrix );
+	vec3.subtract( leverArm, frameWorldPos, pivotPos );
+	vec3.cross( leverArm, rotationAxis, leverArm );
+	vec3.scaleAndAdd( outPos, outPos, leverArm, errorSign );
 
-		// translation
-		vec3.scaleAndAdd( outPos, outPos, axisWorld, sign );
-
-	} else {
-
-		// the change of a point by a rotation about an axis is the cross vector
-		mat4.getTranslation( targetWorldPos, matrix );
-		vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
-		vec3.cross( toTarget, axisWorld, toTarget );
-		vec3.scaleAndAdd( outPos, outPos, toTarget, sign );
-
-		// for a rotation vector the delta is the same as the axis of rotation
-		vec3.scaleAndAdd( outRotVec, outRotVec, axisWorld, sign );
-
-	}
+	// the frame rotation changes along the axis
+	vec3.scaleAndAdd( outRotVec, outRotVec, rotationAxis, errorSign );
 
 }
 
@@ -764,22 +756,42 @@ export class ChainSolver {
 							// Transform local axis to world space using the rotation part of the matrix
 							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
 							vec3.transformQuat( axisWorld, AXES[ dof ], tempAxisQuat );
-							mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
+							mat4.getTranslation( pivotWorldPos, identityDoFMatrixWorld );
 
-							// Error is defined as (closure - child) and the jacobian stores the negated derivative, so
-							// moving the closure contributes with sign -1 and moving the child with sign +1. A joint
-							// above the fork moves both and the two contributions cancel except for the offset between them.
+							// The error is closure minus child, so moving the closure side counts as -1 and moving the
+							// child side as +1. A joint above the fork moves both sides and the two cancel except for
+							// the rotation of the offset between the frames while the closure is still open.
 							vec3.zero( tempPos );
 							vec3.zero( tempRotVec );
-							if ( affectsClosure ) {
+							if ( dof < 3 ) {
 
-								accumulateDoFInfluence( tempPos, tempRotVec, dof, axisWorld, jointWorldPos, targetJoint.matrixWorld, - 1 );
+								// translation slides each affected frame along the axis
+								if ( affectsClosure ) {
 
-							}
+									vec3.subtract( tempPos, tempPos, axisWorld );
 
-							if ( affectsChild ) {
+								}
 
-								accumulateDoFInfluence( tempPos, tempRotVec, dof, axisWorld, jointWorldPos, targetJoint.child.matrixWorld, 1 );
+								if ( affectsChild ) {
+
+									vec3.add( tempPos, tempPos, axisWorld );
+
+								}
+
+							} else {
+
+								// rotation swings each affected frame around the joint
+								if ( affectsClosure ) {
+
+									accumulateRotationInfluence( axisWorld, pivotWorldPos, targetJoint.matrixWorld, - 1, tempPos, tempRotVec );
+
+								}
+
+								if ( affectsChild ) {
+
+									accumulateRotationInfluence( axisWorld, pivotWorldPos, targetJoint.child.matrixWorld, 1, tempPos, tempRotVec );
+
+								}
 
 							}
 
