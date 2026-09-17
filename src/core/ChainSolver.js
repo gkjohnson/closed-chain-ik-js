@@ -25,6 +25,9 @@ const dofResultInfo = {
 	totalError: 0,
 };
 
+// singular values below this fraction of the largest are treated as near singular
+const SINGULARITY_RATIO = 0.05;
+
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
@@ -325,12 +328,29 @@ export class ChainSolver {
 						mat.transpose( uTranspose, u );
 
 						// Damped pseudo-inverse: σ / (σ² + λ²)
-						// This gives smooth behavior near singularities instead of hard truncation
+						// Singular values that are small relative to the largest get additional damping that
+						// ramps up as they approach zero so steps stay bounded near singularities.
+						let sigmaMax = 0;
+						for ( let i = 0, l = q.length; i < l; i ++ ) {
+
+							sigmaMax = Math.max( sigmaMax, mat.get( q, i, i ) );
+
+						}
+
+						const singularityThreshold = sigmaMax * SINGULARITY_RATIO;
 						const lambda2 = dampingFactor ** 2;
 						for ( let i = 0, l = q.length; i < l; i ++ ) {
 
 							const sigma = mat.get( q, i, i );
-							const inv = sigma / ( sigma * sigma + lambda2 );
+							let damping = lambda2;
+							if ( sigma < singularityThreshold ) {
+
+								const ratio = sigma / singularityThreshold;
+								damping += singularityThreshold * singularityThreshold * ( 1 - ratio * ratio );
+
+							}
+
+							const inv = sigma / ( sigma * sigma + damping );
 							mat.set( qInverse, i, i, inv );
 
 						}
