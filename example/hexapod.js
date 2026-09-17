@@ -86,7 +86,7 @@ function init() {
 	// init light / shadow camera
 	directionalLight = new DirectionalLight();
 	directionalLight.position.set( 1, 3, 2 );
-	directionalLight.intensity = 3 * 0.75;
+	directionalLight.intensity = 3 * 1.5;
 	directionalLight.castShadow = true;
 	directionalLight.shadow.mapSize.setScalar( 2048 );
 
@@ -99,10 +99,10 @@ function init() {
 
 	// add a directional light to illuminate the other side
 	const otherDirectionalLight = new DirectionalLight();
-	otherDirectionalLight.intensity = 3 * 0.25;
+	otherDirectionalLight.intensity = 3 * 0.5;
 	otherDirectionalLight.position.set( - 1, - 3, - 2 );
 
-	const ambientLight = new AmbientLight( 0x1f1a1e, 3 );
+	const ambientLight = new AmbientLight( 0x1f1a1e, 39 );
 	scene.add( directionalLight, directionalLight.target, otherDirectionalLight, ambientLight );
 
 	// controls
