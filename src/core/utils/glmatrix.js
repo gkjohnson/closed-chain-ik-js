@@ -13,6 +13,7 @@ const tempQuat2 = new Float64Array( 4 );
  * @param {vec3} out Euler angles, pitch-yaw-roll
  * @param {quat} mat Quaternion
  * @return {vec3} out
+ * @private
  */
 export function getEuler( out, quat ) {
 

@@ -5,6 +5,21 @@ import { mat } from './matrix.js';
 const tempPos = new Float64Array( 3 );
 const tempRotVec = new Float64Array( 3 );
 const tempEuler = new Float64Array( 3 );
+
+// Closures use all 6 rows. Goals use one row per translation DoF and, if any rotation DoF are
+// set, all 3 rotation rows since rotation vectors can't be split per axis.
+export function getClosureRowCount( joint ) {
+
+	if ( joint.isGoal ) {
+
+		return joint.translationDoFCount + ( joint.rotationDoFCount > 0 ? 3 : 0 );
+
+	}
+
+	return 6;
+
+}
+
 export function accumulateClosureError(
 	solver,
 	joint,
@@ -35,14 +50,13 @@ export function accumulateClosureError(
 	// For Goals:
 	// - Translation: per-axis masking (individual DoFs)
 	// - Rotation: all-or-nothing (rotation vectors can't be decomposed into euler-like components)
-	let rowCount = 6;
+	const rowCount = getClosureRowCount( joint );
 	if ( joint.isGoal ) {
 
 		// Mask translation per-axis
 		tempPos[ 0 ] *= dofFlags[ 0 ];
 		tempPos[ 1 ] *= dofFlags[ 1 ];
 		tempPos[ 2 ] *= dofFlags[ 2 ];
-		rowCount = translationDoFCount;
 
 		// Rotation is all-or-nothing
 		if ( rotationDoFCount === 0 ) {
@@ -50,10 +64,6 @@ export function accumulateClosureError(
 			tempRotVec[ 0 ] = 0;
 			tempRotVec[ 1 ] = 0;
 			tempRotVec[ 2 ] = 0;
-
-		} else {
-
-			rowCount += 3;
 
 		}
 
@@ -248,5 +258,7 @@ export function accumulateTargetError(
 		}
 
 	}
+
+	return result;
 
 }

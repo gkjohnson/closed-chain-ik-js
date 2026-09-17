@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix';
-import { accumulateClosureError, accumulateTargetError } from './utils/solver.js';
+import { accumulateClosureError, accumulateTargetError, getClosureRowCount } from './utils/solver.js';
 import { mat } from './utils/matrix.js';
 import { AXES } from './utils/constants.js';
 
@@ -25,6 +25,32 @@ const dofResultInfo = {
 	totalError: 0,
 };
 
+// number of step scales tried along a line search before the solve is considered diverged
+const MAX_LINE_SEARCH_STEPS = 6;
+
+// singular values below this fraction of the largest are treated as near singular. This is the
+// lowest ratio used and it is raised when full steps are rejected up to the max ratio.
+const SINGULARITY_RATIO = 0.02;
+const MAX_SINGULARITY_RATIO = 0.2;
+
+/**
+ * Statuses returned for each independent chain by `Solver.solve`.
+ *
+ * ```js
+ * // Error for all goals is within the convergence thresholds.
+ * SOLVE_STATUS.CONVERGED
+ *
+ * // No joint moved more than the stall threshold or no joints are free to move.
+ * SOLVE_STATUS.STALLED
+ *
+ * // No step scale could keep the error within the divergence threshold.
+ * SOLVE_STATUS.DIVERGED
+ *
+ * // The maximum number of iterations was reached.
+ * SOLVE_STATUS.TIMEOUT
+ * ```
+ * @type {Object<string, number>}
+ */
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
@@ -34,6 +60,10 @@ export const SOLVE_STATUS = {
 
 };
 
+/**
+ * Names of the solve statuses indexed by status value.
+ * @type {Array<string>}
+ */
 export const SOLVE_STATUS_NAMES = Object.entries( SOLVE_STATUS ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( el => el[ 0 ] );
 
 export class ChainSolver {
@@ -83,6 +113,10 @@ export class ChainSolver {
 		this.dampingFactor = - 1;
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
+
+		// near singular ratio used by the SVD path. Raised when full steps are rejected and lowered
+		// when they are accepted or the solve stalls. Persists across solves.
+		this.singularityRatio = SINGULARITY_RATIO;
 
 		// Cached jacobian and pseudo-inverse for warm start
 		this.prevJacobian = mat.create( 0, 0 );
@@ -178,13 +212,7 @@ export class ChainSolver {
 			maxIterations,
 		} = this;
 
-		// Store original error clamps for backtracking
-		const originalTranslationErrorClamp = this.translationErrorClamp;
-		const originalRotationErrorClamp = this.rotationErrorClamp;
-		let errorClampFactor = 1;
-
 		let iterations = 0;
-		let prevErrorMagnitude = Infinity;
 		let status = - 1;
 
 		// Clear out all the locked joints
@@ -241,43 +269,12 @@ export class ChainSolver {
 
 			}
 
-			// Check if we've diverged - backtrack with smaller step
-			if ( totalError > prevErrorMagnitude + divergeThreshold ) {
+			// Cache the joint state so a rejected step can be reverted
+			prevDoFValues.forEach( ( dofValues, joint ) => {
 
-				// Revert joint values and update matrices
-				prevDoFValues.forEach( ( dofValues, joint ) => {
+				dofValues.set( joint.dofValues );
 
-					joint.dofValues.set( dofValues );
-					joint.setMatrixDoFNeedsUpdate();
-					joint.updateMatrixWorld();
-
-				} );
-
-				// Halve error clamps to take smaller steps
-				errorClampFactor *= 0.5;
-				this.translationErrorClamp = originalTranslationErrorClamp * errorClampFactor;
-				this.rotationErrorClamp = originalRotationErrorClamp * errorClampFactor;
-
-				// If we've taken a max number of steps or too many iterations then give up
-				if ( errorClampFactor < 0.5 ** 6 || iterations > maxIterations ) {
-
-					status = SOLVE_STATUS.DIVERGED;
-					break;
-
-				}
-
-			} else {
-
-				// Update the previous error and cache joint state for divergence check next frame
-				// Because we haven't diverged these values are in a known good state
-				prevErrorMagnitude = totalError;
-				prevDoFValues.forEach( ( dofValues, joint ) => {
-
-					dofValues.set( joint.dofValues );
-
-				} );
-
-			}
+			} );
 
 			// Check if we've hit max iterations
 			if ( iterations > maxIterations ) {
@@ -325,12 +322,34 @@ export class ChainSolver {
 						mat.transpose( uTranspose, u );
 
 						// Damped pseudo-inverse: σ / (σ² + λ²)
-						// This gives smooth behavior near singularities instead of hard truncation
+						// Singular values that are small relative to the largest get additional damping that
+						// ramps up as they approach zero so steps stay bounded near singularities.
+						// See Chiaverini, Siciliano, Egeland, "Review of the damped least-squares inverse kinematics
+						// with experiments on an industrial robot manipulator", IEEE Trans. Control Systems Technology, 1994
+						// and Section III-B, eq. 12 of Colomé, Torras, "Closed-Loop Inverse Kinematics for Redundant Robots:
+						// Comparative Assessment and Two Enhancements", IEEE/ASME Trans. Mechatronics, 2015.
+						// https://digital.csic.es/bitstream/10261/133046/1/Two%20Enhancements.pdf
+						let sigmaMax = 0;
+						for ( let i = 0, l = q.length; i < l; i ++ ) {
+
+							sigmaMax = Math.max( sigmaMax, mat.get( q, i, i ) );
+
+						}
+
+						const singularityThreshold = sigmaMax * this.singularityRatio;
 						const lambda2 = dampingFactor ** 2;
 						for ( let i = 0, l = q.length; i < l; i ++ ) {
 
 							const sigma = mat.get( q, i, i );
-							const inv = sigma / ( sigma * sigma + lambda2 );
+							let damping = lambda2;
+							if ( sigma < singularityThreshold ) {
+
+								const ratio = sigma / singularityThreshold;
+								damping += singularityThreshold * singularityThreshold * ( 1 - ratio * ratio );
+
+							}
+
+							const inv = sigma / ( sigma * sigma + damping );
 							mat.set( qInverse, i, i, inv );
 
 						}
@@ -476,6 +495,8 @@ export class ChainSolver {
 
 				if ( stalled ) {
 
+					// the near singular damping may be what is holding the joints still
+					this.singularityRatio = Math.max( SINGULARITY_RATIO, this.singularityRatio * 0.5 );
 					status = SOLVE_STATUS.STALLED;
 					break;
 
@@ -483,17 +504,77 @@ export class ChainSolver {
 
 			}
 
-			// Apply joint angles
-			this.applyJointAngles( freeJoints, deltaTheta );
+			// Line search: walk a single scale along the step, forward when the error improves on the best
+			// so far and back when it does not, halving the walk each attempt. A step has to beat the
+			// divergence tolerance to be kept at all.
+			let stepScale = 1;
+			let bestScale = 0;
+			let bestError = totalError + divergeThreshold;
+			for ( let attempt = 0; attempt < MAX_LINE_SEARCH_STEPS; attempt ++ ) {
+
+				this.applyJointAngles( freeJoints, deltaTheta, stepScale );
+
+				// the joint lists are rebuilt with the same contents since no joints are locked until
+				// a step is accepted
+				targetJoints.length = 0;
+				freeJoints.length = 0;
+				this.countUnconvergedVariables( freeJoints, targetJoints, dofResultInfo );
+
+				const stepError = dofResultInfo.totalError;
+				const improved = stepError < bestError;
+				if ( improved ) {
+
+					bestScale = stepScale;
+					bestError = stepError;
+
+				}
+
+				// the full step is the best so there is nothing further along the line to search
+				if ( bestScale === 1 ) {
+
+					break;
+
+				}
+
+				this.revertJointAngles();
+				const walk = 0.5 ** ( attempt + 1 );
+				stepScale += improved ? walk : - walk;
+
+			}
+
+			// Adapt the near singular ratio: a rejected full step means the weak directions need more
+			// damping, an accepted one means it can relax back toward the base ratio.
+			if ( bestScale === 1 ) {
+
+				this.singularityRatio = Math.max( SINGULARITY_RATIO, this.singularityRatio * 0.5 );
+
+			} else {
+
+				this.singularityRatio = Math.min( MAX_SINGULARITY_RATIO, this.singularityRatio * 2 );
+
+			}
+
+			if ( bestScale === 0 ) {
+
+				status = SOLVE_STATUS.DIVERGED;
+				break;
+
+			}
+
+			// reapply the best step found unless the full step was kept
+			if ( bestScale !== 1 ) {
+
+				this.applyJointAngles( freeJoints, deltaTheta, bestScale );
+
+			}
+
+			// Lock any joints that hit their limits during the accepted step
+			this.lockLimitedJointAngles( freeJoints );
 
 			// there's still error and we're under the max iterations
 			iterations ++;
 
 		} while ( true ); // eslint-disable-line
-
-		// Restore original error clamps in case it was modified during divergence checks
-		this.translationErrorClamp = originalTranslationErrorClamp;
-		this.rotationErrorClamp = originalRotationErrorClamp;
 
 		targetJoints.length = 0;
 		freeJoints.length = 0;
@@ -501,15 +582,14 @@ export class ChainSolver {
 
 	}
 
-	// Apply the delta values from the solve to the free joints in the list
-	applyJointAngles( freeJoints, deltaTheta ) {
+	// Apply the delta values from the solve to the free joints in the list scaled by the given amount
+	applyJointAngles( freeJoints, deltaTheta, scale = 1 ) {
 
 		const {
 			lockedJointDoF,
 			lockedJointDoFCount,
 		} = this;
 
-		let lockedJoint = false;
 		let dti = 0;
 		for ( let i = 0, l = freeJoints.length; i < l; i ++ ) {
 
@@ -529,25 +609,7 @@ export class ChainSolver {
 				}
 
 				const value = joint.getDoFValue( dof );
-				const hitLimit = joint.setDoFValue( dof, value + mat.get( deltaTheta, dti, 0 ) );
-
-				// lock the joint if we hit a limit
-				if ( hitLimit ) {
-
-					if ( ! lockedJointDoFCount.has( joint ) ) {
-
-						lockedJointDoFCount.set( joint, 0 );
-						lockedDoF.fill( 0 );
-
-					}
-
-					const lockedCount = lockedJointDoFCount.get( joint );
-					lockedJointDoFCount.set( joint, lockedCount + 1 );
-					lockedDoF[ dof ] = 1;
-					lockedJoint = true;
-
-				}
-
+				joint.setDoFValue( dof, value + scale * mat.get( deltaTheta, dti, 0 ) );
 				dti ++;
 
 			}
@@ -560,7 +622,63 @@ export class ChainSolver {
 
 		}
 
-		return lockedJoint;
+	}
+
+	// Restore the joint values cached at the start of the iteration
+	revertJointAngles() {
+
+		this.prevDoFValues.forEach( ( dofValues, joint ) => {
+
+			joint.dofValues.set( dofValues );
+			joint.setMatrixDoFNeedsUpdate();
+
+		} );
+
+	}
+
+	// Lock any unlocked degrees of freedom that are sitting at a joint limit
+	lockLimitedJointAngles( freeJoints ) {
+
+		const {
+			lockedJointDoF,
+			lockedJointDoFCount,
+		} = this;
+
+		for ( let i = 0, l = freeJoints.length; i < l; i ++ ) {
+
+			const joint = freeJoints[ i ];
+			const dofList = joint.dof;
+			const lockedDoF = lockedJointDoF.get( joint );
+			const isLocked = lockedJointDoFCount.has( joint );
+
+			for ( let d = 0, l = dofList.length; d < l; d ++ ) {
+
+				const dof = dofList[ d ];
+				if ( isLocked && lockedDoF[ dof ] ) {
+
+					continue;
+
+				}
+
+				const value = joint.getDoFValue( dof );
+				if ( value === joint.getMinLimit( dof ) || value === joint.getMaxLimit( dof ) ) {
+
+					if ( ! lockedJointDoFCount.has( joint ) ) {
+
+						lockedJointDoFCount.set( joint, 0 );
+						lockedDoF.fill( 0 );
+
+					}
+
+					const lockedCount = lockedJointDoFCount.get( joint );
+					lockedJointDoFCount.set( joint, lockedCount + 1 );
+					lockedDoF[ dof ] = 1;
+
+				}
+
+			}
+
+		}
 
 	}
 
@@ -678,8 +796,6 @@ export class ChainSolver {
 
 								}
 
-								rowIndex += translationDoFCount + rotationDoFCount;
-
 							} else {
 
 								// set translation
@@ -691,24 +807,13 @@ export class ChainSolver {
 								mat.set( outJacobian, rowIndex + 3, colIndex, tempRotVec[ 0 ] );
 								mat.set( outJacobian, rowIndex + 4, colIndex, tempRotVec[ 1 ] );
 								mat.set( outJacobian, rowIndex + 5, colIndex, tempRotVec[ 2 ] );
-								rowIndex += 6;
-
-							}
-
-						} else {
-
-							// Target isn't relevant, values already zeroed
-							if ( targetJoint.isGoal ) {
-
-								rowIndex += targetJoint.translationDoFCount + targetJoint.rotationDoFCount;
-
-							} else {
-
-								rowIndex += 6;
 
 							}
 
 						}
+
+						// else: target isn't relevant, values already zeroed
+						rowIndex += getClosureRowCount( targetJoint );
 
 					}
 

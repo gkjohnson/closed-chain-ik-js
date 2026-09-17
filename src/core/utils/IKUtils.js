@@ -1,3 +1,12 @@
+/** @import { Frame } from '../Frame.js' */
+
+/**
+ * Finds the unique roots of the trees the given frames belong to, following closure
+ * connections so every connected tree is included.
+ * @section IKUtils
+ * @param {Array<Frame>} frames
+ * @returns {Array<Frame>}
+ */
 export function findRoots( frames ) {
 
 	const potentialRoots = frames.map( f => {
@@ -80,6 +89,12 @@ export function findRoots( frames ) {
 
 }
 
+/**
+ * Saves the current joint values of every joint in the tree as its rest pose and sets
+ * `restPoseSet` to `true`.
+ * @section IKUtils
+ * @param {Frame} root
+ */
 export function saveRestPose( ik ) {
 
 	ik.traverse( c => {
