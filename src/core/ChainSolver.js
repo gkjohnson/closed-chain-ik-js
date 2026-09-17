@@ -330,6 +330,11 @@ export class ChainSolver {
 						// Damped pseudo-inverse: σ / (σ² + λ²)
 						// Singular values that are small relative to the largest get additional damping that
 						// ramps up as they approach zero so steps stay bounded near singularities.
+						// See Chiaverini, Siciliano, Egeland, "Review of the damped least-squares inverse kinematics
+						// with experiments on an industrial robot manipulator", IEEE Trans. Control Systems Technology, 1994
+						// and Section III-B, eq. 12 of Colomé, Torras, "Closed-Loop Inverse Kinematics for Redundant Robots:
+						// Comparative Assessment and Two Enhancements", IEEE/ASME Trans. Mechatronics, 2015.
+						// https://digital.csic.es/bitstream/10261/133046/1/Two%20Enhancements.pdf
 						let sigmaMax = 0;
 						for ( let i = 0, l = q.length; i < l; i ++ ) {
 
