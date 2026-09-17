@@ -130,4 +130,8 @@ solver.solve();
 
 # API
 
-See [API.md](./API.md) for full API documentation.
+| Package | Reference |
+| --- | --- |
+| `closed-chain-ik/core` | [API Reference](./src/core/API.md) |
+| `closed-chain-ik/three` | [API Reference](./src/three/API.md) |
+| `closed-chain-ik/worker` | [API Reference](./src/worker/API.md) |

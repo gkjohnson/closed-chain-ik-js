@@ -1,5 +1,5 @@
 <!-- This file is generated automatically. Do not edit it directly. -->
-# closed-chain-ik
+# closed-chain-ik/core
 
 ## Constants
 
@@ -771,75 +771,6 @@ addChild( child: Joint ): void
 Adds a joint as a child of this link. Throws if the child is not a joint.
 
 
-## IKRootsHelper
-
-_extends `Group`_
-
-Renders the frames of an IK system in a three.js scene. Frame relationships are drawn as
-lines and joints are drawn with indicators for their degrees of freedom.
-
-
-### .roots
-
-```js
-roots: Array<Frame>
-```
-
-The roots to render. If modified `updateStructure` must be called.
-
-
-### .constructor
-
-```js
-constructor( roots: Frame | Array<Frame> )
-```
-
-### .setColor
-
-```js
-setColor( color: Color | string | number ): IKRootsHelper
-```
-
-Sets the color of the helper.
-
-
-### .setJointScale
-
-```js
-setJointScale( scale: number ): IKRootsHelper
-```
-
-Sets the scale of the joint indicators.
-
-
-### .setDrawThrough
-
-```js
-setDrawThrough( drawThrough: boolean ): IKRootsHelper
-```
-
-Sets whether the helper is drawn on top of everything else in the scene.
-
-
-### .updateStructure
-
-```js
-updateStructure(): void
-```
-
-Rebuilds the helpers for the frames in the roots. Must be called whenever the structure of
-the rendered trees or `roots` change.
-
-
-### .dispose
-
-```js
-dispose(): void
-```
-
-Disposes of every material and geometry created by the helper.
-
-
 ## Solver
 
 Solves the closure and joint target constraints of a system of frames using damped least
@@ -1003,106 +934,6 @@ solve(): Array<number>
 Runs a solve on every independent joint chain and returns a `SOLVE_STATUS` for each.
 
 
-## WorkerSolver
-
-Runs the `Solver` asynchronously in a WebWorker. The worker owns a copy of the frames and the
-resulting joint values are copied back onto the frames on the main thread as solves complete.
-
-> [!WARNING]
-> When `SharedArrayBuffer` is not available a new `ArrayBuffer` is copied to the worker
-> on every update and back with every result.
-
-### .roots
-
-```js
-roots: Array<Frame>
-```
-
-The roots to solve for. If modified `updateStructure` must be called.
-
-
-### .status
-
-```js
-readonly status: Array<number>
-```
-
-The `SOLVE_STATUS` of each chain from the most recent solve in the worker.
-
-
-### .running
-
-```js
-readonly running: boolean
-```
-
-Whether a solve is running in the worker.
-
-
-### .constructor
-
-```js
-constructor( roots: Frame | Array<Frame> )
-```
-
-### .updateStructure
-
-```js
-updateStructure(): void
-```
-
-Sends the structure of the trees to the worker. Must be called whenever the parent child
-structure, the degrees of freedom of a joint, or the joint values are changed on the main
-thread.
-
-
-### .updateSolverSettings
-
-```js
-updateSolverSettings( settings: Object ): void
-```
-
-Sets the given `Solver` options on the solver in the worker.
-
-
-### .updateFrameState
-
-```js
-updateFrameState( ...frames: Frame ): void
-```
-
-Copies the frame transforms and joint settings, everything except the joint values being
-solved for, to the worker. Copies every frame if none are given.
-
-
-### .solve
-
-```js
-solve(): void
-```
-
-Starts a solve loop in the worker if one is not running. The loop stops on its own once no
-chain returns `SOLVE_STATUS.TIMEOUT`.
-
-
-### .stop
-
-```js
-stop(): void
-```
-
-Stops the solve loop in the worker.
-
-
-### .dispose
-
-```js
-dispose(): void
-```
-
-Stops the solve loop and terminates the worker.
-
-
 ## IKUtils
 
 ### findRoots
@@ -1123,36 +954,4 @@ saveRestPose( root: Frame ): void
 
 Saves the current joint values of every joint in the tree as its rest pose and sets
 `restPoseSet` to `true`.
-
-
-## URDFUtils
-
-### urdfRobotToIKRoot
-
-```js
-urdfRobotToIKRoot( robot: URDFRobot, trimUnused = false: boolean ): Joint
-```
-
-Builds an IK tree from a `URDFRobot` and returns its root joint, which has all six degrees
-of freedom set. Joint values on the robot are reflected in the tree.
-
-
-### setIKFromUrdf
-
-```js
-setIKFromUrdf( ikRoot: Joint, robot: URDFRobot ): void
-```
-
-Copies the root transform and joint values from the robot onto the IK tree, matching joints
-by name.
-
-
-### setUrdfFromIK
-
-```js
-setUrdfFromIK( robot: URDFRobot, ikRoot: Joint ): void
-```
-
-Copies the root transform and joint values from the IK tree onto the robot, matching joints
-by name.
 
