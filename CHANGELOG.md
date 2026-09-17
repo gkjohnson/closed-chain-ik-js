@@ -9,25 +9,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - "closed-chain-ik/core", "closed-chain-ik/three", and "closed-chain-ik/worker" entry points so the three.js and worker code can be imported separately.
 
 ### Changed
-- "WorkerSolver" is no longer exported from the root entry point and must be imported from "closed-chain-ik/worker".
-
-### Changed
-- Steps that increase the error are line searched within the same iteration for the scale with the least error instead of being reverted and shrinking every following step.
-- Additional damping is applied to near singular directions when using SVD so steps stay bounded near singularities. The threshold adapts, rising when full steps are rejected and relaxing when they are accepted or the solve stalls.
+- "WorkerSolver" must now be imported from "closed-chain-ik/worker" instead of the root entry point.
+- Steps that increase the error are retried at smaller scales within the same iteration instead of being reverted and shrinking every following step.
+- SVD solves damp near singular directions with a threshold that adapts as steps are rejected or accepted so steps stay bounded near singularities.
 
 ### Fixed
-- WorkerSolver.stop not stopping the worker solve loop and "running" flag being cleared prematurely.
-- IKRootsHelper.dispose throwing an error and removed helpers being retained after updateStructure.
-- Frame.traverseParents leaving shared traversal state in use after an early stop.
-- Cached Jacobian pseudo inverse being reused after "dampingFactor" or "useSVD" changed.
-- URDFUtils.setIKFromUrdf not transferring the root rotation to the IK root DoF.
-- Frame.setWorldQuaternion producing the wrong result when the frame already had a local rotation.
-- Target joint rotation error using a signed sum so opposing or negative errors could report as converged.
-- Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
-- Solver throwing instead of returning STALLED when a chain has no free degrees of freedom.
-- Solver throwing when a joint with "targetSet" is part of a solved chain and stepping in the wrong direction toward the target.
 - "useSVD" silently falling back to damped least squares when there are more free DoF than constraint rows.
 - Jacobian columns for joints above a closure fork only accounting for one side of the closure.
+- Solver throwing when a chain has no free degrees of freedom or when a joint with "targetSet" is part of a solved chain, and target joints stepping away from their targets.
+- Target joint rotation error using a signed sum so opposing or negative errors could report as converged.
+- Cached Jacobian pseudo inverse being reused after "dampingFactor" or "useSVD" changed.
+- Frame.setWorldQuaternion producing the wrong result when the frame already had a local rotation, and Frame.traverseParents leaving shared traversal state in use after an early stop.
+- Joint.getDoFQuaternion, getRestPoseQuaternion, and getTargetQuaternion treating radians as degrees.
+- URDFUtils.setIKFromUrdf not transferring the root rotation to the IK root DoF.
+- WorkerSolver.stop not stopping the worker and "running" being cleared prematurely.
+- IKRootsHelper.dispose throwing and removed helpers being retained after updateStructure.
 
 ## [0.0.6] - 2026-02-02
 ### Added
