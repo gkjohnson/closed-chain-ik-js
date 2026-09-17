@@ -1,3 +1,4 @@
+/** @import { URDFRobot } from 'urdf-loader' */
 import { mat4, quat } from 'gl-matrix';
 import { Joint, DOF } from '../core/Joint.js';
 import { Link } from '../core/Link.js';
@@ -9,6 +10,14 @@ const tempVec2 = new Float64Array( 3 );
 const tempQuat = new Float64Array( 4 );
 const tempMatrix = new Float64Array( 16 );
 
+/**
+ * Builds an IK tree from a `URDFRobot` and returns its root joint, which has all six degrees
+ * of freedom set. Joint values on the robot are reflected in the tree.
+ * @section URDFUtils
+ * @param {URDFRobot} robot
+ * @param {boolean} [trimUnused=false] - Remove dangling links that do not lead to a movable joint.
+ * @returns {Joint}
+ */
 export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true ) {
 
 	let rootNode = null;
@@ -194,6 +203,13 @@ export function urdfRobotToIKRoot( urdfNode, trimUnused = false, isRoot = true )
 
 }
 
+/**
+ * Copies the root transform and joint values from the robot onto the IK tree, matching joints
+ * by name.
+ * @section URDFUtils
+ * @param {Joint} ikRoot
+ * @param {URDFRobot} robot
+ */
 export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
 	// get the urdf root transform relative to the ik root frame
@@ -232,6 +248,13 @@ export function setIKFromUrdf( ikRoot, urdfRoot ) {
 
 }
 
+/**
+ * Copies the root transform and joint values from the IK tree onto the robot, matching joints
+ * by name.
+ * @section URDFUtils
+ * @param {URDFRobot} robot
+ * @param {Joint} ikRoot
+ */
 export function setUrdfFromIK( urdfRoot, ikRoot ) {
 
 	ikRoot.updateMatrixWorld();

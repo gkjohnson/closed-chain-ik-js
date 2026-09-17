@@ -33,6 +33,24 @@ const MAX_LINE_SEARCH_STEPS = 6;
 const SINGULARITY_RATIO = 0.02;
 const MAX_SINGULARITY_RATIO = 0.2;
 
+/**
+ * Statuses returned for each independent chain by `Solver.solve`.
+ *
+ * ```js
+ * // Error for all goals is within the convergence thresholds.
+ * SOLVE_STATUS.CONVERGED
+ *
+ * // No joint moved more than the stall threshold or no joints are free to move.
+ * SOLVE_STATUS.STALLED
+ *
+ * // No step scale could keep the error within the divergence threshold.
+ * SOLVE_STATUS.DIVERGED
+ *
+ * // The maximum number of iterations was reached.
+ * SOLVE_STATUS.TIMEOUT
+ * ```
+ * @type {Object<string, number>}
+ */
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
@@ -42,6 +60,10 @@ export const SOLVE_STATUS = {
 
 };
 
+/**
+ * Names of the solve statuses indexed by status value.
+ * @type {Array<string>}
+ */
 export const SOLVE_STATUS_NAMES = Object.entries( SOLVE_STATUS ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( el => el[ 0 ] );
 
 export class ChainSolver {

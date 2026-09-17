@@ -1,3 +1,4 @@
+/** @import { Frame } from '../core/Frame.js' */
 import { SOLVE_STATUS } from '../core/ChainSolver.js';
 import { serialize } from './serialize.js';
 import {
@@ -11,12 +12,35 @@ import { findRoots } from '../core/utils/IKUtils.js';
 
 const useSharedArrayBuffers = ( typeof SharedArrayBuffer ) !== 'undefined';
 
+/**
+ * Runs the `Solver` asynchronously in a WebWorker. The worker owns a copy of the frames and the
+ * resulting joint values are copied back onto the frames on the main thread as solves complete.
+ * @param {Frame | Array<Frame>} roots - The roots of the trees to solve.
+ * @warn When `SharedArrayBuffer` is not available a new `ArrayBuffer` is copied to the worker
+ * on every update and back with every result.
+ */
 export class WorkerSolver {
 
 	constructor( roots = [] ) {
 
+		/**
+		 * The roots to solve for. If modified `updateStructure` must be called.
+		 * @type {Array<Frame>}
+		 */
 		this.roots = Array.isArray( roots ) ? [ ...roots ] : [ roots ];
+
+		/**
+		 * The `SOLVE_STATUS` of each chain from the most recent solve in the worker.
+		 * @type {Array<number>}
+		 * @readonly
+		 */
 		this.status = [];
+
+		/**
+		 * Whether a solve is running in the worker.
+		 * @type {boolean}
+		 * @readonly
+		 */
 		this.running = false;
 
 		this.frames = null;
@@ -87,8 +111,11 @@ export class WorkerSolver {
 
 	}
 
-	// Update the structure of the graph in the worker. Must be called every time the graph structure
-	// changes or a degree of freedom changes. Or if the main thread must change the DoF values.
+	/**
+	 * Sends the structure of the trees to the worker. Must be called whenever the parent child
+	 * structure, the degrees of freedom of a joint, or the joint values are changed on the main
+	 * thread.
+	 */
 	updateStructure() {
 
 		// TODO: do we need to track versions of the structure now if we use
@@ -172,7 +199,10 @@ export class WorkerSolver {
 
 	}
 
-	// Update the solver settings via a settings object.
+	/**
+	 * Sets the given `Solver` options on the solver in the worker.
+	 * @param {Object} settings - Option names and values as listed on `Solver`.
+	 */
 	updateSolverSettings( settings ) {
 
 		this.worker.postMessage( {
@@ -182,7 +212,11 @@ export class WorkerSolver {
 
 	}
 
-	// Copy the non DoF values over to shared buffer for use in the worker
+	/**
+	 * Copies the frame transforms and joint settings, everything except the joint values being
+	 * solved for, to the worker. Copies every frame if none are given.
+	 * @param {...Frame} frames - The frames to copy.
+	 */
 	updateFrameState( ...updateJoints ) {
 
 		const { frames, floatBuffer, byteBuffer } = this;
@@ -223,7 +257,10 @@ export class WorkerSolver {
 
 	}
 
-	// Start the solve loop if it's not running
+	/**
+	 * Starts a solve loop in the worker if one is not running. The loop stops on its own once no
+	 * chain returns `SOLVE_STATUS.TIMEOUT`.
+	 */
 	solve() {
 
 		this.worker.postMessage( {
@@ -233,7 +270,9 @@ export class WorkerSolver {
 
 	}
 
-	// Stop the solve loop
+	/**
+	 * Stops the solve loop in the worker.
+	 */
 	stop() {
 
 		this.worker.postMessage( {
@@ -243,7 +282,9 @@ export class WorkerSolver {
 
 	}
 
-	// Stop and dispose the worker
+	/**
+	 * Stops the solve loop and terminates the worker.
+	 */
 	dispose() {
 
 		this.stop();
