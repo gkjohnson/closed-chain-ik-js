@@ -25,15 +25,6 @@ const dofResultInfo = {
 	totalError: 0,
 };
 
-// scratch state for evaluating line search steps
-const trialTargetJoints = [];
-const trialFreeJoints = [];
-const trialResultInfo = {
-	errorRows: 0,
-	freeDoF: 0,
-	totalError: 0,
-};
-
 // number of times a step is halved before the solve is considered diverged
 const MAX_LINE_SEARCH_STEPS = 6;
 
@@ -465,10 +456,12 @@ export class ChainSolver {
 
 				this.applyJointAngles( freeJoints, deltaTheta, stepScale );
 
-				trialTargetJoints.length = 0;
-				trialFreeJoints.length = 0;
-				this.countUnconvergedVariables( trialFreeJoints, trialTargetJoints, trialResultInfo );
-				if ( trialResultInfo.totalError <= totalError + divergeThreshold ) {
+				// the joint lists are rebuilt with the same contents since no joints are locked until
+				// a step is accepted
+				targetJoints.length = 0;
+				freeJoints.length = 0;
+				this.countUnconvergedVariables( freeJoints, targetJoints, dofResultInfo );
+				if ( dofResultInfo.totalError <= totalError + divergeThreshold ) {
 
 					stepAccepted = true;
 					break;
