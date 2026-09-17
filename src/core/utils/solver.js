@@ -158,6 +158,8 @@ export function accumulateTargetError(
 		lockedJointDoFCount,
 		translationErrorClamp,
 		rotationErrorClamp,
+		translationFactor,
+		rotationFactor,
 		lockedJointDoF,
 	} = solver;
 
@@ -166,9 +168,7 @@ export function accumulateTargetError(
 		dofValues,
 		translationDoFCount,
 		rotationDoFCount,
-		translationFactor,
-		rotationFactor,
-		dofList,
+		dof: dofList,
 	} = joint;
 
 	// get the position delta
@@ -203,7 +203,13 @@ export function accumulateTargetError(
 
 		// clamp the position delta to the max error step
 		const posMag = vec3.length( tempPos );
-		vec3.scale( tempPos, tempPos, translationFactor * translationErrorClamp / posMag );
+		if ( posMag > translationErrorClamp ) {
+
+			vec3.scale( tempPos, tempPos, translationErrorClamp / posMag );
+
+		}
+
+		vec3.scale( tempPos, tempPos, translationFactor );
 		for ( let i = 0, l = translationDoFCount; i < l; i ++ ) {
 
 			const dof = dofList[ i ];
@@ -228,7 +234,13 @@ export function accumulateTargetError(
 
 		// clamp the euler difference to the error step magnitude
 		const eulerMag = vec3.length( tempEuler );
-		vec3.scale( tempEuler, tempEuler, rotationFactor * rotationErrorClamp / eulerMag );
+		if ( eulerMag > rotationErrorClamp ) {
+
+			vec3.scale( tempEuler, tempEuler, rotationErrorClamp / eulerMag );
+
+		}
+
+		vec3.scale( tempEuler, tempEuler, rotationFactor );
 		for ( let i = translationDoFCount, l = translationDoFCount + rotationDoFCount; i < l; i ++ ) {
 
 			const dof = dofList[ i ];
