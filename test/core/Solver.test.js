@@ -5,6 +5,39 @@ import { Solver } from '../../src/core/Solver.js';
 import { ChainSolver, SOLVE_STATUS } from '../../src/core/ChainSolver.js';
 import { mat } from '../../src/core/utils/matrix.js';
 
+// serial arm of unit links with alternating Z and X rotation joints and a goal on the end
+function createArm( numJoints, goalDoF ) {
+
+	const root = new Link();
+	let current = root;
+	const joints = [];
+	for ( let i = 0; i < numJoints; i ++ ) {
+
+		const joint = new Joint();
+		joint.setDoF( i % 2 === 0 ? DOF.EZ : DOF.EX );
+		joint.setPosition( 0, 1, 0 );
+		joint.setDoFValues( i % 2 === 0 ? 0.1 : - 0.1 );
+		current.addChild( joint );
+		joints.push( joint );
+
+		const link = new Link();
+		joint.addChild( link );
+		current = link;
+
+	}
+
+	const goal = new Goal();
+	goal.setGoalDoF( ...goalDoF );
+	goal.makeClosure( current );
+	root.updateMatrixWorld( true );
+	current.getWorldPosition( goal.position );
+	current.getWorldQuaternion( goal.quaternion );
+	goal.setMatrixNeedsUpdate();
+
+	return { root, goal, joints };
+
+}
+
 // closure error of a goal masked to the goal's constrained DoF, matching what the solver minimizes
 function getClosureErrorMagnitude( goal ) {
 
@@ -111,6 +144,32 @@ describe( 'Solver', () => {
 		expect( svdSpy ).toHaveBeenCalled();
 		expect( svdSpy.mock.results.every( r => r.type === 'return' ) ).toBe( true );
 		svdSpy.mockRestore();
+
+	} );
+
+	it( 'should line search steps that increase the error and never end a solve worse than it started.', () => {
+
+		const { root, goal } = createArm( 20, [ DOF.X, DOF.Y, DOF.Z, DOF.EX, DOF.EY, DOF.EZ ] );
+		const solver = new Solver( [ root, goal ] );
+		solver.maxIterations = 10;
+		solver.restPoseFactor = 0.001;
+		solver.dampingFactor = 0.01;
+
+		const applySpy = vi.spyOn( ChainSolver.prototype, 'applyJointAngles' );
+		const targets = [[ 1, 19, 0 ], [ - 1, 19, 0 ], [ 0, 19, 1 ], [ 0, 19, - 1 ], [ 0.5, 19.5, 0.5 ]];
+		for ( let i = 0; i < 50; i ++ ) {
+
+			goal.setPosition( ...targets[ i % targets.length ] );
+			const before = getClosureErrorMagnitude( goal );
+			solver.solve();
+			const after = getClosureErrorMagnitude( goal );
+			expect( after ).toBeLessThanOrEqual( before + solver.divergeThreshold );
+
+		}
+
+		const scales = applySpy.mock.calls.map( args => args[ 2 ] );
+		expect( scales ).toContain( 0.5 );
+		applySpy.mockRestore();
 
 	} );
 
