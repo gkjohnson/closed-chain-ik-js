@@ -173,7 +173,7 @@ describe( 'Solver', () => {
 
 	} );
 
-	it( 'should take a bounded step near a singularity without backtracking when using SVD.', () => {
+	it( 'should raise the near singular ratio when a full step is rejected and lower it once steps are accepted.', () => {
 
 		// nearly straight arm reaching for a goal beyond its length along the arm axis
 		const root = new Joint();
@@ -203,17 +203,24 @@ describe( 'Solver', () => {
 		solver.useSVD = true;
 		solver.maxIterations = 0;
 
-		const applySpy = vi.spyOn( ChainSolver.prototype, 'applyJointAngles' );
+		const chainSolver = solver.solvers[ 0 ];
+		const baseRatio = chainSolver.singularityRatio;
 		const before = getClosureErrorMagnitude( goal );
 		const status = solver.solve()[ 0 ];
 		const after = getClosureErrorMagnitude( goal );
 
+		// the full step overshoots at the base ratio so the ratio is raised and the step stays bounded
 		expect( status ).not.toBe( SOLVE_STATUS.DIVERGED );
 		expect( after ).toBeLessThanOrEqual( before + solver.divergeThreshold );
-		expect( applySpy ).toHaveBeenCalledTimes( 1 );
+		expect( chainSolver.singularityRatio ).toBe( baseRatio * 2 );
 		expect( Math.abs( j1.getDoFValue( DOF.EZ ) ) ).toBeLessThan( 0.5 );
 		expect( Math.abs( j2.getDoFValue( DOF.EZ ) ) ).toBeLessThan( 0.5 );
-		applySpy.mockRestore();
+
+		// an easy reachable goal accepts full steps and relaxes the ratio back to the base
+		goal.setPosition( 1, 1, 0 );
+		solver.maxIterations = 10;
+		solver.solve();
+		expect( chainSolver.singularityRatio ).toBe( baseRatio );
 
 	} );
 

@@ -28,8 +28,10 @@ const dofResultInfo = {
 // number of step scales tried along a line search before the solve is considered diverged
 const MAX_LINE_SEARCH_STEPS = 6;
 
-// singular values below this fraction of the largest are treated as near singular
-const SINGULARITY_RATIO = 0.05;
+// singular values below this fraction of the largest are treated as near singular. This is the
+// lowest ratio used and it is raised when full steps are rejected up to the max ratio.
+const SINGULARITY_RATIO = 0.02;
+const MAX_SINGULARITY_RATIO = 0.2;
 
 export const SOLVE_STATUS = {
 
@@ -89,6 +91,10 @@ export class ChainSolver {
 		this.dampingFactor = - 1;
 		this.divergeThreshold = - 1;
 		this.restPoseFactor = - 1;
+
+		// near singular ratio used by the SVD path. Raised when full steps are rejected and lowered
+		// when they are accepted or the solve stalls. Persists across solves.
+		this.singularityRatio = SINGULARITY_RATIO;
 
 		// Cached jacobian and pseudo-inverse for warm start
 		this.prevJacobian = mat.create( 0, 0 );
@@ -308,7 +314,7 @@ export class ChainSolver {
 
 						}
 
-						const singularityThreshold = sigmaMax * SINGULARITY_RATIO;
+						const singularityThreshold = sigmaMax * this.singularityRatio;
 						const lambda2 = dampingFactor ** 2;
 						for ( let i = 0, l = q.length; i < l; i ++ ) {
 
@@ -467,6 +473,8 @@ export class ChainSolver {
 
 				if ( stalled ) {
 
+					// the near singular damping may be what is holding the joints still
+					this.singularityRatio = Math.max( SINGULARITY_RATIO, this.singularityRatio * 0.5 );
 					status = SOLVE_STATUS.STALLED;
 					break;
 
@@ -509,6 +517,18 @@ export class ChainSolver {
 				this.revertJointAngles();
 				const walk = 0.5 ** ( attempt + 1 );
 				stepScale += improved ? walk : - walk;
+
+			}
+
+			// Adapt the near singular ratio: a rejected full step means the weak directions need more
+			// damping, an accepted one means it can relax back toward the base ratio.
+			if ( bestScale === 1 ) {
+
+				this.singularityRatio = Math.max( SINGULARITY_RATIO, this.singularityRatio * 0.5 );
+
+			} else {
+
+				this.singularityRatio = Math.min( MAX_SINGULARITY_RATIO, this.singularityRatio * 2 );
 
 			}
 
