@@ -53,12 +53,12 @@ npm install github:@gkjohnson/closed-chain-ik-js
 
 ## Entry Points
 
-| Entry point | Contents |
-|---|---|
-| `closed-chain-ik` | The core and three.js entry points together. Requires `three` and `urdf-loader`. |
-| `closed-chain-ik/core` | The solver, frames, and `IKUtils`. Has no three.js dependency. |
-| `closed-chain-ik/three` | `IKRootsHelper` and `URDFUtils` for use with three.js and urdf-loader. |
-| `closed-chain-ik/worker` | `WorkerSolver`. Not included in the root entry point. |
+| Entry point | Contents | Reference |
+|---|---|---|
+| `closed-chain-ik` | The core and three.js entry points together. Requires `three` and `urdf-loader`. | [core](./src/core/API.md) · [three](./src/three/API.md) |
+| `closed-chain-ik/core` | The solver, frames, and `IKUtils`. Has no three.js dependency. | [API Reference](./src/core/API.md) |
+| `closed-chain-ik/three` | `IKRootsHelper` and `URDFUtils` for use with three.js and urdf-loader. | [API Reference](./src/three/API.md) |
+| `closed-chain-ik/worker` | `WorkerSolver`. Not included in the root entry point. | [API Reference](./src/worker/API.md) |
 
 ## Simple 2 DoF System
 
@@ -126,12 +126,4 @@ solver.solve();
 
 - The web worker implementation uses ShareArrayBuffers which are not available on some platforms (Safari, Chrome for Android). See issue [#44](https://github.com/gkjohnson/closed-chain-ik-js/issues/44).
 
-- Enabling SVD on the Solver can cause divergence on solvable systems and stutter. See [#76](https://github.com/gkjohnson/closed-chain-ik-js/issues/76).
-
-# API
-
-| Package | Reference |
-| --- | --- |
-| `closed-chain-ik/core` | [API Reference](./src/core/API.md) |
-| `closed-chain-ik/three` | [API Reference](./src/three/API.md) |
-| `closed-chain-ik/worker` | [API Reference](./src/worker/API.md) |
+- Enabling SVD on the Solver adds damping in near singular directions but is several times slower than the default solve.
