@@ -147,7 +147,7 @@ describe( 'Solver', () => {
 
 	} );
 
-	it( 'should halve steps that increase the error and never end a solve worse than it started.', () => {
+	it( 'should line search steps that increase the error and never end a solve worse than it started.', () => {
 
 		const { root, goal } = createArm( 20, [ DOF.X, DOF.Y, DOF.Z, DOF.EX, DOF.EY, DOF.EZ ] );
 		const solver = new Solver( [ root, goal ] );

@@ -25,7 +25,7 @@ const dofResultInfo = {
 	totalError: 0,
 };
 
-// number of times a step is halved before the solve is considered diverged
+// number of step scales tried along a line search before the solve is considered diverged
 const MAX_LINE_SEARCH_STEPS = 6;
 
 // singular values below this fraction of the largest are treated as near singular
@@ -474,9 +474,12 @@ export class ChainSolver {
 
 			}
 
-			// Line search: apply the step and halve it until the error no longer grows
+			// Line search: walk a single scale along the step, forward when the error improves on the best
+			// so far and back when it does not, halving the walk each attempt. A step has to beat the
+			// divergence tolerance to be kept at all.
 			let stepScale = 1;
-			let stepAccepted = false;
+			let bestScale = 0;
+			let bestError = totalError + divergeThreshold;
 			for ( let attempt = 0; attempt < MAX_LINE_SEARCH_STEPS; attempt ++ ) {
 
 				this.applyJointAngles( freeJoints, deltaTheta, stepScale );
@@ -486,22 +489,40 @@ export class ChainSolver {
 				targetJoints.length = 0;
 				freeJoints.length = 0;
 				this.countUnconvergedVariables( freeJoints, targetJoints, dofResultInfo );
-				if ( dofResultInfo.totalError <= totalError + divergeThreshold ) {
 
-					stepAccepted = true;
+				const stepError = dofResultInfo.totalError;
+				const improved = stepError < bestError;
+				if ( improved ) {
+
+					bestScale = stepScale;
+					bestError = stepError;
+
+				}
+
+				// the full step is the best so there is nothing further along the line to search
+				if ( bestScale === 1 ) {
+
 					break;
 
 				}
 
 				this.revertJointAngles();
-				stepScale *= 0.5;
+				const walk = 0.5 ** ( attempt + 1 );
+				stepScale += improved ? walk : - walk;
 
 			}
 
-			if ( ! stepAccepted ) {
+			if ( bestScale === 0 ) {
 
 				status = SOLVE_STATUS.DIVERGED;
 				break;
+
+			}
+
+			// reapply the best step found unless the full step was kept
+			if ( bestScale !== 1 ) {
+
+				this.applyJointAngles( freeJoints, deltaTheta, bestScale );
 
 			}
 
