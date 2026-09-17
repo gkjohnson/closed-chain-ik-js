@@ -6,10 +6,10 @@ import { AXES } from './utils/constants.js';
 // temp reusable variables
 const tempRotVec = new Float64Array( 3 );
 const tempPos = new Float64Array( 3 );
-const jointWorldPos = new Float64Array( 3 );
-const targetWorldPos = new Float64Array( 3 );
+const pivotWorldPos = new Float64Array( 3 );
+const frameWorldPos = new Float64Array( 3 );
 const axisWorld = new Float64Array( 3 );
-const toTarget = new Float64Array( 3 );
+const leverArm = new Float64Array( 3 );
 
 const tempAxisQuat = new Float64Array( 4 );
 const targetJoints = [];
@@ -65,6 +65,22 @@ export const SOLVE_STATUS = {
  * @type {Array<string>}
  */
 export const SOLVE_STATUS_NAMES = Object.entries( SOLVE_STATUS ).sort( ( a, b ) => a[ 1 ] - b[ 1 ] ).map( el => el[ 0 ] );
+
+// Adds how the frame at "frameMatrix" moves for a unit rotation about "rotationAxis" through
+// "pivotPos". "errorSign" is +1 or -1 depending on whether moving the frame raises or lowers
+// the closure error.
+function accumulateRotationInfluence( rotationAxis, pivotPos, frameMatrix, errorSign, outPos, outRotVec ) {
+
+	// the frame position sweeps around the pivot
+	mat4.getTranslation( frameWorldPos, frameMatrix );
+	vec3.subtract( leverArm, frameWorldPos, pivotPos );
+	vec3.cross( leverArm, rotationAxis, leverArm );
+	vec3.scaleAndAdd( outPos, outPos, leverArm, errorSign );
+
+	// the frame rotation changes along the axis
+	vec3.scaleAndAdd( outRotVec, outRotVec, rotationAxis, errorSign );
+
+}
 
 export class ChainSolver {
 
@@ -733,49 +749,54 @@ export class ChainSolver {
 					// if it's a closure target
 					if ( targetJoint.isClosure ) {
 
-						if ( relevantClosures.has( targetJoint ) || relevantConnectedClosures.has( targetJoint ) ) {
-
-							// Determine which position we're affecting and the sign. If we're the connected child then
-							// we need to invert the change needed.
-							const isConnected = relevantConnectedClosures.has( targetJoint );
+						const affectsClosure = relevantClosures.has( targetJoint );
+						const affectsChild = relevantConnectedClosures.has( targetJoint );
+						if ( affectsClosure || affectsChild ) {
 
 							// Transform local axis to world space using the rotation part of the matrix
 							mat4.getRotation( tempAxisQuat, identityDoFMatrixWorld );
 							vec3.transformQuat( axisWorld, AXES[ dof ], tempAxisQuat );
+							mat4.getTranslation( pivotWorldPos, identityDoFMatrixWorld );
 
+							// The error is closure minus child, so moving the closure side counts as -1 and moving the
+							// child side as +1. A joint above the fork moves both sides and the two cancel except for
+							// the rotation of the offset between the frames while the closure is still open.
+							vec3.zero( tempPos );
+							vec3.zero( tempRotVec );
 							if ( dof < 3 ) {
 
-								// translation
-								vec3.copy( tempPos, axisWorld );
-								tempRotVec[ 0 ] = 0;
-								tempRotVec[ 1 ] = 0;
-								tempRotVec[ 2 ] = 0;
+								// translation slides each affected frame along the axis
+								if ( affectsClosure ) {
+
+									vec3.subtract( tempPos, tempPos, axisWorld );
+
+								}
+
+								if ( affectsChild ) {
+
+									vec3.add( tempPos, tempPos, axisWorld );
+
+								}
 
 							} else {
 
-								// rotation
-								// get the target position which is needed to calculate the impact of rotation
-								const affectedMatrix = isConnected ? targetJoint.child.matrixWorld : targetJoint.matrixWorld;
-								mat4.getTranslation( targetWorldPos, affectedMatrix );
+								// rotation swings each affected frame around the joint
+								if ( affectsClosure ) {
 
-								// get relative position
-								mat4.getTranslation( jointWorldPos, identityDoFMatrixWorld );
-								vec3.subtract( toTarget, targetWorldPos, jointWorldPos );
+									accumulateRotationInfluence( axisWorld, pivotWorldPos, targetJoint.matrixWorld, - 1, tempPos, tempRotVec );
 
-								// the change of a point by a rotation about an axis is the cross vector
-								vec3.cross( tempPos, axisWorld, toTarget );
+								}
 
-								// for a rotation vector the delta is the same as the axis of rotation
-								vec3.copy( tempRotVec, axisWorld );
+								if ( affectsChild ) {
+
+									accumulateRotationInfluence( axisWorld, pivotWorldPos, targetJoint.child.matrixWorld, 1, tempPos, tempRotVec );
+
+								}
 
 							}
 
-							// Error is defined as (closure - child), so:
-							// - For direct closures: moving closure changes error positively, so negate
-							// - For connected closures: moving child changes error negatively, so keep positive
-							const sign = isConnected ? 1 : - 1;
-							vec3.scale( tempPos, tempPos, sign * translationFactor );
-							vec3.scale( tempRotVec, tempRotVec, sign * rotationFactor );
+							vec3.scale( tempPos, tempPos, translationFactor );
+							vec3.scale( tempRotVec, tempRotVec, rotationFactor );
 
 							// TODO: Goals use DoF-based row selection, non-Goal closures hardcode all 6.
 							// See solver.js for details on unifying closure semantics.
