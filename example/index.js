@@ -22,7 +22,6 @@ import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import {
 	Solver,
-	WorkerSolver,
 	Link,
 	Joint,
 	SOLVE_STATUS_NAMES,
@@ -30,6 +29,7 @@ import {
 	URDFUtils,
 	Goal,
 } from '../src/index.js';
+import { WorkerSolver } from '../src/worker/index.js';
 import {
 	loadATHLETE,
 	loadRobonaut,

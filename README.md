@@ -51,6 +51,15 @@ npm install github:@gkjohnson/closed-chain-ik-js
 
 # Use
 
+## Entry Points
+
+| Entry point | Contents |
+|---|---|
+| `closed-chain-ik` | The core and three.js entry points together. Requires `three` and `urdf-loader`. |
+| `closed-chain-ik/core` | The solver, frames, and `IKUtils`. Has no three.js dependency. |
+| `closed-chain-ik/three` | `IKRootsHelper` and `URDFUtils` for use with three.js and urdf-loader. |
+| `closed-chain-ik/worker` | `WorkerSolver`. Not included in the root entry point. |
+
 ## Simple 2 DoF System
 
 ```js
@@ -100,7 +109,8 @@ solver.solve();
 ## Using a WebWorker Solver
 
 ```js
-import { WorkerSolve, Joint, Link, Goal, DOF } from 'closed-chain-ik';
+import { Joint, Link, Goal, DOF } from 'closed-chain-ik';
+import { WorkerSolver } from 'closed-chain-ik/worker';
 
 // ... instantiate kinematic system...
 

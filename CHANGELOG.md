@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- "closed-chain-ik/core", "closed-chain-ik/three", and "closed-chain-ik/worker" entry points so the three.js and worker code can be imported separately.
+
+### Changed
+- "WorkerSolver" is no longer exported from the root entry point and must be imported from "closed-chain-ik/worker".
+
 ### Changed
 - Steps that increase the error are line searched within the same iteration for the scale with the least error instead of being reverted and shrinking every following step.
 - Additional damping is applied to near singular directions when using SVD so steps stay bounded near singularities. The threshold adapts, rising when full steps are rejected and relaxing when they are accepted or the solve stalls.
