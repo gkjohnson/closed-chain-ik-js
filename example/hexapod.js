@@ -119,7 +119,7 @@ function init() {
 		controls.enabled = false;
 		params.animate = 'none';
 
- 	} );
+	} );
 
 	transformControls.addEventListener( 'mouseUp', () => {
 
