@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Additional damping is applied to near singular directions when using SVD so steps stay bounded near singularities.
+
 ### Fixed
 - WorkerSolver.stop not stopping the worker solve loop and "running" flag being cleared prematurely.
 - IKRootsHelper.dispose throwing an error and removed helpers being retained after updateStructure.
