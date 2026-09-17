@@ -25,6 +25,18 @@ const dofResultInfo = {
 	totalError: 0,
 };
 
+// scratch state for evaluating line search steps
+const trialTargetJoints = [];
+const trialFreeJoints = [];
+const trialResultInfo = {
+	errorRows: 0,
+	freeDoF: 0,
+	totalError: 0,
+};
+
+// number of times a step is halved before the solve is considered diverged
+const MAX_LINE_SEARCH_STEPS = 6;
+
 export const SOLVE_STATUS = {
 
 	CONVERGED: 0,
@@ -178,13 +190,7 @@ export class ChainSolver {
 			maxIterations,
 		} = this;
 
-		// Store original error clamps for backtracking
-		const originalTranslationErrorClamp = this.translationErrorClamp;
-		const originalRotationErrorClamp = this.rotationErrorClamp;
-		let errorClampFactor = 1;
-
 		let iterations = 0;
-		let prevErrorMagnitude = Infinity;
 		let status = - 1;
 
 		// Clear out all the locked joints
@@ -241,43 +247,12 @@ export class ChainSolver {
 
 			}
 
-			// Check if we've diverged - backtrack with smaller step
-			if ( totalError > prevErrorMagnitude + divergeThreshold ) {
+			// Cache the joint state so a rejected step can be reverted
+			prevDoFValues.forEach( ( dofValues, joint ) => {
 
-				// Revert joint values and update matrices
-				prevDoFValues.forEach( ( dofValues, joint ) => {
+				dofValues.set( joint.dofValues );
 
-					joint.dofValues.set( dofValues );
-					joint.setMatrixDoFNeedsUpdate();
-					joint.updateMatrixWorld();
-
-				} );
-
-				// Halve error clamps to take smaller steps
-				errorClampFactor *= 0.5;
-				this.translationErrorClamp = originalTranslationErrorClamp * errorClampFactor;
-				this.rotationErrorClamp = originalRotationErrorClamp * errorClampFactor;
-
-				// If we've taken a max number of steps or too many iterations then give up
-				if ( errorClampFactor < 0.5 ** 6 || iterations > maxIterations ) {
-
-					status = SOLVE_STATUS.DIVERGED;
-					break;
-
-				}
-
-			} else {
-
-				// Update the previous error and cache joint state for divergence check next frame
-				// Because we haven't diverged these values are in a known good state
-				prevErrorMagnitude = totalError;
-				prevDoFValues.forEach( ( dofValues, joint ) => {
-
-					dofValues.set( joint.dofValues );
-
-				} );
-
-			}
+			} );
 
 			// Check if we've hit max iterations
 			if ( iterations > maxIterations ) {
@@ -483,17 +458,42 @@ export class ChainSolver {
 
 			}
 
-			// Apply joint angles
-			this.applyJointAngles( freeJoints, deltaTheta );
+			// Line search: apply the step and halve it until the error no longer grows
+			let stepScale = 1;
+			let stepAccepted = false;
+			for ( let attempt = 0; attempt < MAX_LINE_SEARCH_STEPS; attempt ++ ) {
+
+				this.applyJointAngles( freeJoints, deltaTheta, stepScale );
+
+				trialTargetJoints.length = 0;
+				trialFreeJoints.length = 0;
+				this.countUnconvergedVariables( trialFreeJoints, trialTargetJoints, trialResultInfo );
+				if ( trialResultInfo.totalError <= totalError + divergeThreshold ) {
+
+					stepAccepted = true;
+					break;
+
+				}
+
+				this.revertJointAngles();
+				stepScale *= 0.5;
+
+			}
+
+			if ( ! stepAccepted ) {
+
+				status = SOLVE_STATUS.DIVERGED;
+				break;
+
+			}
+
+			// Lock any joints that hit their limits during the accepted step
+			this.lockLimitedJointAngles( freeJoints );
 
 			// there's still error and we're under the max iterations
 			iterations ++;
 
 		} while ( true ); // eslint-disable-line
-
-		// Restore original error clamps in case it was modified during divergence checks
-		this.translationErrorClamp = originalTranslationErrorClamp;
-		this.rotationErrorClamp = originalRotationErrorClamp;
 
 		targetJoints.length = 0;
 		freeJoints.length = 0;
@@ -501,15 +501,14 @@ export class ChainSolver {
 
 	}
 
-	// Apply the delta values from the solve to the free joints in the list
-	applyJointAngles( freeJoints, deltaTheta ) {
+	// Apply the delta values from the solve to the free joints in the list scaled by the given amount
+	applyJointAngles( freeJoints, deltaTheta, scale = 1 ) {
 
 		const {
 			lockedJointDoF,
 			lockedJointDoFCount,
 		} = this;
 
-		let lockedJoint = false;
 		let dti = 0;
 		for ( let i = 0, l = freeJoints.length; i < l; i ++ ) {
 
@@ -529,25 +528,7 @@ export class ChainSolver {
 				}
 
 				const value = joint.getDoFValue( dof );
-				const hitLimit = joint.setDoFValue( dof, value + mat.get( deltaTheta, dti, 0 ) );
-
-				// lock the joint if we hit a limit
-				if ( hitLimit ) {
-
-					if ( ! lockedJointDoFCount.has( joint ) ) {
-
-						lockedJointDoFCount.set( joint, 0 );
-						lockedDoF.fill( 0 );
-
-					}
-
-					const lockedCount = lockedJointDoFCount.get( joint );
-					lockedJointDoFCount.set( joint, lockedCount + 1 );
-					lockedDoF[ dof ] = 1;
-					lockedJoint = true;
-
-				}
-
+				joint.setDoFValue( dof, value + scale * mat.get( deltaTheta, dti, 0 ) );
 				dti ++;
 
 			}
@@ -560,7 +541,63 @@ export class ChainSolver {
 
 		}
 
-		return lockedJoint;
+	}
+
+	// Restore the joint values cached at the start of the iteration
+	revertJointAngles() {
+
+		this.prevDoFValues.forEach( ( dofValues, joint ) => {
+
+			joint.dofValues.set( dofValues );
+			joint.setMatrixDoFNeedsUpdate();
+
+		} );
+
+	}
+
+	// Lock any unlocked degrees of freedom that are sitting at a joint limit
+	lockLimitedJointAngles( freeJoints ) {
+
+		const {
+			lockedJointDoF,
+			lockedJointDoFCount,
+		} = this;
+
+		for ( let i = 0, l = freeJoints.length; i < l; i ++ ) {
+
+			const joint = freeJoints[ i ];
+			const dofList = joint.dof;
+			const lockedDoF = lockedJointDoF.get( joint );
+			const isLocked = lockedJointDoFCount.has( joint );
+
+			for ( let d = 0, l = dofList.length; d < l; d ++ ) {
+
+				const dof = dofList[ d ];
+				if ( isLocked && lockedDoF[ dof ] ) {
+
+					continue;
+
+				}
+
+				const value = joint.getDoFValue( dof );
+				if ( value === joint.getMinLimit( dof ) || value === joint.getMaxLimit( dof ) ) {
+
+					if ( ! lockedJointDoFCount.has( joint ) ) {
+
+						lockedJointDoFCount.set( joint, 0 );
+						lockedDoF.fill( 0 );
+
+					}
+
+					const lockedCount = lockedJointDoFCount.get( joint );
+					lockedJointDoFCount.set( joint, lockedCount + 1 );
+					lockedDoF[ dof ] = 1;
+
+				}
+
+			}
+
+		}
 
 	}
 
