@@ -1,3 +1,4 @@
+/** @import { quat } from 'gl-matrix' */
 // https://github.com/toji/gl-matrix/issues/329
 import { mat4, vec3 } from 'gl-matrix';
 import { RAD2DEG } from './constants.js';
@@ -11,8 +12,8 @@ const tempQuat2 = new Float64Array( 4 );
 /**
  * Returns an euler angle representation of a quaternion
  * @param {vec3} out Euler angles, pitch-yaw-roll
- * @param {quat} mat Quaternion
- * @return {vec3} out
+ * @param {quat} quat Quaternion
+ * @returns {vec3} out
  * @private
  */
 export function getEuler( out, quat ) {
