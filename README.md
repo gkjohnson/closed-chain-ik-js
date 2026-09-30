@@ -54,14 +54,14 @@ npm install github:@gkjohnson/closed-chain-ik-js
 
 ## Entry Points
 
+See the [docs site](https://gkjohnson.github.io/tools/docs/closed-chain-ik/) for full API documentation. The same documentation is also available as markdown, linked below.
+
 | Entry point | Contents | Reference |
 |---|---|---|
 | `closed-chain-ik` | The core and three.js entry points together. Requires `three` and `urdf-loader`. | [core](./src/core/API.md) · [three](./src/three/API.md) |
 | `closed-chain-ik/core` | The solver, frames, and `IKUtils`. Has no three.js dependency. | [API Reference](./src/core/API.md) |
 | `closed-chain-ik/three` | `IKRootsHelper` and `URDFUtils` for use with three.js and urdf-loader. | [API Reference](./src/three/API.md) |
 | `closed-chain-ik/worker` | `WorkerSolver`. Not included in the root entry point. | [API Reference](./src/worker/API.md) |
-
-The same documentation is also available on the [docs site](https://gkjohnson.github.io/tools/docs/closed-chain-ik/).
 
 ## Simple 2 DoF System
 
