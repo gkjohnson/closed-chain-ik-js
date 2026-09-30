@@ -61,6 +61,8 @@ npm install github:@gkjohnson/closed-chain-ik-js
 | `closed-chain-ik/three` | `IKRootsHelper` and `URDFUtils` for use with three.js and urdf-loader. | [API Reference](./src/three/API.md) |
 | `closed-chain-ik/worker` | `WorkerSolver`. Not included in the root entry point. | [API Reference](./src/worker/API.md) |
 
+The same documentation is also available on the [docs site](https://gkjohnson.github.io/tools/docs/closed-chain-ik/).
+
 ## Simple 2 DoF System
 
 ```js
